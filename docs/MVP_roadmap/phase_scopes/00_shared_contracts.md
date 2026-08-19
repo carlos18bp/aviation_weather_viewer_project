@@ -1,27 +1,83 @@
-# Contratos compartidos congelados
+# Contratos compartidos congelados — Demo visual Colombia
 
-Este documento es la frontera técnica entre todas las fases. Los ejemplos del
-roadmap quedan concretados aquí para que backend, generación de datos y frontend
-puedan desarrollarse en ramas distintas sin coordinar formatos durante la ola.
+Este archivo es la frontera entre las sesiones paralelas. Congela solo lo que
+la demostración utiliza; una fase no debe volver a introducir capacidades
+descartadas del starter o del antiguo P1.
 
-## Identidad y alcance
+## Identidad y objetivo
 
-| Propiedad | Valor congelado |
+| Propiedad | Valor |
 |---|---|
-| Repositorio real | `aviation_weather_viewer_project` |
-| Servicio | `aero-meteo-mvp` |
+| Producto visible | Meteorología Aeronáutica · Demo ProjectApp |
+| Servicio backend | `aero-meteo-mvp` |
 | Escenario | `demo-colombia-001` |
-| Fecha por defecto | `2026-01-15` |
+| Fecha ficticia | `2026-01-15` |
 | Cobertura WGS84 | `[-82, -5, -66, 14]` |
 | Zona horaria | UTC/Zulu |
+| Viewport de aceptación | `1920×1080`, Chrome o Edge |
+| Tema | Único, oscuro aeronáutico |
 | Uso operacional | `false` |
-| Fuente meteorológica | Simulada, semilla fija, sin APIs externas |
+| Fuente | Simulada, determinística y local |
 
-La fecha vive en una configuración única del generador. Cambiarla exige
-regenerar los seis frames, el manifiesto y los registros de escenario; nunca se
-infiere a partir del reloj del sistema.
+La fecha no se deriva del reloj. Cambiarla exige regenerar todos los assets y
+actualizar el manifiesto.
 
-## Timestamps
+## Dirección visual fija
+
+- Mapa fullscreen; Colombia ocupa el centro y la mayor superficie disponible.
+- Basemap carbón/azul, discreto y sin selector de tema.
+- Paneles compactos, translúcidos y con borde tenue.
+- Partículas claras y finas, visibles sin ocultar límites ni aeropuertos.
+- Campo térmico continuo con suficiente transparencia para conservar contexto.
+- Tipografía del sistema; no se descargan fuentes durante la reunión.
+
+Tokens base:
+
+```css
+--viewer-bg: #07131f;
+--viewer-surface: rgb(7 19 31 / 78%);
+--viewer-border: rgb(255 255 255 / 14%);
+--viewer-text: #f5f7fa;
+--viewer-muted: #a8b4c2;
+--viewer-accent: #22d3ee;
+--viewer-warning: #f59e0b;
+```
+
+Composición `1920×1080`:
+
+```text
+┌ marca / título ─────────────── hora UTC · reset ┐
+│ panel aeropuerto                               │
+│                                                │
+│                MAPA DE COLOMBIA     capas      │
+│                + meteorología       leyenda    │
+│                                                │
+│ warning                                        │
+└──────────── controles + timeline ──────────────┘
+```
+
+Otros tamaños solo deben evitar overflow grave. No existe fase mobile,
+responsive avanzada ni dark/light mode.
+
+## Cámara y cobertura
+
+```typescript
+export const INITIAL_VIEW = {
+  longitude: -73.5,
+  latitude: 4.5,
+  zoom: 4.7,
+  bearing: 0,
+  pitch: 0,
+};
+```
+
+- `minZoom: 4`, `maxZoom: 9`.
+- `maxBounds: [[-84, -7], [-64, 16]]` para impedir navegación global.
+- El bbox meteorológico siempre usa `[west, south, east, north]`.
+- Todo dato público usa EPSG:4326.
+- La cobertura del campo meteorológico es exactamente `[-82, -5, -66, 14]`.
+
+## Timestamps y defaults
 
 ```text
 2026-01-15T00:00:00Z
@@ -32,39 +88,18 @@ infiere a partir del reloj del sistema.
 2026-01-15T15:00:00Z
 ```
 
-- El frontend conserva timestamps ISO completos; `00Z`…`15Z` es solo copy.
+- El estado inicial es `06Z` con capa `wind` para producir impacto inmediato.
+- El copy corto usa `00Z`…`15Z`; el estado conserva ISO completo.
 - Siguiente desde `15Z` vuelve a `00Z`; anterior desde `00Z` vuelve a `15Z`.
-- La reproducción usa un intervalo inicial de `1500 ms` por frame.
-- El estado inicial confirmado es `06Z` y la capa inicial es temperatura.
+- Playback usa un intervalo fijo de `1500 ms` y no ofrece selector de velocidad.
+- Un tick se omite si hay un frame cargando; no se acumulan timers.
 
-## Cobertura y orden geográfico
-
-El bbox siempre se expresa como `[west, south, east, north]`.
-
-```json
-[-82, -5, -66, 14]
-```
-
-Las esquinas del `ImageSource` de MapLibre se entregan en este orden:
-
-```json
-[
-  [-82, 14],
-  [-66, 14],
-  [-66, -5],
-  [-82, -5]
-]
-```
-
-Todo dato geográfico usa EPSG:4326. El renderer puede convertir internamente a
-Mercator, pero ninguna API expone coordenadas proyectadas.
-
-## Assets versionados
+## Assets locales
 
 ```text
 backend/media/demo-weather/demo-colombia-001/
 ├── manifest.json
-├── airports.json
+├── airport-weather.json
 ├── temperature/
 │   ├── 00Z.webp
 │   ├── 03Z.webp
@@ -81,19 +116,43 @@ backend/media/demo-weather/demo-colombia-001/
     └── 15Z.json
 ```
 
-Solo `backend/media/demo-weather/**` se exceptúa del ignore general de media.
-Los uploads ordinarios continúan ignorados. Los artefactos se commitean para que
-la presentación no dependa de ejecutar el generador ni de una red externa.
+Los assets se versionan para que el despliegue no dependa de ejecutar el
+generador. Solo este subárbol se exceptúa del ignore general de media.
 
 ## Contrato de temperatura
 
-- Formato: WebP RGBA transparente.
-- Todas las imágenes comparten dimensiones, bbox y escala cromática.
-- Rango visual global: `0–38 °C`; cada frame publica además su mínimo/máximo.
-- El alpha suaviza los límites del campo, no codifica temperatura.
-- Los píxeles no se interpretan de vuelta como datos científicos.
+- Formato WebP RGBA `1024×1216`, mismas dimensiones para los seis frames.
+- Mismas esquinas MapLibre para todos los frames:
 
-## Contrato de viento U/V
+```json
+[
+  [-82, 14],
+  [-66, 14],
+  [-66, -5],
+  [-82, -5]
+]
+```
+
+- Rango visual global `0–38 °C` y paleta única en todos los timestamps.
+- El alpha suaviza el campo; no representa un valor científico.
+- Opacidad visual fija `0.72`; no existe control de usuario.
+
+Stops térmicos:
+
+```typescript
+export const TEMPERATURE_COLOR_STOPS = [
+  [0, "#313695"],
+  [8, "#4575b4"],
+  [14, "#74add1"],
+  [20, "#abd9e9"],
+  [24, "#fee090"],
+  [28, "#fdae61"],
+  [33, "#f46d43"],
+  [38, "#a50026"],
+] as const;
+```
+
+## Contrato de viento
 
 ```typescript
 export interface WindField {
@@ -111,17 +170,43 @@ export interface WindField {
 }
 ```
 
-- `u` y `v` son arrays planos de `width * height` valores.
-- El orden es row-major: norte a sur y, dentro de cada fila, oeste a este.
+- `u` y `v` contienen `128 * 160` valores row-major, norte a sur y oeste a este.
 - `u > 0` apunta al este; `v > 0` apunta al norte.
-- Los valores están en nudos y no están normalizados.
-- La interpolación del renderer es bilineal.
-- `speed = sqrt(u² + v²)`; la dirección mostrada se deriva de los componentes.
-- Cada frame debe validar longitudes, finitud y rango antes de publicarse.
+- Los valores son nudos; `speed = sqrt(u² + v²)`.
+- El renderer interpola bilinealmente.
+- Calidad fija inicial: `5000` partículas. El tuning puede reducirla, pero no
+  expone perfiles en la interfaz.
+
+Stops visuales por velocidad:
+
+```typescript
+export const WIND_SPEED_COLOR_STOPS = [
+  [0, "#8ecae6"],
+  [15, "#22d3ee"],
+  [30, "#84cc16"],
+  [45, "#f59e0b"],
+  [60, "#ef4444"],
+] as const;
+```
+
+## Descriptor de leyenda
+
+```typescript
+export interface WeatherLegendDefinition {
+  title: "Temperatura" | "Viento";
+  unit: "°C" | "kt";
+  minimum: number;
+  maximum: number;
+  colorStops: ReadonlyArray<readonly [number, string]>;
+}
+```
+
+Las fases 03 y 05 exportan su descriptor usando exactamente los stops de este
+documento. La fase 06 transforma `colorStops` en el gradiente visual.
 
 ## Manifiesto
 
-`manifest.json` es la interfaz entre la fase generadora y Django. Incluye:
+El manifiesto reemplaza modelos de escenario/frame y es la fuente de catálogo:
 
 ```typescript
 interface DemoManifest {
@@ -129,44 +214,71 @@ interface DemoManifest {
   scenario: {
     code: "demo-colombia-001";
     name: string;
-    description: string;
     scenario_date: "2026-01-15";
     bbox: [-82, -5, -66, 14];
     seed: number;
     is_simulated: true;
     operational_use: false;
   };
+  layers: Array<{
+    id: "temperature" | "wind";
+    name: string;
+    kind: "scalar" | "vector";
+    unit: "°C" | "kt";
+    minimum: number;
+    maximum: number;
+  }>;
+  timestamps: string[];
   frames: Array<{
     layer: "temperature" | "wind";
     timestamp: string;
-    level: "surface";
-    unit: "°C" | "kt";
     data_path: string;
     minimum: number;
     maximum: number;
-    sha256: string;
   }>;
 }
 ```
 
-`data_path` es relativo a `MEDIA_ROOT`; nunca expone una ruta absoluta del
-servidor. Debe haber exactamente doce entradas: dos capas por seis timestamps.
+Debe contener doce frames. `data_path` es relativo a `MEDIA_ROOT`; nunca incluye
+un path absoluto. Los hashes pueden utilizarse en tests de determinismo, pero
+no forman parte de la API ni se verifican durante cada carga del navegador.
 
-## Contratos HTTP
+## Aeropuertos congelados
 
-Los endpoints son públicos y no requieren JWT. No llevan slash final.
+La demo carga exactamente estos seis aeropuertos. Las coordenadas GeoJSON usan
+orden longitud/latitud:
+
+| ICAO | IATA | Nombre | Ciudad / departamento | Longitud | Latitud | Elevación ft |
+|---|---|---|---|---:|---:|---:|
+| [SKBO](https://ourairports.com/airports/SKBO/) | BOG | El Dorado International Airport | Bogotá / Bogotá D.C. | -74.146900 | 4.701590 | 8361 |
+| [SKRG](https://ourairports.com/airports/SKRG/) | MDE | José María Córdova International Airport | Medellín / Antioquia | -75.423100 | 6.164540 | 6955 |
+| [SKCL](https://ourairports.com/airports/SKCL/) | CLO | Alfonso Bonilla Aragón International Airport | Cali / Valle del Cauca | -76.381898 | 3.542717 | 3162 |
+| [SKBQ](https://ourairports.com/airports/SKBQ/) | BAQ | Ernesto Cortissoz International Airport | Barranquilla / Atlántico | -74.780800 | 10.889600 | 98 |
+| [SKCG](https://ourairports.com/airports/SKCG/) | CTG | Rafael Núñez International Airport | Cartagena / Bolívar | -75.513000 | 10.442400 | 4 |
+| [SKSM](https://ourairports.com/airports/SKSM/) | SMR | Simón Bolívar International Airport | Santa Marta / Magdalena | -74.230600 | 11.119600 | 22 |
+
+Fuente: [OurAirports Open Data](https://ourairports.com/data/), datos publicados
+como dominio público y usados solo como referencia ilustrativa. Toda condición
+meteorológica es ficticia. PostGIS almacena únicamente el modelo `Airport` con
+`PointField(srid=4326)`; no se crean modelos para matrices, escenarios, frames o
+coberturas.
+
+## Contratos HTTP mínimos
+
+Los endpoints son públicos, same-origin, sin JWT y sin slash final:
 
 ```text
 GET /api/v1/health
 GET /api/v1/demo/weather/catalog
 GET /api/v1/demo/weather/frames?layer={layer}&timestamp={iso}
 GET /api/v1/airports
-GET /api/v1/airports?bbox={west},{south},{east},{north}
-GET /api/v1/airports/{icaoCode}
 GET /api/v1/demo/airports/{icaoCode}/weather?timestamp={iso}
 ```
 
-### Salud
+No se implementan detalle de aeropuerto, filtro bbox, nearest-airport, search o
+sample por coordenada.
+
+### Health
 
 ```json
 {
@@ -206,7 +318,6 @@ interface WeatherFrameResponse {
   scenario: string;
   layer: "temperature" | "wind";
   timestamp: string;
-  level: "surface";
   unit: "°C" | "kt";
   is_simulated: true;
   operational_use: false;
@@ -214,23 +325,18 @@ interface WeatherFrameResponse {
   minimum: number;
   maximum: number;
   data_url: string;
-  sha256: string;
 }
 ```
 
 ### Aeropuertos
 
-La colección se entrega como `FeatureCollection`. La geometría es `Point` y
-`properties` contiene solo:
+`GET /airports` entrega un GeoJSON `FeatureCollection`. Cada `Point` contiene:
 
 ```text
 icao_code, iata_code, name, city, department, elevation_ft
 ```
 
-Los códigos ICAO se normalizan a mayúsculas. `bbox` inválido responde 400; ICAO
-inexistente responde 404.
-
-### Condición simulada de aeropuerto
+### Condición de aeropuerto
 
 ```typescript
 interface AirportWeatherResponse {
@@ -248,35 +354,11 @@ interface AirportWeatherResponse {
 }
 ```
 
-## Errores HTTP
+Errores esperados: `400 invalid_layer`, `400 invalid_timestamp`,
+`404 airport_not_found`, `404 frame_not_found` y `503 asset_unavailable`. Todos
+usan copy en español, conservan los dos flags y nunca exponen paths ni trazas.
 
-Todo error de los endpoints demo usa:
-
-```json
-{
-  "error": {
-    "code": "invalid_timestamp",
-    "message": "El timestamp solicitado no pertenece al escenario demo.",
-    "details": {}
-  },
-  "is_simulated": true,
-  "operational_use": false
-}
-```
-
-| Caso | HTTP | Código estable |
-|---|---:|---|
-| layer inválida | 400 | `invalid_layer` |
-| timestamp ausente/inválido | 400 | `invalid_timestamp` |
-| bbox inválido | 400 | `invalid_bbox` |
-| frame inexistente | 404 | `frame_not_found` |
-| aeropuerto inexistente | 404 | `airport_not_found` |
-| archivo registrado ausente | 503 | `asset_unavailable` |
-| error inesperado | 500 | `internal_error` |
-
-Los mensajes visibles están en español y no incluyen paths, trazas ni secretos.
-
-## Estado frontend
+## Estado frontend mínimo
 
 ```typescript
 export type WeatherLayerId = "temperature" | "wind";
@@ -284,147 +366,132 @@ export type WeatherLayerId = "temperature" | "wind";
 export interface WeatherViewerState {
   activeLayer: WeatherLayerId;
   activeTimestamp: string;
-  committedTimestamp: string;
   availableTimestamps: string[];
   selectedAirport: string | null;
-  selectedCoordinate: [number, number] | null;
   isPlaying: boolean;
-  playbackSpeed: number;
-  windVisible: boolean;
-  opacity: number;
-  mapViewport: { longitude: number; latitude: number; zoom: number };
   isMapReady: boolean;
   isFrameLoading: boolean;
   frameError: string | null;
 }
 ```
 
-Estado inicial:
+Defaults:
 
 ```typescript
 {
-  activeLayer: "temperature",
+  activeLayer: "wind",
   activeTimestamp: "2026-01-15T06:00:00Z",
-  committedTimestamp: "2026-01-15T06:00:00Z",
   availableTimestamps: [],
   selectedAirport: null,
-  selectedCoordinate: null,
   isPlaying: false,
-  playbackSpeed: 1500,
-  windVisible: false,
-  opacity: 0.72,
-  mapViewport: { longitude: -73.5, latitude: 4.5, zoom: 4.5 },
   isMapReady: false,
   isFrameLoading: false,
   frameError: null
 }
 ```
 
-`reset()` vuelve exactamente a esos valores, conservando únicamente el catálogo
-ya cargado si sigue siendo válido.
+No existen `selectedCoordinate`, `opacity`, `quality`, `playbackSpeed`,
+`windVisible`, URL state ni viewport global. La cámara pertenece al controller.
 
 ## Controller y adapters
 
-La API pública mínima es:
-
 ```typescript
+export type WeatherMapFrame =
+  | {
+      layer: "temperature";
+      timestamp: string;
+      imageUrl: string;
+    }
+  | {
+      layer: "wind";
+      timestamp: string;
+      field: WindField;
+    };
+
 export interface WeatherMapController {
   initialize(): Promise<void>;
-  setLayer(layerId: string): void;
-  setTimestamp(timestamp: string): void;
-  setWindVisible(visible: boolean): void;
+  setLayer(layerId: WeatherLayerId): void;
+  setWeatherFrame(frame: WeatherMapFrame): Promise<void>;
+  setAirports(collection: GeoJSON.FeatureCollection): void;
+  setSelectedAirport(icaoCode: string | null): void;
   focusAirport(icaoCode: string): void;
-  selectCoordinate(longitude: number, latitude: number): void;
-  setOpacity(value: number): void;
   resize(): void;
   reset(): void;
   destroy(): void;
 }
-```
 
-Las capas se entregan a su constructor mediante adapters internos:
-
-```typescript
 export interface WeatherLayerAdapter<TFrame> {
   readonly id: WeatherLayerId | "airports";
   initialize(): Promise<void>;
-  stageFrame?(frame: TFrame, signal: AbortSignal): Promise<void>;
-  commitFrame?(timestamp: string): void;
+  setFrame?(frame: TFrame): Promise<void> | void;
+  setSelectedFeature?(featureId: string | null): void;
+  focusFeature?(featureId: string): void;
   setVisible(visible: boolean): void;
-  setOpacity?(value: number): void;
   reset(): void;
   destroy(): void;
 }
 ```
 
-Una fase de capa crea su adapter, pero solo la fase 08 lo registra en el
-controller real.
+La instancia MapLibre y sus listeners se crean una sola vez. React nunca
+almacena la instancia ni dibuja partículas. El `ViewerOrchestrator` carga y
+valida API/assets; la UI solo invoca al controller/orchestrator, nunca a adapters
+internos.
 
-## Sincronización atómica
+## Cambio de timestamp
 
-Al cambiar timestamp:
+1. La UI solicita el timestamp sin cambiar todavía `activeTimestamp`.
+2. Se marca `isFrameLoading` y se conserva visible el frame anterior.
+3. Se carga el frame de la capa activa y, si hay aeropuerto, su condición.
+4. Si ambos terminan, el orquestador espera `setWeatherFrame`, actualiza el
+   panel y publica el nuevo `activeTimestamp` en una transición.
+5. Si falla, el frame anterior permanece y se muestra retry/reset.
+6. Al cambiar de capa se carga la nueva capa para el timestamp ya activo.
 
-1. incrementar `frameGeneration` y abortar la generación anterior;
-2. mantener visibles los datos de `committedTimestamp`;
-3. cargar en paralelo temperatura, viento y clima del aeropuerto seleccionado;
-4. validar timestamp y checksum de cada respuesta;
-5. ejecutar `stageFrame` sin hacer visible el resultado;
-6. si todas las cargas terminan y la generación sigue activa, ejecutar los
-   `commitFrame` y actualizar `committedTimestamp` en una sola transición;
-7. si una carga falla, conservar completo el frame anterior y publicar error;
-8. después del commit, precargar el timestamp siguiente sin modificar estado.
-
-Nunca se mezcla temperatura de un timestamp con viento o panel de otro.
+Como solo una capa meteorológica está visible, no se implementa doble buffer de
+temperatura y viento ni una cache LRU. Requests obsoletos se abortan.
 
 ## Basemap local
 
-La aplicación usa un style MapLibre local y GeoJSON simplificado de Natural
-Earth bajo `frontend/public/map/`. No se permite un style, glyph, sprite o tile
-URL remoto en el build de demostración.
-
-Se conserva `frontend/public/map/NOTICE.md` con fuente, versión y licencia. Para
-Admin-1 solo se mantienen geometría, nombre y códigos comunes; se eliminan
-`type_en`, `valid_from` y `valid_to`.
+El style MapLibre y los GeoJSON simplificados viven en `frontend/public/map/`.
+Incluyen costa, límites nacionales, departamentos de Colombia y contexto vecino
+mínimo. Los symbol layers usan Noto Sans mediante glyph PBF locales en
+`frontend/public/map/fonts/{fontstack}/{range}.pbf`; el style referencia una URL
+same-origin. No hay URLs remotas de tiles, styles, glyphs, sprites o fuentes.
+`NOTICE.md` registra fuente, versión y licencia de cada asset.
 
 ## Renderer de viento
-
-- Primario: WeatherLayers GL sobre deck.gl/MapLibre, encapsulado en
-  `WindRenderer` y sin modificar código vendorizado.
-- Contexto requerido: WebGL2.
-- Calidad interna inicial: `medium`, 5.000 partículas; `low` usa 2.000 y `high`
-  10.000. La UI de selección de calidad es P1.
-- El adapter convierte U/V JSON a la textura que consume la librería; el JSON
-  sigue siendo el contrato público.
-- Si el spike no compila con Node 22, no mantiene alineación, no libera recursos
-  o no alcanza 30 FPS en el equipo de referencia, se implementa un custom layer
-  WebGL mínimo bajo la misma interfaz.
-- Fallback runtime: flechas estáticas GeoJSON derivadas de una grilla reducida.
 
 ```typescript
 export interface WindRenderer {
   initialize(): Promise<void>;
   setField(field: WindField): void;
   setVisible(visible: boolean): void;
-  setQuality(quality: "high" | "medium" | "low"): void;
   resize(): void;
-  render(): void;
   destroy(): void;
 }
 ```
 
-`destroy()` cancela animation frames, elimina listeners y borra programas,
-buffers, texturas y framebuffers que pertenezcan al renderer.
+- Opción primaria: WeatherLayers GL encapsulada sobre MapLibre/WebGL2.
+- Si no supera compatibilidad, alineación, lifecycle o 30 FPS en el equipo
+  objetivo, se usa un custom layer WebGL2 mínimo bajo la misma interfaz.
+- Fallback runtime: flechas GeoJSON estáticas derivadas de una grilla reducida.
+- `destroy()` cancela RAF, elimina listeners y libera recursos WebGL propios.
+- No se modifica código vendorizado ni se expone control de quality.
 
-## Referencias de licencia y compatibilidad
+## Inventario mínimo de licencias
 
-- [MapLibre GL JS CustomLayerInterface](https://maplibre.org/maplibre-gl-js/docs/API/interfaces/CustomLayerInterface/)
-- [WeatherLayers GL — repositorio y licencia MPL-2.0](https://github.com/weatherlayers/weatherlayers-gl)
-- [WeatherLayers GL — compatibilidad](https://docs.weatherlayers.com/weatherlayers-gl)
-- [Natural Earth — términos de uso](https://www.naturalearthdata.com/about/terms-of-use/)
+| Recurso | Licencia elegida | Fuente |
+|---|---|---|
+| MapLibre GL JS | BSD-3-Clause | [LICENSE](https://github.com/maplibre/maplibre-gl-js/blob/main/LICENSE.txt) |
+| WeatherLayers GL, si supera el spike | MPL-2.0 | [Repositorio/licencia](https://github.com/weatherlayers/weatherlayers-gl) |
+| Natural Earth | Dominio público | [Terms of Use](https://www.naturalearthdata.com/about/terms-of-use/) |
+| Noto Sans | OFL-1.1 | [Repositorio](https://github.com/notofonts/noto-fonts) |
+| OurAirports | Dominio público | [Open Data](https://ourairports.com/data/) |
 
-Cada dependencia se instala con versión fijada en lockfile y se registra en el
-inventario de fase 00/06. El equipo no modifica código MPL vendorizado dentro
-del repositorio.
+Cada fase fija una versión en lockfile/asset y conserva avisos aplicables en
+`NOTICE.md`. WeatherLayers se consume como dependencia sin modificar ni copiar
+su código fuente; cualquier modificación futura a archivos MPL se revisa fuera
+del alcance de esta demo.
 
 ## Advertencia obligatoria
 
@@ -432,4 +499,4 @@ El copy exacto y permanente es:
 
 > **DATOS SIMULADOS — PROTOTIPO DEMOSTRATIVO — NO APTO PARA USO OPERACIONAL**
 
-Debe permanecer visible con el mapa cargando, en error y usando fallback.
+Debe permanecer visible durante loading, error y fallback.

@@ -1,88 +1,77 @@
-# Architecture — Aviation Weather Viewer MVP
+# Architecture — Demo visual meteorológica de Colombia
 
-> Memory Bank · actualizado 2026-08-19. Arquitectura objetivo aprobada; el
-> código actual sigue siendo el scaffold hasta ejecutar la fase 00.
+> Memory Bank · actualizado 2026-08-19. Arquitectura objetivo; la fase 00 aún
+> debe retirar el scaffold actual.
 
-## Vista de sistema objetivo
+## Vista del sistema
 
 ```mermaid
 flowchart LR
-    U[Usuario] --> N[Next.js / React / TypeScript]
-    N --> S[Zustand: estado único]
+    U[Reunión / usuario] --> N[Next.js + React]
+    N --> S[Zustand mínimo]
     S --> C[WeatherMapController]
-    C --> M[MapLibre GL JS]
-    M --> W[WebGL: partículas]
+    C --> M[MapLibre]
+    M --> W[WindRenderer WebGL]
     N --> A[Django REST /api/v1]
-    A --> P[(PostgreSQL + PostGIS)]
-    A --> F[Assets locales WebP + JSON U/V]
+    A --> P[(PostGIS: Airport)]
+    A --> F[Manifest + WebP + JSON U/V]
 ```
 
-- React controla paneles, timeline, leyenda y estados.
-- El store expresa intención/estado committed; no almacena MapLibre.
-- `WeatherMapController` conserva una instancia estable y recibe adapters.
-- MapLibre controla cámara, sources, layers e interacción geográfica.
-- WebGL mueve partículas en cliente; fallback usa flechas estáticas.
-- Django publica catálogo, frames, aeropuertos y metadata simulada.
-- PostGIS almacena puntos/coberturas; assets pesados viven en filesystem.
+- React compone controles/paneles; no controla internals cartográficos.
+- Zustand conserva solo intención visible y estados de carga/error.
+- Controller mantiene una instancia MapLibre y registra adapters.
+- MapLibre gestiona cámara, basemap, layers y eventos geográficos.
+- WebGL mueve partículas; flechas GeoJSON son fallback.
+- Django publica manifiesto, frames, aeropuertos y clima simulado.
+- PostGIS almacena únicamente puntos de aeropuerto.
 
-## Modelo de datos objetivo
+## Persistencia mínima
 
 ```mermaid
 erDiagram
-    DEMO_SCENARIO ||--o{ DEMO_WEATHER_FRAME : contains
-    DEMO_SCENARIO {
-        string code UK
-        date scenario_date
-        polygon bbox
-        boolean is_simulated
-    }
-    DEMO_WEATHER_FRAME {
-        string layer
-        datetime timestamp
-        string level
-        string data_path
-        polygon coverage
-        string sha256
-    }
     AIRPORT {
         string icao_code UK
         string iata_code
+        string name
+        string city
         point location
         int elevation_ft
     }
 ```
 
-No existe relación de partículas/celdas con la base de datos.
+Escenario, layers y frames viven en `manifest.json`. No hay modelos de frame,
+cobertura, partículas o celdas.
 
-## Flujo temporal atómico
+## Flujo de timestamp
 
 ```mermaid
 sequenceDiagram
-    participant UI as Timeline/UI
+    participant UI as Timeline
     participant O as ViewerOrchestrator
-    participant API as Django API
-    participant L as Layer adapters
+    participant API as Django
+    participant L as Active layer
     participant ST as Store
-    UI->>O: seleccionar timestamp
-    O->>O: abortar generación anterior
-    O->>API: cargar temperature + wind + airport weather
-    API-->>O: metadata/URLs simuladas
-    O->>L: stageFrame de todas las capas
-    O->>O: verificar generación activa
-    O->>L: commitFrame conjunto
-    O->>ST: committedTimestamp + ready
+    UI->>O: requestTimestamp(next)
+    O->>O: abort previous request
+    O->>API: active frame + selected airport weather
+    API-->>O: metadata/data
+    O->>L: setFrame
+    O->>ST: activeTimestamp = next
 ```
 
-Ante cualquier fallo se conserva completo el timestamp anterior.
+El frame anterior continúa visible durante loading. Si algo falla, no cambia el
+timestamp visible y se ofrece retry/reset. Como una sola capa meteorológica está
+activa, no existe doble buffer global ni cache LRU.
 
-## Basemap y assets
+## Basemap y composición
 
-- Style/GeoJSON Natural Earth bajo `frontend/public/map/`.
-- Meteorología bajo `backend/media/demo-weather/demo-colombia-001/`.
-- Ningún tile, glyph, sprite o API remoto durante la demostración.
-- Django/nginx expone assets same-origin y DB conserva rutas relativas.
+- Style/GeoJSON local bajo `frontend/public/map/`.
+- Cobertura y navegación limitadas a Colombia/contexto inmediato.
+- Meteorología versionada bajo `backend/media/demo-weather/demo-colombia-001/`.
+- Tema único oscuro; chrome translúcido y layout objetivo `1920×1080`.
+- Ningún tile, glyph, sprite, font o API remoto durante la reunión.
 
-## Separación frontend prevista
+## Separación frontend
 
 ```text
 frontend/
@@ -92,7 +81,6 @@ frontend/
 ├── lib/{services,stores,weather}/
 └── map/
     ├── WeatherMapController.ts
-    ├── adapters/
     ├── layers/{airport,temperature,wind}/
     └── renderers/wind/
 ```
@@ -101,19 +89,15 @@ frontend/
 
 ```mermaid
 flowchart LR
-    P0[Fase 00\nlimpieza/contratos] --> W1[Ola 1\nGIS core + API + datos]
-    W1 --> W2[Ola 2\nairports + temp + wind + controls]
-    W2 --> I[Fase 08\nintegración]
-    I --> H[Fase 09\nhardening]
-    H --> R[Fase 10\nrelease]
-    R -. P1 aceptado .-> O[P1 opcional]
+    P0[Fase 00\nlimpieza/visual] --> W1[Ola 1\nmapa + datos + viento]
+    W1 --> W2[Ola 2\nairports + temperatura + controles]
+    W2 --> I[Fase 07\nintegración/pulido]
+    I --> R[Fase 08\nvalidación/release]
 ```
-
-El índice/ownership exactos están en `docs/MVP_roadmap/phase_scopes/README.md`.
 
 ## Estado actual
 
-- `master` contiene el scaffold de comercio sin lógica meteorológica.
-- Fase 00 será la única limpieza transversal.
-- No existen todavía dominio, PostGIS operativo ni servicios demo.
-- Este paquete documental es el contrato para iniciar implementación.
+- `master` conserva el scaffold de comercio.
+- El paquete documental recortado vive en el PR de scopes.
+- No existen todavía dominio weather, PostGIS operativo ni visor.
+- La próxima ejecución autorizada es fase 00.

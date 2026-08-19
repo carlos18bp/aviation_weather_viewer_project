@@ -1,72 +1,80 @@
-# Product Requirement Docs — Aviation Weather Viewer MVP
+# Product Requirement Docs — Demo visual meteorológica de Colombia
 
-> Memory Bank · actualizado 2026-08-19. El código aún conserva lógica del
-> template; la ejecución del producto comienza por la fase 00.
+> Memory Bank · actualizado 2026-08-19. El código aún conserva el starter; la
+> ejecución comienza por la fase 00.
 
 ## Propósito
 
-Construir un prototipo funcional y comercial de un visor meteorológico
-aeronáutico sobre Colombia, inspirado en la experiencia de Windy sin copiar su
-identidad. Debe demostrar navegación GIS fluida, capas meteorológicas y una
-arquitectura evolucionable, no prestar un servicio operacional.
+Construir para la próxima reunión una muestra visual, funcional y comercial de
+un visor meteorológico aeronáutico sobre Colombia. Debe evidenciar que
+ProjectApp puede acercarse a la experiencia de Windy en poco tiempo mediante
+mapa protagonista, capas, partículas y timeline, sin presentarse como una
+plataforma operacional.
 
 ## Fuente de verdad
 
-1. [`docs/MVP_roadmap/mvp_roadmap.md`](../MVP_roadmap/mvp_roadmap.md): alcance
-   funcional y backlog original.
-2. [`00_shared_contracts.md`](../MVP_roadmap/phase_scopes/00_shared_contracts.md):
-   contratos congelados para implementación.
-3. [`phase_scopes/README.md`](../MVP_roadmap/phase_scopes/README.md): orden,
-   ownership y gates de ejecución.
+1. [`mvp_roadmap.md`](../MVP_roadmap/mvp_roadmap.md) conserva el levantamiento amplio.
+2. [`00_shared_contracts.md`](../MVP_roadmap/phase_scopes/00_shared_contracts.md)
+   congela los contratos mínimos.
+3. [`phase_scopes/README.md`](../MVP_roadmap/phase_scopes/README.md) es la guía
+   ejecutable de olas, ownership y gates para la reunión.
 
-Los scopes proyectan el roadmap; no lo sustituyen ni amplían P0.
+Cuando el roadmap incluya una capacidad retirada por los scopes, prevalece el
+recorte ejecutable para esta demo.
 
-## Usuario y recorrido P0
+## Usuario y recorrido
 
-El usuario principal participa en una reunión de validación. Puede abrir el
-visor, reconocer la advertencia, navegar Colombia, seleccionar un aeropuerto,
-alternar temperatura/viento, observar partículas, recorrer seis timestamps UTC,
-consultar leyenda/hora y reiniciar la demostración.
+El usuario es una persona presente en la reunión. Abre la URL a `1920×1080`, ve
+Colombia con viento animado, reconoce la advertencia, selecciona un aeropuerto,
+cambia a temperatura, recorre/reproduce seis timestamps y reinicia la muestra.
 
-## Alcance obligatorio P0
+## Alcance obligatorio
 
-- mapa fullscreen local, zoom, pan y aeropuertos principales;
-- selección y panel de aeropuerto;
+- mapa fullscreen oscuro, limitado a Colombia, con zoom y pan;
+- seis aeropuertos principales y panel meteorológico simulado;
 - temperatura WebP y viento U/V con partículas WebGL;
 - seis timestamps, timeline, play/pausa/anterior/siguiente;
-- selector, leyenda, UTC, loading, error y reset;
-- warning permanente de simulación/no operacional;
-- Django/DRF, PostgreSQL/PostGIS y archivos locales determinísticos;
-- fallback de viento, ejecución local y URL HTTPS;
-- presentación sin APIs o assets externos.
+- selector de dos capas, leyenda, UTC, loading, error y reset;
+- warning permanente y backend marcado como simulado/no operacional;
+- Django/DRF y PostGIS mínimo para aeropuertos;
+- manifiesto y assets locales, determinísticos y versionados;
+- fallback estático de viento, ejecución local y URL HTTPS;
+- una sola dirección visual oscura inspirada en Windy, con identidad propia.
 
-## Opcionales P1
+## Fuera de este plan
 
-Solo después de aceptar P0: búsqueda ICAO/nombre, picker por coordenada,
-opacidad, perfiles gráficos, móvil básico, transiciones/modo oscuro, estado en
-URL y cobertura E2E ampliada.
+No se implementan autenticación, CAPTCHA, comercio, dark/light mode, búsqueda,
+picker por coordenada, control de opacidad, perfiles gráficos, responsive móvil,
+estado compartible en URL, datos oficiales, radar, satélite, METAR/TAF/SIGMET,
+GRIB/NetCDF ni infraestructura productiva avanzada.
 
-## Fuera del alcance
-
-Datos oficiales, Aerocivil APIs, autenticación, usuarios/roles, Redis, radar,
-satélite, METAR/TAF/SIGMET, GRIB2/NetCDF, modelos o niveles múltiples, histórico,
-pronóstico real, alertas, reportes/descargas, infraestructura productiva/HA,
-auditoría institucional y aplicación nativa.
+Tampoco se crean `DemoScenario`, `DemoWeatherFrame`, filtros bbox, consultas de
+aeropuerto cercano o polígonos de cobertura: no aportan valor visible al guion.
 
 ## Reglas no negociables
 
 - Copy permanente: **DATOS SIMULADOS — PROTOTIPO DEMOSTRATIVO — NO APTO PARA
   USO OPERACIONAL**.
-- API meteorológica siempre incluye `is_simulated: true` y
-  `operational_use: false`.
-- React no dibuja partículas; Django no transmite posiciones animadas.
+- API meteorológica incluye `is_simulated: true` y `operational_use: false`.
+- React no dibuja partículas ni guarda la instancia MapLibre.
+- Django entrega campos; WebGL anima en el navegador.
 - MapLibre se inicializa una vez detrás de `WeatherMapController`.
-- Un cambio temporal hace commit atómico de mapa, panel, hora y leyenda.
-- Matrices/imágenes viven como archivos, no como filas/celdas Postgres.
-- El demo funciona con datos/basemap same-origin y determinísticos.
+- Solo una capa meteorológica está visible; panel y timestamp visible coinciden.
+- Imágenes/matrices viven en filesystem, no en PostgreSQL.
+- La demostración funciona sin APIs/tiles meteorológicos externos.
 
-## Definición de listo P0
+## Prioridad ante recortes
 
-Todos los RF-001–RF-030 y RNF-001–RNF-018 tienen una fase primaria en el índice
-de scopes. P0 se acepta únicamente después de fase 10: URL/local, fallback,
-pruebas, objetivo de 30 FPS, diez minutos estables y dos ensayos.
+1. viento animado;
+2. temperatura;
+3. timeline/selector;
+4. aeropuertos/panel;
+5. acabados secundarios.
+
+Warning, mapa estable y fallback nunca se recortan.
+
+## Definición de listo
+
+La demo se acepta después de fase 08: vertical slice funcional, un E2E desktop,
+builds verdes, Chrome/Edge a `1920×1080`, objetivo cercano a 30 FPS, diez
+minutos estables, URL HTTPS, ejecución local y contingencia ensayada.

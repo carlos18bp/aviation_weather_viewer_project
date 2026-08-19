@@ -1,9 +1,14 @@
-# Scopes de ejecución por fases — Aviation Weather Viewer MVP
+# Scopes de ejecución — Demo visual meteorológica de Colombia
 
-Este directorio convierte [`mvp_roadmap.md`](../mvp_roadmap.md) en unidades de
-trabajo que pueden asignarse a sesiones independientes. El roadmap original
-continúa siendo la fuente funcional; estos archivos definen cómo ejecutarlo sin
-mezclar ownership ni obligar a que varias ramas editen la composición central.
+Este directorio convierte [`mvp_roadmap.md`](../mvp_roadmap.md) en un plan
+ejecutable para la próxima reunión. El roadmap conserva el levantamiento amplio;
+estos scopes son el subconjunto que se construirá ahora: una muestra visual,
+funcional y convincente de la capacidad de ProjectApp.
+
+La prioridad no es completar una plataforma operacional. La prioridad es que,
+al abrir la URL, el cliente reconozca una experiencia meteorológica moderna,
+fluida e inspirada en Windy, limitada a Colombia y construida con identidad
+propia.
 
 ## Cómo usar este paquete
 
@@ -14,60 +19,57 @@ Cada sesión recibe exactamente:
 3. el archivo de su fase;
 4. las instrucciones `AGENTS.md` del repositorio.
 
-Una sesión no debe implementar requisitos de otra fase aunque parezcan cambios
-pequeños. Si detecta una necesidad fuera de su scope, la documenta en el handoff
-de su PR. La fase de integración resolverá el cableado compartido.
+Una sesión implementa únicamente su scope. Si necesita cambiar un contrato o
+un archivo de otra fase, lo registra en el handoff de su PR; la fase de
+integración realiza el cableado compartido.
 
-## Reglas de ejecución
+## Prioridad de producto
+
+Si una restricción de tiempo obliga a recortar, se protege este orden:
+
+1. viento animado alineado con el mapa;
+2. temperatura continua sobre Colombia;
+3. timeline y selector de capas;
+4. aeropuertos y panel compacto;
+5. acabados secundarios.
+
+No se sacrificarán la advertencia de simulación, la estabilidad del mapa ni el
+fallback de viento.
+
+## Reglas de ejecución paralela
 
 - Una fase equivale a una sesión, rama, worktree y PR.
-- Cada ola parte del mismo commit de `master`, después de integrar por completo
-  la ola anterior.
-- Las fases de una misma ola no dependen entre sí.
-- No se inicia una ola posterior con PRs pendientes de una ola anterior.
-- Los paths marcados como exclusivos no pueden ser modificados por otra fase de
-  la misma ola.
-- `frontend/app/page.tsx`, el store central y `WeatherMapController` solo pueden
-  ser cableados por las fases que los tienen asignados explícitamente.
-- El primer push debe abrir el PR con las líneas `Sesión:` e `Intención:` que
-  exige `AGENTS.md`.
-- La integración de varias ramas se drena con `merge-queue`; ninguna sesión
-  reutiliza la rama de otra.
+- Cada ola parte del mismo commit de `master`, después de integrar la ola previa.
+- Las fases de una misma ola no tienen dependencias entre sí.
+- No se abre una ola posterior mientras queden PRs pendientes de la anterior.
+- Los paths exclusivos de una fase no se modifican desde otra fase de la misma ola.
+- Las fases 04–06 entregan componentes/adapters sin editar la composición central.
+- Las fases 07 y 08 son secuenciales porque integran y validan trabajo compartido.
+- Varias ramas se integran con `merge-queue`; nunca se reutiliza una rama ajena.
 
 ## Mapa de olas
 
-| Ola | Fases ejecutables | Gate para comenzar | Paralelismo |
+| Ola | Fases | Gate de entrada | Paralelismo |
 |---|---|---|---:|
-| 0 | Fase 00 — baseline del producto | Roadmap aprobado | 1 |
-| 1 | Fases 01, 02 y 03 | Fase 00 integrada | 3 |
-| 2 | Fases 04, 05, 06 y 07 | Toda la ola 1 integrada | 4 |
-| 3 | Fase 08 — integración vertical | Toda la ola 2 integrada | 1 |
-| 4 | Fase 09 — resiliencia y rendimiento | Fase 08 integrada | 1 |
-| 5 | Fase 10 — validación y despliegue | Fase 09 integrada | 1 |
-| 6 (P1) | Fases 11 y 12 | MVP P0 aceptado | 2 |
-| 7 (P1) | Fase 13 | Toda la ola 6 integrada | 1 |
-
-Las olas 6 y 7 son opcionales. No forman parte de la definición de listo del MVP
-P0 ni pueden retrasar su presentación.
+| 0 | 00 — limpieza y dirección visual | Este paquete aprobado | 1 |
+| 1 | 01 mapa, 02 backend/datos, 03 viento | Fase 00 integrada | 3 |
+| 2 | 04 aeropuertos, 05 temperatura, 06 controles | Ola 1 integrada | 3 |
+| 3 | 07 — integración y acabado | Ola 2 integrada | 1 |
+| 4 | 08 — entrega de la demo | Fase 07 integrada | 1 |
 
 ## Índice de fases
 
 | Fase | Archivo | Entrega principal |
 |---:|---|---|
-| 00 | [`01_phase_00_template_baseline.md`](01_phase_00_template_baseline.md) | Template limpio, identidad y contratos listos |
-| 01 | [`02_phase_01_frontend_gis_foundation.md`](02_phase_01_frontend_gis_foundation.md) | Mapa estable, controller, store y puertos GIS |
-| 02 | [`03_phase_02_backend_geospatial_api.md`](03_phase_02_backend_geospatial_api.md) | PostGIS, modelos y API pública v1 |
-| 03 | [`04_phase_03_simulated_weather_pipeline.md`](04_phase_03_simulated_weather_pipeline.md) | Seis frames determinísticos versionados |
-| 04 | [`05_phase_04_airports_experience.md`](05_phase_04_airports_experience.md) | Aeropuertos seleccionables y panel |
-| 05 | [`06_phase_05_temperature_visualization.md`](06_phase_05_temperature_visualization.md) | Campo de temperatura georreferenciado |
-| 06 | [`07_phase_06_wind_webgl.md`](07_phase_06_wind_webgl.md) | Partículas WebGL y fallback |
-| 07 | [`08_phase_07_viewer_controls.md`](08_phase_07_viewer_controls.md) | Timeline, selector, leyenda, warning y reset |
-| 08 | [`09_phase_08_vertical_integration.md`](09_phase_08_vertical_integration.md) | Vertical slice sincronizado de punta a punta |
-| 09 | [`10_phase_09_resilience_performance.md`](10_phase_09_resilience_performance.md) | Rendimiento, memoria y recuperación |
-| 10 | [`11_phase_10_validation_deployment.md`](11_phase_10_validation_deployment.md) | URL, HTTPS, pruebas y ensayo demostrativo |
-| 11 | [`12_phase_11_p1_search_picker.md`](12_phase_11_p1_search_picker.md) | Búsqueda y picker opcionales |
-| 12 | [`13_phase_12_p1_visual_controls.md`](13_phase_12_p1_visual_controls.md) | Controles gráficos y responsive opcionales |
-| 13 | [`14_phase_13_p1_url_state.md`](14_phase_13_p1_url_state.md) | Estado compartible por URL |
+| 00 | [`01_phase_00_cleanup_visual_freeze.md`](01_phase_00_cleanup_visual_freeze.md) | Starter limpio y dirección visual congelada |
+| 01 | [`02_phase_01_map_shell.md`](02_phase_01_map_shell.md) | Mapa fullscreen, controller y store mínimo |
+| 02 | [`03_phase_02_minimal_backend_demo_data.md`](03_phase_02_minimal_backend_demo_data.md) | API mínima, PostGIS y assets determinísticos |
+| 03 | [`04_phase_03_wind_renderer.md`](04_phase_03_wind_renderer.md) | Partículas WebGL encapsuladas y fallback |
+| 04 | [`05_phase_04_airports.md`](05_phase_04_airports.md) | Aeropuertos seleccionables y panel |
+| 05 | [`06_phase_05_temperature.md`](06_phase_05_temperature.md) | Campo térmico y leyenda |
+| 06 | [`07_phase_06_controls.md`](07_phase_06_controls.md) | Timeline, selector, UTC, warning y reset |
+| 07 | [`08_phase_07_integration_visual_polish.md`](08_phase_07_integration_visual_polish.md) | Vertical slice y acabado Windy-inspired |
+| 08 | [`09_phase_08_demo_release.md`](09_phase_08_demo_release.md) | Verificación, URL y ensayo de reunión |
 
 ## Ownership por ola
 
@@ -75,92 +77,82 @@ P0 ni pueden retrasar su presentación.
 
 | Fase | Ownership exclusivo |
 |---|---|
-| 01 | `frontend/map/`, `frontend/lib/stores/weatherViewerStore.ts`, shell del visor |
-| 02 | `backend/weather/` excepto `generators/` y `management/commands/generate_demo_weather.py` |
-| 03 | `backend/weather/generators/`, comando generador y `backend/media/demo-weather/` |
+| 01 | `frontend/map/`, `frontend/lib/stores/weatherViewerStore.ts`, shell base del visor |
+| 02 | `backend/weather/`, `backend/media/demo-weather/` y configuración PostGIS |
+| 03 | `frontend/map/renderers/wind/`, `frontend/map/layers/wind/` y fixture U/V de tests |
+
+La fase 03 usa el fixture U/V congelado en contratos; no espera assets de fase
+02. La fase 07 reemplaza el fixture por las URLs reales.
 
 ### Ola 2
 
 | Fase | Ownership exclusivo |
 |---|---|
 | 04 | `frontend/features/airports/`, `frontend/components/weather/AirportPanel/`, `frontend/map/layers/airport/` |
-| 05 | `frontend/features/weather/temperature/`, `frontend/map/layers/temperature/` |
-| 06 | `frontend/features/weather/wind/`, `frontend/map/layers/wind/`, `frontend/map/renderers/wind/` |
-| 07 | `frontend/features/timeline/` y controles en `frontend/components/weather/` no asignados a AirportPanel |
+| 05 | `frontend/features/weather/temperature/`, `frontend/map/layers/temperature/`, leyenda térmica |
+| 06 | `frontend/features/timeline/` y controles bajo `frontend/components/weather/` no asignados a otras fases |
 
-Las fases de ola 2 entregan módulos y adapters aislados. No los registran en la
-página ni modifican el store/controller compartido.
+## Requerimientos primarios
 
-## Matriz canónica de requerimientos P0
-
-“Primaria” significa que esa fase es responsable de demostrar y probar el
-requerimiento. Otras fases pueden consumir el comportamiento sin duplicar su
-ownership.
-
-| Fase primaria | Requerimientos funcionales |
+| Fase | Requerimientos funcionales |
 |---|---|
 | 01 | RF-001, RF-002, RF-003 |
+| 02 | RF-025, RF-026, RF-027, RF-028, RF-029 |
+| 03 | RF-009, RF-010, RF-023 |
 | 04 | RF-004, RF-005, RF-006, RF-007 |
 | 05 | RF-008 |
-| 06 | RF-009, RF-010, RF-023 |
-| 07 | RF-011, RF-012, RF-013, RF-014, RF-015, RF-016, RF-017, RF-018, RF-019, RF-020, RF-024 |
-| 08 | RF-021, RF-022, RF-030 |
-| 03 | RF-025 |
-| 02 | RF-026, RF-027, RF-028, RF-029 |
+| 06 | RF-011, RF-012, RF-013, RF-014, RF-015, RF-016, RF-017, RF-018, RF-019, RF-020, RF-024 |
+| 07 | RF-021, RF-022, RF-030 |
 
-| Fase primaria | Requerimientos no funcionales |
+| Fase | Requerimientos no funcionales |
 |---|---|
-| 09 | RNF-001, RNF-002, RNF-003, RNF-004 |
-| 01 | RNF-005, RNF-006, RNF-011, RNF-015 |
-| 03 | RNF-007 |
-| 10 | RNF-008, RNF-009, RNF-012 |
-| 07 | RNF-010 |
 | 00 | RNF-013, RNF-014 |
-| 02 | RNF-016 |
-| 06 | RNF-017 |
-| 08 | RNF-018 |
+| 01 | RNF-005, RNF-006, RNF-011, RNF-015 |
+| 02 | RNF-007, RNF-016 |
+| 03 | RNF-017 |
+| 06 | RNF-010, RNF-018 |
+| 08 | RNF-001, RNF-002, RNF-003, RNF-004, RNF-008, RNF-009, RNF-012 |
 
 ## Gates entre olas
 
 ### Gate de ola 0
 
-- template de comercio retirado;
-- frontend y backend compilan/arrancan con un placeholder;
-- PostgreSQL/PostGIS y CI preparados;
-- contratos de este directorio sin decisiones abiertas.
+- no quedan rutas, dependencias, copy ni servicios funcionales del template;
+- existe un único tema oscuro aeronáutico, sin theme switcher;
+- frontend y backend compilan/arrancan con placeholders;
+- composición `1920×1080` y contratos quedan congelados.
 
 ### Gate de ola 1
 
-- mapa local navegable con API de controller estable;
-- endpoints backend contract-tested;
-- archivos simulados reproducibles y con checksums;
-- cada PR integrado sin alterar ownership de otra fase.
+- mapa local navegable dentro de Colombia;
+- API mínima y assets determinísticos verificados;
+- renderer de viento funciona con fixture o activa fallback;
+- cada PR respeta ownership y puede probarse aislado.
 
 ### Gate de ola 2
 
-- módulos de aeropuerto, temperatura, viento y controles probados en aislamiento;
-- ningún módulo depende de imports privados de otro módulo de ola 2;
-- cada módulo entrega un adapter o callback documentado para la fase 08.
+- aeropuertos, temperatura y controles funcionan como módulos aislados;
+- ningún módulo importa internals de otra fase de la ola;
+- cada fase entrega props, callbacks o adapter para fase 07.
 
-### Gate de MVP P0
+### Gate de demo
 
-- vertical slice completo y sincronizado;
-- validación de rendimiento y memoria aprobada;
-- ejecución local y URL HTTPS verificadas;
-- demostración funcional sin llamadas externas;
-- advertencia de simulación siempre visible;
-- fallback de viento probado;
+- vertical slice completo en Chrome/Edge a `1920×1080`;
+- temperatura, viento y panel reflejan el timestamp visible;
+- advertencia permanente y fallback probados;
+- ejecución local y URL HTTPS sin APIs/tiles meteorológicos externos;
 - ensayo continuo de diez minutos sin errores críticos.
+
+## Fuera de este plan
+
+No se crean fases futuras para búsqueda, picker por coordenada, control de
+opacidad, selector de calidad, responsive móvil, dark/light mode, persistencia
+en URL, autenticación ni módulos del starter. Si el cliente valida la muestra,
+esas capacidades se priorizarán en un roadmap posterior.
 
 ## Política de cambios al contrato
 
-Si una fase detecta que `00_shared_contracts.md` es inviable, no lo modifica en
-su rama. Debe registrar en el PR:
-
-1. contrato afectado;
-2. evidencia reproducible;
-3. cambio mínimo propuesto;
-4. fases impactadas.
-
-El cambio se resuelve y se integra antes de abrir la siguiente ola. Nunca se
-mantienen dos contratos incompatibles entre ramas paralelas.
+Una fase no modifica [`00_shared_contracts.md`](00_shared_contracts.md) en su
+rama. Si encuentra un bloqueo, documenta contrato, evidencia, cambio mínimo e
+impacto. La corrección se integra antes de abrir la siguiente ola; nunca se
+mantienen contratos incompatibles entre sesiones paralelas.

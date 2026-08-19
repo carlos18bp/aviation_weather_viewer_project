@@ -1,4 +1,4 @@
-# Tasks Plan — Aviation Weather Viewer MVP
+# Tasks Plan — Demo visual meteorológica de Colombia
 
 > Memory Bank · actualizado 2026-08-19. Fuente operativa:
 > `docs/MVP_roadmap/phase_scopes/README.md`.
@@ -7,53 +7,48 @@
 
 | Ola | Fases | Estado | Condición de salida |
 |---|---|---|---|
-| Documentación | scopes + contratos | ✅ completa | PR integrado |
-| 0 | 00 baseline | ⏳ pendiente | template limpio, contracts/build/checks |
-| 1 | 01 GIS, 02 API, 03 datos | bloqueada | tres PRs integrados |
-| 2 | 04 airports, 05 temp, 06 wind, 07 controls | bloqueada | cuatro PRs integrados |
-| 3 | 08 integración | bloqueada | vertical slice P0 |
-| 4 | 09 hardening | bloqueada | performance/memoria aprobados |
-| 5 | 10 release | bloqueada | URL/local/tests/ensayos aprobados |
-| 6 P1 | 11 search/picker, 12 graphics | bloqueada P1 | ambos PRs integrados |
-| 7 P1 | 13 URL/integración | bloqueada P1 | P1 verificado |
+| Documentación | scopes + contratos | ✅ revisada | PR integrado |
+| 0 | 00 limpieza/visual | ⏳ pendiente | starter limpio y baseline verde |
+| 1 | 01 mapa, 02 backend/datos, 03 viento | bloqueada | tres PRs integrados |
+| 2 | 04 aeropuertos, 05 temperatura, 06 controles | bloqueada | tres PRs integrados |
+| 3 | 07 integración/pulido | bloqueada | vertical slice visual |
+| 4 | 08 validación/release | bloqueada | demo desplegada y ensayada |
 
-## Backlog ejecutable P0
+## Backlog ejecutable
 
-- [ ] Fase 00 — baseline del producto y limpieza del template.
-- [ ] Fase 01 — frontend GIS foundation.
-- [ ] Fase 02 — backend geoespacial/API.
-- [ ] Fase 03 — pipeline simulado.
-- [ ] Fase 04 — experiencia de aeropuertos.
-- [ ] Fase 05 — visualización de temperatura.
-- [ ] Fase 06 — viento WebGL/fallback.
-- [ ] Fase 07 — controles/timeline.
-- [ ] Fase 08 — integración vertical.
-- [ ] Fase 09 — resiliencia/rendimiento.
-- [ ] Fase 10 — validación/despliegue/ensayo.
-
-## Backlog P1 bloqueado
-
-- [ ] Fase 11 — búsqueda/picker.
-- [ ] Fase 12 — controles gráficos/responsive.
-- [ ] Fase 13 — estado URL e integración P1.
+- [ ] Fase 00 — limpiar starter y congelar dirección visual.
+- [ ] Fase 01 — mapa Colombia, shell, controller y store.
+- [ ] Fase 02 — API mínima, PostGIS y datos simulados.
+- [ ] Fase 03 — renderer de viento WebGL y fallback.
+- [ ] Fase 04 — aeropuertos y panel meteorológico.
+- [ ] Fase 05 — temperatura y metadata de leyenda.
+- [ ] Fase 06 — timeline y controles del visor.
+- [ ] Fase 07 — integración vertical y acabado visual.
+- [ ] Fase 08 — E2E, rendimiento, despliegue y ensayo.
 
 ## Gates operativos
 
-- Una ola nueva parte de `master` después de integrar la anterior.
-- Cada fase usa rama/worktree/PR propio y paths exclusivos.
-- Las ramas de ola 2 no editan composición central.
-- P1 requiere aceptación P0 documentada por el operador.
-- Fase 10 requiere dominio, equipo y resolución de referencia.
+- Una ola parte de `master` solo después de integrar la anterior.
+- Una fase usa su propia rama/worktree/PR y respeta ownership.
+- Fases 04–06 no editan página, store o controller.
+- Fase 07 es el único wiring compartido.
+- Fase 08 no añade features; solo corrige bloqueos de aceptación.
+
+## Recortes congelados
+
+No hay backlog P1 dentro de esta ejecución. Quedan fuera search, picker,
+opacity, quality, mobile, dark/light, URL state, auth, comercio y backend no
+consumido por el guion.
 
 ## Riesgos abiertos
 
-1. GeoDjango/PostGIS y GEOS/GDAL aún no validados en este repo.
-2. WeatherLayers/WebGL2 debe pasar el spike de lifecycle/FPS.
-3. Dominio y servicios demo no existen todavía.
-4. El basemap local debe verificarse completamente sin red.
-5. La lógica del template sigue presente hasta fase 00.
+1. Limpieza amplia del template en fase 00.
+2. GEOS/GDAL/PostGIS aún no validados.
+3. WeatherLayers/WebGL debe superar el gate de fase 03.
+4. Basemap/meteorología deben funcionar sin red externa.
+5. Equipo `1920×1080`, URL y HTTPS deben confirmarse para fase 08.
 
-## Deuda del template
+## Deuda deliberada
 
-Los issues de funcionalidades heredadas del antiguo Memory Bank no son backlog
-del producto: esas features se retiran en fase 00. Su evidencia queda en Git.
+La muestra no pretende ser operacional ni production-ready. Todo hallazgo no
+bloqueante se registra después de la reunión y no reabre el alcance actual.

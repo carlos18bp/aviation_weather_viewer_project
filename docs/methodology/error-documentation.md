@@ -26,8 +26,10 @@ ha comenzado.
 
 ## Riesgos registrados, no errores
 
-- El código actual sigue siendo el template; fase 00 realiza la conversión.
-- No existe dominio ni PostGIS operativo; son gates explícitos de fases 00/10.
-- WebGL/partículas se decide mediante el spike objetivo de fase 06.
+- El código actual sigue siendo el template; fase 00 hace la limpieza completa.
+- GeoDjango/PostGIS y GEOS/GDAL aún no fueron validados en este repo.
+- WeatherLayers/WebGL2 debe superar el gate de fase 03 o usar custom layer.
+- Basemap y assets deben comprobarse sin red externa.
+- Dominio, HTTPS y equipo de reunión se validan en fase 08.
 
-Los riesgos no se promueven a error hasta tener un fallo reproducible.
+Un riesgo solo se promueve a error cuando exista un fallo reproducible.
