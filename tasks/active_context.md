@@ -1,52 +1,46 @@
-# Active Context — Aviation Weather Viewer
+# Contexto activo — Fase 00
 
-> Memory Bank · actualizado 2026-08-19. Refrescar al cerrar cada sesión significativa.
+Actualizado: 2026-08-19.
 
-## Foco actual
+## Objetivo actual
 
-Plan de ejecución visual-first para la próxima reunión:
+Cerrar la limpieza del starter y dejar una base mínima verificable para la demo
+meteorológica de Colombia.
 
-1. ✅ Roadmap amplio versionado.
-2. ✅ Double check: la necesidad real es una demo visual de Colombia.
-3. ✅ Backend, frontend y contratos recortados a lo visible/necesario.
-4. ✅ Nueve fases organizadas en cinco olas con máximo tres sesiones paralelas.
-5. ⏳ Próxima ejecución: fase 00.
+## Coordenada Git
 
-## Decisiones activas
+- Base resuelta: `master`.
+- SHA base: `c677fcc6e611425cc0691296c069cbea44bb2b24`.
+- Rama: `feat/19082026-phase-00-visual-foundation`.
+- Worktree: `~/webapps/.wt/aviation_weather_viewer_project/phase-00-visual-foundation`.
+- Gate: PR documental #2 integrado y contenido en la base.
 
-- Objetivo: impresionar visualmente, no completar un MVP convencional.
-- Tema único oscuro aeronáutico; no existe dark/light mode.
-- Target formal: Chrome/Edge `1920×1080`.
-- Default visible: viento `06Z` sobre Colombia.
-- Django/DRF/PostGIS permanecen, con `Airport` como único modelo de dominio.
-- Manifiesto local reemplaza modelos de escenario/frame.
-- Dataset fijo: seis WebP, seis U/V y treinta y seis condiciones curadas.
-- Django solo sirve artefactos; no hay generación o aleatoriedad en runtime.
-- La experiencia sigue siendo dinámica por timeline, frames y WebGL.
-- WeatherLayers es opción primaria, encapsulada y gateada por fase 03.
-- Solo fase 07 integra store/controller/página.
-- Search, picker, opacity, quality, mobile y URL state están fuera del plan.
+## Cambios implementados
 
-## Cambios recientes
+- Starter funcional de comercio, auth y attachments eliminado.
+- Backend reducido a `aviation_weather_project` + `weather` + health.
+- PostGIS configurado como único motor local/CI.
+- Frontend reducido a una raíz fullscreen estática con identidad y warning.
+- Dependencias y lockfiles reducidos; MapLibre/psycopg fijados.
+- CI, `.env.example`, `.gitignore`, NOTICE y guías actualizados.
+- Ecosistemas Claude/Codex/Windsurf sincronizados desde guía compartida.
 
-- Eliminadas las tres fases P1.
-- Fusionados backend geoespacial y generador en una sola fase mínima.
-- Fusionados hardening, QA, performance y deployment en la fase de release.
-- Simplificados API, store, controller, renderer y flujo de timestamp.
-- Sustituidas catorce fases por nueve scopes visual-first.
-- Congelada la estrategia “datos fijos, experiencia dinámica”, con contingencia
-  de autoría manual validada si el generador amenaza la fecha de reunión.
-- Actualizado Memory Bank con el alcance de reunión.
+## Verificación completada
 
-## Estado real del código
+- `python manage.py check`: 0 issues.
+- `SELECT PostGIS_Full_Version()`: PostgreSQL 16 / PostGIS 3.4.2.
+- `pytest weather/tests/test_health.py -v`: 4 passed.
+- `npm test -- app/__tests__/page.test.tsx`: 3 passed.
+- `npm run build`: compilación y prerender de `/` correctos con Next 16.3.1.
+- `npm audit`: 0 vulnerabilidades.
+- Auditoría `rg`: 0 rutas, imports, copy o dependencias funcionales del starter.
+- Flow audit: 1 flow exento deliberadamente, 0 missing, 0 junk-only.
 
-El visor todavía no está implementado. `master` conserva el starter de comercio;
-ninguna fase funcional está Done hasta ejecutar sus criterios.
+## Cierre pendiente
 
-## Próximos pasos
+Commit, push y PR contra `master`; no hacer merge.
 
-1. Integrar el PR documental revisado.
-2. Ejecutar fase 00 en una nueva sesión/worktree.
-3. Integrar fase 00 y abrir en paralelo fases 01, 02 y 03.
-4. Drenar ola 1 antes de abrir fases 04, 05 y 06.
-5. Reservar fase 07 para integración y fase 08 para release, sin features nuevas.
+## Límites activos
+
+No implementar mapa, aeropuertos, assets meteorológicos, viento, temperatura,
+timeline, paneles funcionales, selector de tema ni responsive avanzado.

@@ -1,39 +1,40 @@
----
-trigger: manual
-description: Registro de errores conocidos y resoluciones del Aviation Weather Viewer.
----
+# Documentación de errores y resoluciones
 
-# Error Documentation — Aviation Weather Viewer
+## 2026-08-19 — Cluster PostgreSQL registrado sin directorio de datos
 
-> Memory Bank · actualizado 2026-08-19.
+### Síntoma
 
-## Formato
+Después de instalar PostgreSQL 16, `pg_lsclusters` mostraba `16/main` detenido,
+con owner desconocido, y `/var/lib/postgresql/16/main` no existía.
 
-```text
-### [ERROR-NNN] Descripción corta
-- Fecha
-- Contexto
-- Causa raíz
-- Resolución
-- Archivos afectados
-- Test de regresión
-```
+### Causa
 
-## Errores conocidos
+El host conservaba configuración de paquetes de una instalación anterior, pero
+no conservaba un data directory ni datos recuperables.
 
-No hay errores de producto documentados: la implementación meteorológica aún no
-ha comenzado.
+### Resolución
 
-## Riesgos registrados, no errores
+La configuración residual se movió de forma recuperable a
+`/var/tmp/postgresql-16-main-stale-20260819`. Luego se creó un cluster limpio
+`16/main`, se creó la base local y se habilitó PostGIS como superusuario.
 
-- El código actual sigue siendo el template; fase 00 hace la limpieza completa.
-- GeoDjango/PostGIS y GEOS/GDAL aún no fueron validados en este repo.
-- WeatherLayers/WebGL2 debe superar el gate de fase 03 o usar custom layer.
-- Basemap y assets deben comprobarse sin red externa.
-- La contingencia de assets manuales puede introducir pares faltantes o datos
-  incoherentes; fase 02 valida doce frames y las treinta y seis combinaciones.
-- Cualquier generación meteorológica en startup/request viola el contrato de
-  repetibilidad y debe tratarse como bloqueo de release.
-- Dominio, HTTPS y equipo de reunión se validan en fase 08.
+### Verificación
 
-Un riesgo solo se promueve a error cuando exista un fallo reproducible.
+- Cluster online en puerto 5432.
+- `SELECT PostGIS_Full_Version()` devuelve PostGIS 3.4.2 sobre PostgreSQL 16.
+- GDAL 3.8.4 y GEOS 3.12.1 disponibles.
+
+## 2026-08-19 — El owner no puede instalar la extensión PostGIS
+
+### Síntoma
+
+El primer `CREATE EXTENSION postgis` ejecutado como owner de la base devolvió
+`permission denied`.
+
+### Resolución
+
+PostGIS se habilitó una sola vez con el rol administrador `postgres`. El rol de
+aplicación conserva privilegios mínimos y puede usar la extensión sin ser
+superusuario.
+
+No hay errores de producto conocidos pendientes en Fase 00.

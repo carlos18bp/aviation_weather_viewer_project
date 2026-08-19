@@ -1,88 +1,79 @@
-# Technical — Demo visual meteorológica de Colombia
+# Referencia técnica — Aviation Weather Viewer
 
-> Memory Bank · actualizado 2026-08-19. Las versiones finales se fijan durante
-> fases 00 y 03.
+## Versiones fijadas
 
-## Stack congelado
+| Tecnología | Versión |
+|---|---:|
+| Python | 3.12 |
+| Django | 6.0.5 |
+| Django REST framework | 3.17.1 |
+| psycopg / psycopg-binary | 3.3.4 |
+| PostgreSQL | 16.14 local; 16 en CI |
+| PostGIS | 3.4.2 local; imagen CI `postgis/postgis:16-3.4` |
+| GDAL | 3.8.4 local |
+| GEOS | 3.12.1 local |
+| Next.js | 16.3.1 |
+| React / React DOM | 19.2.6 |
+| Zustand | 5.0.13 |
+| MapLibre GL JS | 6.3.0 |
 
-| Capa | Decisión |
-|---|---|
-| Frontend | Next.js existente + React + TypeScript |
-| Estado | Zustand mínimo |
-| Cartografía | MapLibre GL JS |
-| Meteorología | WebGL2 detrás de `WindRenderer` |
-| Backend | Django 6 + Django REST Framework |
-| Geográfico | GeoDjango + PostgreSQL/PostGIS |
-| Temperatura | WebP RGBA local |
-| Viento | JSON U/V `128×160` local |
-| Tests | pytest, Jest/Testing Library y un E2E Playwright |
+## Variables backend
 
-No se crea Vite paralelo ni se cambia el stack acordado.
+Obligatorias:
 
-## Estado previo a fase 00
+- `DJANGO_SECRET_KEY`
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_HOST`
 
-- Next.js 16.2.6, React 19.2.6 y Zustand 5.0.13.
-- Django 6.0.5 y DRF 3.17.1.
-- Comercio, auth, CAPTCHA, JWT, Redis/Huey, MySQL y themes siguen presentes.
-- MapLibre, PostGIS, app `weather` y assets demo aún no existen.
+Opcionales con default: `POSTGRES_PORT=5432`, `DJANGO_ENV=development`,
+`DJANGO_DEBUG=true` y `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1`.
 
-## Contratos técnicos
+Django rechaza valores vacíos y placeholders conocidos. No existe fallback a
+SQLite o MySQL.
 
-- Escenario `demo-colombia-001`, fecha `2026-01-15`.
-- Bbox `[-82, -5, -66, 14]`; seis timestamps 00Z–15Z.
-- Default `wind/06Z`, playback fijo `1500 ms`.
-- Cámara `[-73.5, 4.5]`, zoom `4.7`, límites regionales.
-- API pública same-origin bajo `/api/v1`, sin JWT ni slash final.
-- Store no contiene MapLibre, viewport, opacity, quality ni URL state.
-- Frame anterior permanece visible durante loading.
-- Cada adapter y renderer limpia recursos de forma idempotente.
+## Variable frontend
 
-Detalle completo: `docs/MVP_roadmap/phase_scopes/00_shared_contracts.md`.
+- `NEXT_PUBLIC_BACKEND_ORIGIN=http://localhost:8000`: origen usado por el
+  servidor Next.js para rewrites same-origin.
 
-## Renderer de viento
+## PostGIS local validado
 
-WeatherLayers GL es la opción primaria, encapsulada y sometida al gate de fase
-03. Si no pasa compatibilidad, alineación, lifecycle o FPS, se implementa un
-custom layer WebGL2 mínimo bajo la misma interfaz. Fallback runtime: flechas
-GeoJSON derivadas del U/V.
+El host de trabajo usa el cluster PostgreSQL `16/main` en el puerto `5432`. La
+base `aviation_weather` tiene habilitada la extensión `postgis`. Comandos de
+diagnóstico:
 
-No se expone quality, densidad u opacidad al usuario. El tuning fija un único
-valor para el equipo de reunión.
+```bash
+pg_lsclusters
+psql -d aviation_weather -c "SELECT PostGIS_Full_Version();"
+gdalinfo --version
+geos-config --version
+```
 
-## Persistencia y datos
+Para conexiones TCP debe crearse una credencial local fuera de Git. Las pruebas
+de esta fase pueden usar peer auth por socket Unix y una variable de password no
+utilizada por PostgreSQL; CI usa credenciales efímeras explícitamente marcadas
+como no secretas.
 
-- `Airport.location`: `PointField(srid=4326)`.
-- Exactamente seis aeropuertos seeded de forma idempotente.
-- Catálogo/frames: `manifest.json`, no tablas Django.
-- Seis WebP, seis U/V y treinta y seis registros aeroportuarios: archivos
-  versionados.
-- Temperatura/viento se producen una vez con Python determinístico; se permite
-  autoría manual si el generador amenaza el plazo y los validadores pasan.
-- `airport-weather.json` se cura explícitamente para seis ICAO × seis timestamps.
-- Runtime es de solo lectura: sin `random`, Faker, reloj ni generación por request.
-- Postgres no almacena imágenes, matrices, texturas ni partículas.
-- No existen queries bbox/nearest/picker en esta demo.
+## Comandos dirigidos
 
-## Testing
+```bash
+cd backend && source venv/bin/activate && python manage.py check
+cd backend && source venv/bin/activate && pytest weather/tests/test_health.py -v
+cd frontend && npm test -- app/__tests__/page.test.tsx
+```
 
-- Backend con `backend/venv`; máximo veinte tests y tres comandos por ciclo.
-- Frontend unitario por archivo.
-- Un único spec E2E desktop para el recorrido de reunión.
-- Fase 07 actualiza/audita flow map; fase 08 ejecuta `qa` y quality gate.
-- Rendimiento y estabilidad se validan manualmente a `1920×1080`.
+El build se ejecuta en un ciclo separado:
 
-## Seguridad y operación
+```bash
+cd frontend && npm run build
+```
 
-- `.env` ignorado y `.env.example` solo con placeholders.
-- Endpoints demo públicos, validados y sin autenticación de producto.
-- Errores no exponen paths, trazas ni DSN.
-- Assets/dependencias registran fuente, versión y licencia.
-- Warning permanece en loading, error y fallback.
-- URL HTTPS y ejecución local se validan; no se construye infraestructura HA.
+## Decisiones técnicas
 
-## Entrega paralela
-
-- Ola 1: mapa, backend/datos y renderer de viento.
-- Ola 2: aeropuertos, temperatura y controles.
-- Fase 07 realiza el único wiring transversal.
-- Fase 08 valida/despliega; no añade funcionalidades.
+- `APPEND_SLASH=False`; el health exacto no termina en `/`.
+- DRF no registra autenticadores y usa `AllowAny`.
+- `django.contrib.gis` y el backend PostGIS se cargan en todos los ambientes.
+- MapLibre está instalado y fijado, pero no se importa en la UI de Fase 00.
+- El tema usa únicamente los siete tokens `--viewer-*` del contrato.
