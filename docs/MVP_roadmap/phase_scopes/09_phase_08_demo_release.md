@@ -23,6 +23,7 @@ ensayar la presentación y su contingencia.
 - Ajuste de densidad fija para acercarse a 30 FPS.
 - Verificación de listeners, RAF y memoria durante diez minutos.
 - Prueba sin red externa y verificación de assets same-origin.
+- Verificación de repetibilidad: recargar no cambia escenario ni valores.
 - Despliegue mínimo con HTTPS y health check.
 - Ensayo del guion principal y contingencia con fallback.
 - Ejecución de `qa` y quality gate según reglas del repo.
@@ -40,9 +41,11 @@ ensayar la presentación y su contingencia.
 3. Seleccionar SKBO y validar panel simulado.
 4. Cambiar a temperatura.
 5. Seleccionar siguiente/anterior y un timestamp directo.
-6. Reproducir dos ticks y pausar.
-7. Volver a viento.
-8. Resetear y comprobar defaults.
+6. Recorrer los seis timestamps y comprobar cambios de campo/panel/hora.
+7. Reproducir dos ticks y pausar.
+8. Volver a viento.
+9. Resetear y comprobar defaults.
+10. Recargar y confirmar el mismo escenario `wind/06Z`.
 
 Los errores/fallback se prueban de forma dirigida en unit/integration y mediante
 un ensayo manual; no se multiplica el corpus E2E.
@@ -67,7 +70,8 @@ externas. No se exige memoria idéntica, pero sí ausencia de crecimiento contin
 1. Ejecutar builds/checks y corregir únicamente bloqueos de la demo.
 2. Escribir/ajustar el spec E2E desde el flow map de fase 07.
 3. Invocar `qa`, resolver findings válidos y ejecutar quality gate.
-4. Validar que el navegador no solicite dominios externos.
+4. Validar que el navegador no solicite dominios externos ni endpoints de
+   generación meteorológica.
 5. Medir FPS; reducir densidad fija si controles o mapa pierden fluidez.
 6. Ejecutar escenario de estabilidad y revisar cleanup.
 7. Preparar ejecución local reproducible y datos incluidos.
@@ -100,9 +104,11 @@ Respetar límites del repo y ejecutar comandos adicionales en ciclos separados.
 - [ ] URL HTTPS y ejecución local completan el mismo recorrido.
 - [ ] E2E único pasa en Desktop Chrome.
 - [ ] Chrome y Edge muestran composición correcta a `1920×1080`.
+- [ ] Los seis timestamps cambian datos visibles y una recarga los reproduce.
 - [ ] Diez minutos terminan sin crash, errores críticos ni crecimiento continuo.
 - [ ] Controles permanecen responsivos y viento se acerca a 30 FPS.
 - [ ] No hay requests meteorológicas/cartográficas externas.
+- [ ] Startup, deploy y requests no generan ni mutan los fixtures versionados.
 - [ ] Fallback y reset fueron ensayados.
 - [ ] `qa`, quality gate y checks dirigidos están verdes.
 - [ ] Existe guion principal y plan de contingencia practicados.

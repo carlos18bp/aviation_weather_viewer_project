@@ -20,6 +20,9 @@ Plan de ejecución visual-first para la próxima reunión:
 - Default visible: viento `06Z` sobre Colombia.
 - Django/DRF/PostGIS permanecen, con `Airport` como único modelo de dominio.
 - Manifiesto local reemplaza modelos de escenario/frame.
+- Dataset fijo: seis WebP, seis U/V y treinta y seis condiciones curadas.
+- Django solo sirve artefactos; no hay generación o aleatoriedad en runtime.
+- La experiencia sigue siendo dinámica por timeline, frames y WebGL.
 - WeatherLayers es opción primaria, encapsulada y gateada por fase 03.
 - Solo fase 07 integra store/controller/página.
 - Search, picker, opacity, quality, mobile y URL state están fuera del plan.
@@ -31,6 +34,8 @@ Plan de ejecución visual-first para la próxima reunión:
 - Fusionados hardening, QA, performance y deployment en la fase de release.
 - Simplificados API, store, controller, renderer y flujo de timestamp.
 - Sustituidas catorce fases por nueve scopes visual-first.
+- Congelada la estrategia “datos fijos, experiencia dinámica”, con contingencia
+  de autoría manual validada si el generador amenaza la fecha de reunión.
 - Actualizado Memory Bank con el alcance de reunión.
 
 ## Estado real del código

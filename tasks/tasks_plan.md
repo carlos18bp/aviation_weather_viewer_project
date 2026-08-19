@@ -18,7 +18,7 @@
 
 - [ ] Fase 00 — limpiar starter y congelar dirección visual.
 - [ ] Fase 01 — mapa Colombia, shell, controller y store.
-- [ ] Fase 02 — API mínima, PostGIS y datos simulados.
+- [ ] Fase 02 — API mínima, PostGIS, doce frames y treinta y seis condiciones.
 - [ ] Fase 03 — renderer de viento WebGL y fallback.
 - [ ] Fase 04 — aeropuertos y panel meteorológico.
 - [ ] Fase 05 — temperatura y metadata de leyenda.
@@ -33,6 +33,8 @@
 - Fases 04–06 no editan página, store o controller.
 - Fase 07 es el único wiring compartido.
 - Fase 08 no añade features; solo corrige bloqueos de aceptación.
+- Ola 1 no cierra si falta un frame, una combinación ICAO/timestamp o existe
+  generación meteorológica en runtime.
 
 ## Recortes congelados
 
@@ -46,7 +48,8 @@ consumido por el guion.
 2. GEOS/GDAL/PostGIS aún no validados.
 3. WeatherLayers/WebGL debe superar el gate de fase 03.
 4. Basemap/meteorología deben funcionar sin red externa.
-5. Equipo `1920×1080`, URL y HTTPS deben confirmarse para fase 08.
+5. Autoría manual de assets requiere validación estricta de completitud/coherencia.
+6. Equipo `1920×1080`, URL y HTTPS deben confirmarse para fase 08.
 
 ## Deuda deliberada
 

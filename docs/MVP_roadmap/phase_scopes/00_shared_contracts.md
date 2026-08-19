@@ -119,6 +119,31 @@ backend/media/demo-weather/demo-colombia-001/
 Los assets se versionan para que el despliegue no dependa de ejecutar el
 generador. Solo este subárbol se exceptúa del ignore general de media.
 
+## Política de autoría y runtime
+
+Los archivos versionados son la fuente de verdad del producto demostrativo. El
+dataset permanece fijo entre ambientes y recargas; la experiencia sí es
+dinámica porque cada timestamp selecciona artefactos distintos y WebGL anima el
+campo U/V activo.
+
+- Ruta primaria de autoría: ejecutar una vez un generador Python determinístico
+  para producir temperatura y viento, validar su salida y commitearla.
+- Clima aeroportuario: curar y hardcodear treinta y seis registros en
+  `airport-weather.json`, uno por cada combinación aeropuerto/timestamp.
+- Contingencia de plazo: se aceptan WebP/JSON preparados manualmente si cumplen
+  exactamente este contrato y pasan los mismos validadores.
+- Runtime: Django abre el manifiesto y los fixtures, valida inputs y sirve
+  metadata/URLs; nunca calcula ni regenera meteorología.
+- Prohibido en runtime: `random`, Faker, fecha actual, jobs de generación o
+  valores meteorológicos construidos dentro de una view/request.
+- Prohibido en UI: matrices U/V, tablas de clima o arrays masivos hardcoded en
+  componentes React.
+
+El comando de autoría, si existe, no se invoca desde startup, build, deploy,
+migraciones ni requests. CI puede ejecutarlo explícitamente en un directorio
+temporal para comprobar determinismo; la demo desplegada solo lee artefactos ya
+versionados.
+
 ## Contrato de temperatura
 
 - Formato WebP RGBA `1024×1216`, mismas dimensiones para los seis frames.
@@ -220,6 +245,7 @@ interface DemoManifest {
     is_simulated: true;
     operational_use: false;
   };
+  airport_weather_path: "airport-weather.json";
   layers: Array<{
     id: "temperature" | "wind";
     name: string;
@@ -262,6 +288,45 @@ como dominio público y usados solo como referencia ilustrativa. Toda condición
 meteorológica es ficticia. PostGIS almacena únicamente el modelo `Airport` con
 `PointField(srid=4326)`; no se crean modelos para matrices, escenarios, frames o
 coberturas.
+
+## Fixture de clima aeroportuario
+
+`airport-weather.json` usa un array deliberadamente pequeño y legible:
+
+```typescript
+type DemoAirportIcao = "SKBO" | "SKRG" | "SKCL" | "SKBQ" | "SKCG" | "SKSM";
+
+interface AirportWeatherFixture {
+  schema_version: 1;
+  scenario: "demo-colombia-001";
+  is_simulated: true;
+  operational_use: false;
+  records: Array<{
+    airport: DemoAirportIcao;
+    timestamp: string;
+    temperature_c: number;
+    wind_speed_kt: number;
+    wind_direction_deg: number;
+    visibility_km: number;
+    pressure_hpa: number;
+  }>;
+}
+```
+
+Reglas del fixture:
+
+- contiene exactamente treinta y seis registros y ninguna combinación
+  `(airport, timestamp)` duplicada;
+- cubre el producto cartesiano de los seis ICAO y los seis timestamps;
+- todos los números son finitos: temperatura `4–36 °C`, viento `0–40 kt`,
+  dirección entera `0–359°`, visibilidad `1–20 km` y presión `980–1040 hPa`;
+- los valores cambian de forma moderada entre timestamps y son visualmente
+  coherentes con los campos de temperatura y viento, sin pretensión científica;
+- el orden canónico es timestamp ascendente y, dentro de cada timestamp, el
+  orden de aeropuertos de la tabla anterior.
+
+Estos valores se curan una sola vez y se versionan. La API selecciona el registro
+solicitado; no aplica ruido ni deriva un valor nuevo durante la request.
 
 ## Contratos HTTP mínimos
 
@@ -446,6 +511,11 @@ internos.
    panel y publica el nuevo `activeTimestamp` en una transición.
 5. Si falla, el frame anterior permanece y se muestra retry/reset.
 6. Al cambiar de capa se carga la nueva capa para el timestamp ya activo.
+
+Por tanto, “datos fijos” no significa “pantalla estática”: avanzar el timeline
+cambia la URL/field activo, la textura o las partículas, los valores del panel,
+la leyenda y el copy UTC. Recargar la aplicación debe reconstruir exactamente el
+mismo escenario y la misma secuencia.
 
 Como solo una capa meteorológica está visible, no se implementa doble buffer de
 temperatura y viento ni una cache LRU. Requests obsoletos se abortan.

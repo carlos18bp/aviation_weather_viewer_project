@@ -17,6 +17,7 @@ experiencia coherente, y aplicar el acabado visual definitivo para la reunión.
 
 - Wiring único de adapters, controller, store y componentes.
 - Bootstrap de catálogo, mapa, aeropuertos y frame inicial `wind/06Z`.
+- Experiencia dinámica construida sobre artefactos locales fijos y versionados.
 - Cambio de layer/timestamp con frame anterior conservado durante loading.
 - Condición del aeropuerto sincronizada con timestamp visible.
 - Playback fijo, pausa, previous/next y selección directa.
@@ -65,6 +66,10 @@ Es la primera fase después de ola 1 autorizada a editar store/controller/págin
 5. Esperar `setWeatherFrame`, actualizar panel y publicar el timestamp juntos.
 6. Ante fallo, conservar frame anterior, pausar playback y ofrecer retry/reset.
 
+Cada selección debe resolver otro artefacto existente; no solicita al backend
+generar uno nuevo. Temperatura, campo/partículas, panel, leyenda y copy UTC deben
+corresponder al mismo timestamp antes de publicarlo como activo.
+
 ## Implementación ordenada
 
 1. Crear `ViewerOrchestrator` para bootstrap, requests y aborts.
@@ -75,10 +80,11 @@ Es la primera fase después de ola 1 autorizada a editar store/controller/págin
 6. Sincronizar panel solo con `activeTimestamp` visible.
 7. Implementar un único intervalo playback de `1500 ms`.
 8. Implementar reset: abort, pausa, limpiar error/selección, cámara y defaults.
-9. Ajustar z-index, tamaños, contraste, espacios y orden de layers.
-10. Respetar `prefers-reduced-motion` en chrome decorativo, no en viento.
-11. Probar bootstrap, layer, timestamp, airport, race, error, fallback y reset.
-12. Actualizar mapa de flows e invocar `e2e-user-flows-check`.
+9. Confirmar que los seis timestamps cambian los artefactos/valores visibles.
+10. Ajustar z-index, tamaños, contraste, espacios y orden de layers.
+11. Respetar `prefers-reduced-motion` en chrome decorativo, no en viento.
+12. Probar bootstrap, layer, timestamp, airport, race, error, fallback y reset.
+13. Actualizar mapa de flows e invocar `e2e-user-flows-check`.
 
 ## Orden visual de capas
 
@@ -114,6 +120,7 @@ loading/error/fallback y comparación de jerarquía contra la referencia aprobad
 
 - [ ] Primer render muestra warning y termina en viento `06Z`.
 - [ ] Cambios no recrean MapLibre ni mezclan timestamp visible/panel.
+- [ ] Cada timestamp selecciona su WebP/U/V/condición sin generación runtime.
 - [ ] Play/pausa/previous/next/selector/reset completan el guion.
 - [ ] Aeropuertos permanecen legibles sobre ambas capas.
 - [ ] Todos los errores son recuperables o activan fallback.

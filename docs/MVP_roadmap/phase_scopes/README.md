@@ -36,6 +36,27 @@ Si una restricción de tiempo obliga a recortar, se protege este orden:
 No se sacrificarán la advertencia de simulación, la estabilidad del mapa ni el
 fallback de viento.
 
+## Datos fijos, experiencia dinámica
+
+La fuente de la demo es un dataset local, cerrado y versionado. Eso no convierte
+el visor en una maqueta estática: el timeline cambia el WebP de temperatura, el
+campo U/V, el panel aeroportuario, la leyenda y la hora visible; WebGL anima cada
+campo de viento en el navegador.
+
+El contrato mínimo contiene:
+
+- seis WebP de temperatura;
+- seis JSON de viento U/V;
+- treinta y seis condiciones aeroportuarias curadas: seis aeropuertos por seis
+  timestamps;
+- un manifiesto que relaciona escenario, capas, timestamps y archivos.
+
+Django solo lee y publica estos artefactos. No genera clima al arrancar ni al
+responder requests. La autoría puede apoyarse en un generador Python ejecutado
+una sola vez o, si el plazo de la reunión lo exige, en archivos preparados
+manualmente que superen las mismas validaciones. Los valores hardcoded viven en
+fixtures/archivos de datos, nunca dentro de componentes React.
+
 ## Reglas de ejecución paralela
 
 - Una fase equivale a una sesión, rama, worktree y PR.
@@ -125,7 +146,9 @@ La fase 03 usa el fixture U/V congelado en contratos; no espera assets de fase
 ### Gate de ola 1
 
 - mapa local navegable dentro de Colombia;
-- API mínima y assets determinísticos verificados;
+- API mínima y doce frames determinísticos verificados;
+- `airport-weather.json` contiene las treinta y seis combinaciones únicas;
+- el runtime solo sirve artefactos versionados y no genera datos aleatorios;
 - renderer de viento funciona con fixture o activa fallback;
 - cada PR respeta ownership y puede probarse aislado.
 
@@ -139,6 +162,7 @@ La fase 03 usa el fixture U/V congelado en contratos; no espera assets de fase
 
 - vertical slice completo en Chrome/Edge a `1920×1080`;
 - temperatura, viento y panel reflejan el timestamp visible;
+- los seis timestamps producen cambios visibles y se repiten tras recargar;
 - advertencia permanente y fallback probados;
 - ejecución local y URL HTTPS sin APIs/tiles meteorológicos externos;
 - ensayo continuo de diez minutos sin errores críticos.

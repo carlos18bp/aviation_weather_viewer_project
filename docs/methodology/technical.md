@@ -54,7 +54,12 @@ valor para el equipo de reunión.
 - `Airport.location`: `PointField(srid=4326)`.
 - Exactamente seis aeropuertos seeded de forma idempotente.
 - Catálogo/frames: `manifest.json`, no tablas Django.
-- WebP, U/V y clima aeroportuario: archivos versionados.
+- Seis WebP, seis U/V y treinta y seis registros aeroportuarios: archivos
+  versionados.
+- Temperatura/viento se producen una vez con Python determinístico; se permite
+  autoría manual si el generador amenaza el plazo y los validadores pasan.
+- `airport-weather.json` se cura explícitamente para seis ICAO × seis timestamps.
+- Runtime es de solo lectura: sin `random`, Faker, reloj ni generación por request.
 - Postgres no almacena imágenes, matrices, texturas ni partículas.
 - No existen queries bbox/nearest/picker en esta demo.
 

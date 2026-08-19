@@ -3,7 +3,8 @@
 ## Objetivo
 
 Entregar en un solo PR la fuente de datos completa de la demo: seis aeropuertos
-PostGIS, generadores determinísticos, assets versionados y cinco endpoints DRF.
+PostGIS, doce frames versionados, treinta y seis condiciones aeroportuarias y
+cinco endpoints DRF que solo leen esos artefactos.
 
 ## Ola y dependencias
 
@@ -17,11 +18,13 @@ PostGIS, generadores determinísticos, assets versionados y cinco endpoints DRF.
 
 - Modelo `Airport` con `PointField(srid=4326)` y migración inicial.
 - Seed idempotente de los seis aeropuertos congelados.
-- Generador Python de temperatura, viento U/V y clima aeroportuario.
+- Ruta primaria de autoría one-time de temperatura y viento U/V mediante Python
+  determinístico.
+- Clima aeroportuario curado en treinta y seis registros hardcoded.
 - Seis WebP, seis JSON U/V, un `airport-weather.json` y `manifest.json`.
 - Loaders de manifiesto/assets y endpoints públicos mínimos.
 - Validación de layer/timestamp/ICAO y errores consistentes.
-- Tests de determinismo, modelo, comandos y API.
+- Tests de artefactos, determinismo, modelo, comandos aplicables y API.
 
 ## Fuera del alcance
 
@@ -40,30 +43,41 @@ backend/requirements.txt
 backend/.env.example
 ```
 
-## Modelo y comandos
+## Modelo y herramientas de autoría
 
 `Airport` contiene código ICAO único, IATA, nombre, ciudad, departamento,
 elevación, punto 4326, activo y timestamps administrativos.
 
-Comandos:
+El seed es obligatorio. El segundo comando corresponde a la ruta primaria de
+autoría:
 
 ```text
 python manage.py seed_demo_airports
 python manage.py generate_demo_weather
 ```
 
-Ambos son idempotentes. El segundo reemplaza únicamente el directorio del
-escenario después de generar y validar todo en un directorio temporal.
+El seed es idempotente. `generate_demo_weather` es una herramienta de autoría,
+no una dependencia del runtime: se ejecuta explícitamente una vez, genera en un
+directorio temporal, valida y reemplaza únicamente el directorio del escenario.
+No se llama desde startup, build, deploy, migraciones ni requests.
 
-## Generación meteorológica
+## Autoría de los artefactos
 
 - Semilla fija registrada en manifiesto.
 - Temperatura: latitud, variación suave, aproximación de altitud y ruido
   filtrado; WebP RGBA `1024×1216` con los stops térmicos congelados.
 - Viento: flujo base más una circulación reconocible y variación temporal suave.
-- Clima aeroportuario: valores plausibles derivados del escenario/timestamp,
-  nunca aleatorios durante una request.
-- La regeneración con la misma configuración produce bytes o valores idénticos.
+- Clima aeroportuario: un único `airport-weather.json` legible con exactamente
+  treinta y seis registros plausibles curados, seis ICAO por seis timestamps.
+- En la ruta primaria, regenerar con la misma configuración produce bytes o
+  valores idénticos.
+- Si completar el generador pone en riesgo la reunión, los doce frames pueden
+  prepararse manualmente. Deben conservar shapes, rangos, coherencia visual y
+  determinismo; el validador de artefactos y la API siguen siendo obligatorios.
+
+El generador nunca crea clima durante una request y el servidor no usa
+`random`, Faker ni el reloj para alterar datos. Al recargar, los mismos archivos
+producen el mismo escenario; timeline y WebGL aportan la dinámica visual.
 
 ## API entregada
 
@@ -75,15 +89,15 @@ same-origin y nunca expone `MEDIA_ROOT`.
 
 1. Crear modelo, serializer GeoJSON y migración.
 2. Crear seed con datos documentados y upsert por ICAO.
-3. Implementar configuración única del escenario y utilidades numéricas puras.
-4. Generar los seis campos térmicos con una única paleta global.
-5. Generar U/V `128×160` y validar longitud/finitud/rangos.
-6. Generar clima de los seis aeropuertos para cada timestamp.
+3. Implementar configuración única y un validador de los artefactos congelados.
+4. Producir seis campos térmicos con una única paleta global.
+5. Producir seis U/V `128×160` y validar longitud/finitud/rangos.
+6. Curar `airport-weather.json` con las treinta y seis combinaciones únicas.
 7. Construir/validar manifiesto de doce frames antes del reemplazo atómico.
 8. Implementar loaders cacheados por mtime, sin cache compleja ni workers.
 9. Exponer catálogo, frame, aeropuertos y clima con flags obligatorios.
 10. Versionar assets y registrar fuente/licencia de coordenadas aeroportuarias.
-11. Probar segunda ejecución, configuración inválida y contratos HTTP.
+11. Probar artefactos, repetibilidad, configuración inválida y contratos HTTP.
 
 ## Manejo de errores
 
@@ -96,28 +110,34 @@ same-origin y nunca expone `MEDIA_ROOT`.
 ## Verificación
 
 ```bash
-cd backend && source venv/bin/activate && pytest weather/tests/test_generators.py -v
+cd backend && source venv/bin/activate && pytest weather/tests/test_assets.py -v
 cd backend && source venv/bin/activate && pytest weather/tests/test_commands.py -v
 cd backend && source venv/bin/activate && pytest weather/tests/test_api.py -v
 ```
 
-Comparar hashes de dos generaciones temporales como verificación manual de
-determinismo, sin añadir hashes al contrato runtime.
+Comparar hashes de dos generaciones temporales si se implementó el generador.
+En la contingencia manual, verificar los hashes de los artefactos versionados y
+que dos lecturas consecutivas entreguen los mismos valores, sin añadir hashes al
+contrato runtime. Tests unitarios propios del generador se ejecutan en un ciclo
+separado solo cuando esa ruta se entrega.
 
 ## Criterios de aceptación
 
 - [ ] PostGIS contiene exactamente los seis aeropuertos y seed es idempotente.
 - [ ] Existen seis frames térmicos y seis U/V coherentes y determinísticos.
 - [ ] El manifiesto contiene dos capas, seis timestamps y doce frames.
+- [ ] `airport-weather.json` contiene treinta y seis pares ICAO/timestamp únicos.
 - [ ] Los cinco endpoints cumplen shapes, validación y flags.
 - [ ] No existen modelos de escenario/frame ni datos pesados en PostgreSQL.
+- [ ] Arranque y requests no generan, mutan ni aleatorizan meteorología.
+- [ ] Dos recargas exponen exactamente el mismo escenario y valores.
 - [ ] Assets/API funcionan sin servicios meteorológicos externos.
 - [ ] Tests dirigidos pasan con PostGIS.
 
 ## Handoff
 
 Entregar ejemplos reales de responses, árbol de assets, seed/configuración,
-comando reproducible y URLs que la fase 07 conectará.
+validador, método de autoría utilizado y URLs que la fase 07 conectará.
 
 ## Riesgos
 
@@ -125,3 +145,5 @@ comando reproducible y URLs que la fase 07 conectará.
   expandirse con consultas geográficas que la demo no utiliza.
 - WebP depende del soporte de Pillow; un fallo debe ser accionable, no cambiar
   silenciosamente de formato.
+- El generador no es más importante que la demo: si amenaza el plazo, se activa
+  la contingencia manual y se protege el contrato de artefactos verificables.

@@ -7,6 +7,7 @@
 
 ```mermaid
 flowchart LR
+    G[Autoría offline<br/>Python o manual] --> F
     U[Reunión / usuario] --> N[Next.js + React]
     N --> S[Zustand mínimo]
     S --> C[WeatherMapController]
@@ -14,7 +15,7 @@ flowchart LR
     M --> W[WindRenderer WebGL]
     N --> A[Django REST /api/v1]
     A --> P[(PostGIS: Airport)]
-    A --> F[Manifest + WebP + JSON U/V]
+    A --> F[Manifest + WebP + U/V<br/>+ airport-weather JSON]
 ```
 
 - React compone controles/paneles; no controla internals cartográficos.
@@ -22,8 +23,11 @@ flowchart LR
 - Controller mantiene una instancia MapLibre y registra adapters.
 - MapLibre gestiona cámara, basemap, layers y eventos geográficos.
 - WebGL mueve partículas; flechas GeoJSON son fallback.
-- Django publica manifiesto, frames, aeropuertos y clima simulado.
+- Django lee y publica manifiesto, frames, aeropuertos y clima simulado; no los
+  genera durante startup o requests.
 - PostGIS almacena únicamente puntos de aeropuerto.
+- La autoría offline produce artefactos versionados; puede usar un generador
+  determinístico o la contingencia manual bajo el mismo validador.
 
 ## Persistencia mínima
 
@@ -39,8 +43,23 @@ erDiagram
     }
 ```
 
-Escenario, layers y frames viven en `manifest.json`. No hay modelos de frame,
-cobertura, partículas o celdas.
+Escenario, layers y doce frames viven en `manifest.json`; treinta y seis
+condiciones viven en `airport-weather.json`. No hay modelos de frame, cobertura,
+partículas o celdas.
+
+## Ciclo de datos
+
+```mermaid
+flowchart LR
+    A[Autoría única] --> V[Validar contratos]
+    V --> C[Commit de artefactos]
+    C --> D[Django: lectura]
+    D --> T[Timeline: selección]
+    T --> R[MapLibre/WebGL + panel]
+```
+
+El dataset no muta en runtime. La dinámica surge de seleccionar uno de los seis
+frames y animar el U/V activo; una recarga reconstruye la misma secuencia.
 
 ## Flujo de timestamp
 

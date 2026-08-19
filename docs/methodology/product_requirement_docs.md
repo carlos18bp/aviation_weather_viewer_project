@@ -37,7 +37,8 @@ cambia a temperatura, recorre/reproduce seis timestamps y reinicia la muestra.
 - selector de dos capas, leyenda, UTC, loading, error y reset;
 - warning permanente y backend marcado como simulado/no operacional;
 - Django/DRF y PostGIS mínimo para aeropuertos;
-- manifiesto y assets locales, determinísticos y versionados;
+- manifiesto, seis WebP, seis U/V y treinta y seis condiciones aeroportuarias
+  locales, determinísticas y versionadas;
 - fallback estático de viento, ejecución local y URL HTTPS;
 - una sola dirección visual oscura inspirada en Windy, con identidad propia.
 
@@ -61,6 +62,10 @@ aeropuerto cercano o polígonos de cobertura: no aportan valor visible al guion.
 - MapLibre se inicializa una vez detrás de `WeatherMapController`.
 - Solo una capa meteorológica está visible; panel y timestamp visible coinciden.
 - Imágenes/matrices viven en filesystem, no en PostgreSQL.
+- Django sirve artefactos ya creados; no genera o aleatoriza clima en runtime.
+- Los datos fijos producen una experiencia dinámica mediante timeline, cambios
+  de frame, panel sincronizado y partículas WebGL.
+- Los valores curados/hardcoded viven en archivos de datos, no en React.
 - La demostración funciona sin APIs/tiles meteorológicos externos.
 
 ## Prioridad ante recortes

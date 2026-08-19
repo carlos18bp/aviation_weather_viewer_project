@@ -30,6 +30,10 @@ ha comenzado.
 - GeoDjango/PostGIS y GEOS/GDAL aún no fueron validados en este repo.
 - WeatherLayers/WebGL2 debe superar el gate de fase 03 o usar custom layer.
 - Basemap y assets deben comprobarse sin red externa.
+- La contingencia de assets manuales puede introducir pares faltantes o datos
+  incoherentes; fase 02 valida doce frames y las treinta y seis combinaciones.
+- Cualquier generación meteorológica en startup/request viola el contrato de
+  repetibilidad y debe tratarse como bloqueo de release.
 - Dominio, HTTPS y equipo de reunión se validan en fase 08.
 
 Un riesgo solo se promueve a error cuando exista un fallo reproducible.

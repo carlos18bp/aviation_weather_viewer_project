@@ -49,6 +49,18 @@ custom layer y flechas estáticas sin romper controles, timeline o mapa.
 Auth, CAPTCHA, comercio, themes, Redis y Huey multiplican ruido y tests. Una
 fase secuencial los retira antes de abrir las ramas funcionales.
 
+## 9. Datos fijos no significan demo estática
+
+Versionar seis momentos hace la presentación reproducible. Timeline, cambio de
+textura/campo, panel sincronizado y partículas WebGL producen el movimiento y la
+variación que percibe el cliente sin depender de una API real.
+
+## 10. Hardcodear es válido en la frontera de datos
+
+Para esta reunión es mejor un fixture pequeño, explícito y probado que lógica de
+simulación ejecutándose en cada request. Los treinta y seis registros viven en
+`airport-weather.json`; no se dispersan en views ni componentes React.
+
 ## Convenciones
 
 - Código/identificadores en inglés; documentación operativa en español.
