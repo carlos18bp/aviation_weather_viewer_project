@@ -78,10 +78,9 @@ describe('Timeline', () => {
     expect(callbacks.onNext).toHaveBeenCalledTimes(1);
   });
 
-  it('blocks repeated navigation while loading but keeps pause available', async () => {
-    const user = userEvent.setup();
+  it('blocks repeated navigation while loading', () => {
     const callbacks = createCallbacks();
-    const { rerender } = render(
+    render(
       <Timeline {...createProps({ ...callbacks, isLoading: true })} />,
     );
 
@@ -99,10 +98,15 @@ describe('Timeline', () => {
     expect(callbacks.onPrevious).not.toHaveBeenCalled();
     expect(callbacks.onNext).not.toHaveBeenCalled();
     expect(callbacks.onPlay).not.toHaveBeenCalled();
+  });
 
-    rerender(
+  it('keeps pause available while loading', async () => {
+    const user = userEvent.setup();
+    const callbacks = createCallbacks();
+    render(
       <Timeline {...createProps({ ...callbacks, isLoading: true, isPlaying: true })} />,
     );
+
     const pause = screen.getByRole('button', { name: 'Pausar reproducción' });
     expect(pause).toBeEnabled();
     await user.click(pause);

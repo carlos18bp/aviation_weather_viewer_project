@@ -39,6 +39,7 @@ describe('timelineUtils', () => {
   });
 
   it('returns null when circular navigation has no valid origin', () => {
+    // quality: allow-negation-only (null is the explicit invalid-origin return contract)
     expect(getPreviousTimestamp(TIMESTAMPS, '2026-01-15T18:00:00Z')).toBeNull();
     expect(getNextTimestamp([], TIMESTAMPS[0])).toBeNull();
   });

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { DemoWarning, DEMO_WARNING_TEXT } from '../../DemoWarning';
@@ -24,7 +24,7 @@ describe('controlled viewer controls', () => {
     render(<LayerSelector activeLayer="wind" onSelect={onSelect} />);
 
     const group = screen.getByRole('group', { name: 'Selector de capa' });
-    expect(group.querySelectorAll('button')).toHaveLength(2);
+    expect(within(group).getAllByRole('button')).toHaveLength(2);
     expect(screen.getByRole('button', { name: /Viento kt/ })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -101,8 +101,14 @@ describe('controlled viewer controls', () => {
   });
 
   it('renders no status surface while idle', () => {
-    render(<ViewerStatus status="idle" />);
+    render(
+      <>
+        <span>Visor estable</span>
+        <ViewerStatus status="idle" />
+      </>,
+    );
 
+    expect(screen.getByText('Visor estable')).toBeVisible();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
