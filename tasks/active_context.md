@@ -1,57 +1,46 @@
-# Contexto activo — Fase 01
+# Contexto activo — confiabilidad APT del CI
 
 Actualizado: 2026-08-19.
 
 ## Objetivo actual
 
-Entregar el mapa local de Colombia, el shell GIS, el controller y el store
-mínimo, sin integrar módulos meteorológicos de las fases 02/03.
+Evitar que `backend-health` permanezca silencioso durante horas cuando un
+runner o mirror APT falla, y desbloquear la validación del PR #7 sin mezclar el
+fix operativo con el ownership funcional de Fase 06.
 
 ## Coordenada Git
 
 - Base resuelta: `master`.
-- SHA base: `f1747230b1f86519af5bd69520b309f22d30c9e6`.
-- Rama: `feat/19082026-phase-01-map-shell`.
-- Worktree: `~/webapps/.wt/aviation_weather_viewer_project/phase-01-map-shell`.
-- Gate: Fase 00/PR #3 integrada y contenida en `origin/master`.
-- Handoff: PR #5 abierto contra `master`; esta sesión no hace merge.
+- SHA base: `381404ba06da3510ac7fd313657bea5893d8bf4f`.
+- Rama: `fix/19082026-ci-apt-reliability`.
+- Worktree: `~/webapps/.wt/aviation_weather_viewer_project/ci-apt-reliability`.
+- Host: `vps-projectapp-staging` (`host_status=on-work-host`).
+- PR afectado, no modificado por este fix: #7, Fase 06.
 
-## Cambios implementados
+## Diagnóstico confirmado
 
-- Basemap local con costa, vecinos, Colombia, 33 departamentos y labels.
-- Web Worker y glyphs MapLibre same-origin, sin URLs remotas de runtime.
-- Cámara, zoom y bounds regionales congelados en el controller.
-- Lifecycle de una instancia con initialize/destroy idempotentes y resize.
-- Registry tipado de adapters vacío para temperatura, viento y aeropuertos.
-- Store Zustand exacto, sin mapa, viewport ni capacidades descartadas.
-- Shell fullscreen con tres slots visuales vacíos y warning permanente.
-- Fallback WebGL2, loading, ready, error y retry controlado.
+- Dos runners distintos quedaron detenidos en el mismo step APT.
+- El primer intento no emitió salida de paquetes durante 16 minutos.
+- El segundo superó 45 minutos sin alcanzar Python ni Django.
+- Runs sanos del mismo workflow completaron APT en aproximadamente 2 minutos.
+- Los tres checks frontend/calidad de PR #7 permanecieron verdes.
 
-## Verificación completada
+## Cambio implementado
 
-- Controller: 16 tests passed.
-- Store: 11 tests passed.
-- Shell: 10 tests passed.
-- Página heredada: 3 regression tests passed.
-- `npm run build`: compilación, TypeScript y prerender de `/` correctos.
-- Chromium `1920×1080`: mapa centrado y shell sin overflow grave.
-- Pan y zoom modifican el render; resize conserva estado `ready`.
-- Al desmontar, el worker pasa de uno a cero; cleanup doble se prueba en unit.
-- Red externa bloqueada: 0 requests externas y 0 errores de consola.
-- Flow audit: 1 flow de Fase 00 todavía exento; su actualización semántica se
-  difiere por ownership al handoff de integración.
-- Test Quality Gate: 100/100, sin errores ni warnings de tests.
+- Job backend acotado a 20 minutos.
+- Actualización APT separada y acotada a 5 minutos.
+- Instalación GeoDjango acotada a 10 minutos y en modo no interactivo.
+- Tres reintentos y timeout HTTP/HTTPS de 30 segundos.
+- Salida visible; mismos paquetes y mismos tests dirigidos.
 
 ## Handoff
 
-La implementación está publicada en
-`https://github.com/carlos18bp/aviation_weather_viewer_project/pull/5`. El
-handoff debe actualizar el flow map compartido: la exención
-`viewer-phase-00-placeholder` ya no describe la raíz interactiva, pero
-`frontend/e2e/**` queda fuera del ownership exclusivo de Fase 01.
+El fix debe pasar su propio CI y entrar a `master` mediante PR separado. Luego
+la rama de Fase 06 absorbe `origin/master` con `$git-sync`, relanza sus cuatro
+checks y sólo se mergea cuando todos estén verdes.
 
 ## Límites activos
 
-No implementar aeropuertos, API o assets meteorológicos, viento, temperatura,
-timeline, leyendas, paneles funcionales, search, opacity, quality, URL state,
-cambio de tema ni módulos de Fase 03.
+No modificar componentes frontend, backend, contratos de producto ni los
+PR #8 y #9. El directorio `.playwright-mcp/` del clon principal pertenece a
+otra sesión y permanece intacto.

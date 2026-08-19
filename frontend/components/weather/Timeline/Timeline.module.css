@@ -1,0 +1,184 @@
+.timeline {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  color: var(--viewer-text);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) auto minmax(110px, 1fr);
+  align-items: center;
+  gap: 14px;
+  min-height: 34px;
+}
+
+.activeTime {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.activeTime span {
+  color: var(--viewer-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.activeTime strong {
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+
+.transport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--viewer-border);
+  border-radius: 8px;
+  color: var(--viewer-text);
+  background: rgb(7 19 31 / 74%);
+  cursor: pointer;
+}
+
+.iconButton svg {
+  width: 16px;
+  height: 16px;
+  fill: currentcolor;
+  stroke: currentcolor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.playButton {
+  color: var(--viewer-bg);
+  border-color: var(--viewer-accent);
+  background: var(--viewer-accent);
+}
+
+.iconButton:hover:not(:disabled),
+.iconButton:focus-visible {
+  border-color: var(--viewer-accent);
+  outline: 2px solid rgb(34 211 238 / 26%);
+  outline-offset: 2px;
+}
+
+.iconButton:disabled,
+.timestampButton:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 7px;
+  color: var(--viewer-muted);
+  font-size: 10px;
+}
+
+.loadingState i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--viewer-accent);
+  box-shadow: 0 0 12px var(--viewer-accent);
+  animation: timeline-pulse 1.2s ease-in-out infinite;
+}
+
+.timestamps {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border-top: 1px solid var(--viewer-border);
+}
+
+.timestampButton {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 0 2px 2px;
+  border: 0;
+  color: var(--viewer-muted);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.timestampButton i {
+  width: 6px;
+  height: 6px;
+  margin-top: -3.5px;
+  border: 1px solid var(--viewer-muted);
+  border-radius: 50%;
+  background: var(--viewer-bg);
+}
+
+.timestampButton span {
+  overflow: hidden;
+  max-width: 100%;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timestampButton[data-active="true"] {
+  color: var(--viewer-text);
+  font-weight: 700;
+}
+
+.timestampButton[data-active="true"] i {
+  width: 8px;
+  height: 8px;
+  margin-top: -4.5px;
+  border-color: var(--viewer-accent);
+  background: var(--viewer-accent);
+  box-shadow: 0 0 14px var(--viewer-accent);
+}
+
+.timestampButton:hover:not(:disabled),
+.timestampButton:focus-visible {
+  color: var(--viewer-accent);
+  outline: none;
+}
+
+.timestampButton:focus-visible span {
+  border-radius: 3px;
+  outline: 2px solid var(--viewer-accent);
+  outline-offset: 2px;
+}
+
+.propsError {
+  margin: 0;
+  color: var(--viewer-warning);
+  font-size: 10px;
+  text-align: center;
+}
+
+@keyframes timeline-pulse {
+  50% {
+    opacity: 0.42;
+    transform: scale(0.78);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadingState i {
+    animation: none;
+  }
+}
