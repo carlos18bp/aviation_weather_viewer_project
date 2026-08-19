@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "scenario": {
+    "code": "demo-colombia-001",
+    "name": "Escenario meteorológico ilustrativo",
+    "scenario_date": "2026-01-15",
+    "bbox": [
+      -82,
+      -5,
+      -66,
+      14
+    ],
+    "seed": 20260115,
+    "is_simulated": true,
+    "operational_use": false
+  },
+  "airport_weather_path": "airport-weather.json",
+  "layers": [
+    {
+      "id": "temperature",
+      "name": "Temperatura",
+      "kind": "scalar",
+      "unit": "°C",
+      "minimum": 0,
+      "maximum": 38
+    },
+    {
+      "id": "wind",
+      "name": "Viento",
+      "kind": "vector",
+      "unit": "kt",
+      "minimum": 0,
+      "maximum": 60
+    }
+  ],
+  "timestamps": [
+    "2026-01-15T00:00:00Z",
+    "2026-01-15T03:00:00Z",
+    "2026-01-15T06:00:00Z",
+    "2026-01-15T09:00:00Z",
+    "2026-01-15T12:00:00Z",
+    "2026-01-15T15:00:00Z"
+  ],
+  "frames": [
+    {
+      "layer": "temperature",
+      "timestamp": "2026-01-15T00:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/temperature/00Z.webp",
+      "minimum": 0,
+      "maximum": 38
+    },
+    {
+      "layer": "wind",
+      "timestamp": "2026-01-15T00:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/wind/00Z.json",
+      "minimum": 0,
+      "maximum": 60
+    },
+    {
+      "layer": "temperature",
+      "timestamp": "2026-01-15T03:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/temperature/03Z.webp",
+      "minimum": 0,
+      "maximum": 38
+    },
+    {
+      "layer": "wind",
+      "timestamp": "2026-01-15T03:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/wind/03Z.json",
+      "minimum": 0,
+      "maximum": 60
+    },
+    {
+      "layer": "temperature",
+      "timestamp": "2026-01-15T06:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/temperature/06Z.webp",
+      "minimum": 0,
+      "maximum": 38
+    },
+    {
+      "layer": "wind",
+      "timestamp": "2026-01-15T06:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/wind/06Z.json",
+      "minimum": 0,
+      "maximum": 60
+    },
+    {
+      "layer": "temperature",
+      "timestamp": "2026-01-15T09:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/temperature/09Z.webp",
+      "minimum": 0,
+      "maximum": 38
+    },
+    {
+      "layer": "wind",
+      "timestamp": "2026-01-15T09:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/wind/09Z.json",
+      "minimum": 0,
+      "maximum": 60
+    },
+    {
+      "layer": "temperature",
+      "timestamp": "2026-01-15T12:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/temperature/12Z.webp",
+      "minimum": 0,
+      "maximum": 38
+    },
+    {
+      "layer": "wind",
+      "timestamp": "2026-01-15T12:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/wind/12Z.json",
+      "minimum": 0,
+      "maximum": 60
+    },
+    {
+      "layer": "temperature",
+      "timestamp": "2026-01-15T15:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/temperature/15Z.webp",
+      "minimum": 0,
+      "maximum": 38
+    },
+    {
+      "layer": "wind",
+      "timestamp": "2026-01-15T15:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/wind/15Z.json",
+      "minimum": 0,
+      "maximum": 60
+    }
+  ]
+}
