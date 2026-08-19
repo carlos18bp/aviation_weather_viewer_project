@@ -1,0 +1,225 @@
+.panel {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  color: var(--viewer-text);
+}
+
+.simulationBadge {
+  width: fit-content;
+  padding: 5px 8px;
+  border: 1px solid rgb(245 158 11 / 32%);
+  border-radius: 999px;
+  color: var(--viewer-warning);
+  background: rgb(245 158 11 / 9%);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.header h2,
+.emptyState h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.codes {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 7px;
+}
+
+.codes strong {
+  color: var(--viewer-accent);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+}
+
+.codes span {
+  color: var(--viewer-muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.closeButton {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--viewer-border);
+  border-radius: 7px;
+  color: var(--viewer-muted);
+  background: rgb(7 19 31 / 52%);
+  cursor: pointer;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.closeButton:hover,
+.closeButton:focus-visible,
+.errorState button:hover,
+.errorState button:focus-visible {
+  color: var(--viewer-text);
+  border-color: rgb(34 211 238 / 42%);
+  outline: none;
+}
+
+.metadata {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  color: var(--viewer-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.kicker {
+  margin: 0 0 7px;
+  color: var(--viewer-accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.emptyState {
+  min-height: 150px;
+  align-content: space-between;
+}
+
+.emptyState > div > p:last-child {
+  margin: 10px 0 0;
+  color: var(--viewer-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.loadingState,
+.errorState {
+  min-height: 96px;
+  border-top: 1px solid var(--viewer-border);
+}
+
+.loadingState {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--viewer-muted);
+  font-size: 12px;
+}
+
+.loadingPulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--viewer-accent);
+  box-shadow: 0 0 14px var(--viewer-accent);
+  animation: airport-loading-pulse 1.2s ease-in-out infinite;
+}
+
+.errorState {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 12px;
+  padding-top: 14px;
+}
+
+.errorState p {
+  margin: 0;
+  color: var(--viewer-warning);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.errorState button {
+  padding: 7px 10px;
+  border: 1px solid rgb(34 211 238 / 34%);
+  border-radius: 7px;
+  color: var(--viewer-text);
+  background: rgb(34 211 238 / 11%);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.readyState {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--viewer-border);
+}
+
+.timestamp {
+  margin: 0;
+  color: var(--viewer-muted);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.timestamp time {
+  color: var(--viewer-accent);
+  font-weight: 700;
+}
+
+.weatherGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.weatherGrid div {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 8px;
+  background: rgb(7 19 31 / 42%);
+}
+
+.weatherGrid div:last-child {
+  grid-column: 1 / -1;
+}
+
+.weatherGrid dt {
+  color: var(--viewer-muted);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.weatherGrid dd {
+  margin: 5px 0 0;
+  overflow: hidden;
+  color: var(--viewer-text);
+  font-size: 14px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes airport-loading-pulse {
+  50% {
+    opacity: 0.42;
+    transform: scale(0.78);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadingPulse {
+    animation: none;
+  }
+}
