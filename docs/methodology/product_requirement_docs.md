@@ -1,42 +1,85 @@
-# Product Requirement Docs — Base Django React Next Feature
+# Product Requirement Docs — Demo visual meteorológica de Colombia
 
-> Memory Bank · actualizado 2026-08-13 (corrida /qa). Proyecto **template**: no se despliega a producción; es el punto de partida de los proyectos Django+Next del fleet.
+> Memory Bank · actualizado 2026-08-19. El código aún conserva el starter; la
+> ejecución comienza por la fase 00.
 
-## Por qué existe
+## Propósito
 
-- Arrancar un proyecto cliente nuevo con stack, convenciones, testing y CI ya resueltos, en horas en vez de días.
-- Fijar el estándar de calidad del fleet (quality gate, flow map E2E, Memory Bank) desde el commit 0 de cada derivado.
-- Servir de banco de pruebas de las skills/workflows del toolkit (`new-project-setup`, `pre-staging-cleanup`, `/qa`) antes de tocar proyectos reales.
+Construir para la próxima reunión una muestra visual, funcional y comercial de
+un visor meteorológico aeronáutico sobre Colombia. Debe evidenciar que
+ProjectApp puede acercarse a la experiencia de Windy en poco tiempo mediante
+mapa protagonista, capas, partículas y timeline, sin presentarse como una
+plataforma operacional.
 
-## Alcance funcional (features demo incluidas)
+## Fuente de verdad
 
-| Módulo | Qué demuestra | Rutas API (base_feature_app/urls/) |
-|---|---|---|
-| Auth | sign-up, sign-in, Google OAuth, reset por passcode, update password, validate token (JWT simplejwt) | `auth.py` (7) |
-| Blog | listado + detalle público, CRUD admin | `blog.py` (3) |
-| Catálogo/Producto | listado, detalle, CRUD admin, galería (django_attachments) | `product.py` (3) |
-| Ventas/Checkout | carrito (frontend), venta con SoldProduct snapshot, CRUD admin | `sale.py` (3) |
-| Usuarios | CRUD admin | `user.py` (2) |
-| Captcha | verificación reCAPTCHA | `captcha.py` (2) |
-| Staging banner | fase de staging visible + overlay de expiración | `staging_phase_banner.py` (1) |
+1. [`mvp_roadmap.md`](../MVP_roadmap/mvp_roadmap.md) conserva el levantamiento amplio.
+2. [`00_shared_contracts.md`](../MVP_roadmap/phase_scopes/00_shared_contracts.md)
+   congela los contratos mínimos.
+3. [`phase_scopes/README.md`](../MVP_roadmap/phase_scopes/README.md) es la guía
+   ejecutable de olas, ownership y gates para la reunión.
 
-Frontend (Next App Router, 12 páginas): home, catalog, products/[id], blogs, blogs/[id], checkout, sign-in, sign-up, forgot-password, admin-login, dashboard, backoffice (+ manual y comingSoon).
+Cuando el roadmap incluya una capacidad retirada por los scopes, prevalece el
+recorte ejecutable para esta demo.
 
-## Usuarios
+## Usuario y recorrido
 
-- **Visitante**: navega home/catálogo/blogs, arma carrito.
-- **Cliente autenticado**: checkout/compra, dashboard.
-- **Admin**: admin-login → backoffice (CRUD blogs/productos/ventas/usuarios) + Django admin custom (`admin_site`).
+El usuario es una persona presente en la reunión. Abre la URL a `1920×1080`, ve
+Colombia con viento animado, reconoce la advertencia, selecciona un aeropuerto,
+cambia a temperatura, recorre/reproduce seis timestamps y reinicia la muestra.
 
-## Reglas de negocio del template
+## Alcance obligatorio
 
-- Bilingüe EN/ES end-to-end (next-intl en frontend; contenido con campos pareados o traducción según feature).
-- JWT con refresh (`/api/token/`, `/api/token/refresh/`); rutas sensibles con permisos DRF.
-- Venta congela precio en `SoldProduct` (FK `PROTECT` a Product): borrar producto no rompe historial.
-- Reset de password por código de un solo uso (`PasswordCode`, FK a User).
-- Fake data reproducible vía management commands (`create_fake_data N` / `delete_fake_data`) — obligatoria para E2E y demos.
-- `api/health/` responde `project` + `environment` para que los probes externos verifiquen QUIÉN contesta (lección F24 del fleet).
+- mapa fullscreen oscuro, limitado a Colombia, con zoom y pan;
+- seis aeropuertos principales y panel meteorológico simulado;
+- temperatura WebP y viento U/V con partículas WebGL;
+- seis timestamps, timeline, play/pausa/anterior/siguiente;
+- selector de dos capas, leyenda, UTC, loading, error y reset;
+- warning permanente y backend marcado como simulado/no operacional;
+- Django/DRF y PostGIS mínimo para aeropuertos;
+- manifiesto, seis WebP, seis U/V y treinta y seis condiciones aeroportuarias
+  locales, determinísticas y versionadas;
+- fallback estático de viento, ejecución local y URL HTTPS;
+- una sola dirección visual oscura inspirada en Windy, con identidad propia.
 
-## Fuera de alcance
+## Fuera de este plan
 
-- Pagos reales, emails transaccionales a terceros, monitoreo/backups (excluido explícitamente en projects.yml: scaffold sin servicios ni tráfico).
+No se implementan autenticación, CAPTCHA, comercio, dark/light mode, búsqueda,
+picker por coordenada, control de opacidad, perfiles gráficos, responsive móvil,
+estado compartible en URL, datos oficiales, radar, satélite, METAR/TAF/SIGMET,
+GRIB/NetCDF ni infraestructura productiva avanzada.
+
+Tampoco se crean `DemoScenario`, `DemoWeatherFrame`, filtros bbox, consultas de
+aeropuerto cercano o polígonos de cobertura: no aportan valor visible al guion.
+
+## Reglas no negociables
+
+- Copy permanente: **DATOS SIMULADOS — PROTOTIPO DEMOSTRATIVO — NO APTO PARA
+  USO OPERACIONAL**.
+- API meteorológica incluye `is_simulated: true` y `operational_use: false`.
+- React no dibuja partículas ni guarda la instancia MapLibre.
+- Django entrega campos; WebGL anima en el navegador.
+- MapLibre se inicializa una vez detrás de `WeatherMapController`.
+- Solo una capa meteorológica está visible; panel y timestamp visible coinciden.
+- Imágenes/matrices viven en filesystem, no en PostgreSQL.
+- Django sirve artefactos ya creados; no genera o aleatoriza clima en runtime.
+- Los datos fijos producen una experiencia dinámica mediante timeline, cambios
+  de frame, panel sincronizado y partículas WebGL.
+- Los valores curados/hardcoded viven en archivos de datos, no en React.
+- La demostración funciona sin APIs/tiles meteorológicos externos.
+
+## Prioridad ante recortes
+
+1. viento animado;
+2. temperatura;
+3. timeline/selector;
+4. aeropuertos/panel;
+5. acabados secundarios.
+
+Warning, mapa estable y fallback nunca se recortan.
+
+## Definición de listo
+
+La demo se acepta después de fase 08: vertical slice funcional, un E2E desktop,
+builds verdes, Chrome/Edge a `1920×1080`, objetivo cercano a 30 FPS, diez
+minutos estables, URL HTTPS, ejecución local y contingencia ensayada.

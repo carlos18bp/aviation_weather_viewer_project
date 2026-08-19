@@ -1,68 +1,88 @@
-# Technical — Base Django React Next Feature
+# Technical — Demo visual meteorológica de Colombia
 
-> Memory Bank · actualizado 2026-08-13 (corrida /qa). Versiones verificadas contra `backend/requirements.txt` y `frontend/package.json`.
+> Memory Bank · actualizado 2026-08-19. Las versiones finales se fijan durante
+> fases 00 y 03.
 
-## Stack
+## Stack congelado
 
-| Capa | Tecnología | Versión pineada |
-|---|---|---|
-| Backend | Django / DRF / simplejwt | 6.0.5 / 3.17.1 / 5.5.1 |
-| Tareas | Huey + Redis | huey≥2.5, redis≥4.0 |
-| DB dev/test | sqlite3 (default `DJANGO_DB_ENGINE`) | — |
-| DB prod | MySQL (mysqlclient≥2.2, settings_prod) | — |
-| Frontend | Next.js (App Router) / React | 16.2.6 / 19.2.6 |
-| Estado | Zustand | ^5.0.13 |
-| i18n | next-intl | ^4.12.0 |
-| HTTP | axios | ^1.16.1 |
-| Testing backend | pytest / pytest-django / freezegun / factory-boy | 9.0.3 / 4.12.0 / 1.5.5 / 3.3.3 |
-| Testing unit | Jest 30 + Testing Library (jsdom) | ^30.4.2 |
-| Testing E2E | Playwright | ^1.60.0 |
-| Estilos | Tailwind CSS | ^4.3.0 |
+| Capa | Decisión |
+|---|---|
+| Frontend | Next.js existente + React + TypeScript |
+| Estado | Zustand mínimo |
+| Cartografía | MapLibre GL JS |
+| Meteorología | WebGL2 detrás de `WindRenderer` |
+| Backend | Django 6 + Django REST Framework |
+| Geográfico | GeoDjango + PostgreSQL/PostGIS |
+| Temperatura | WebP RGBA local |
+| Viento | JSON U/V `128×160` local |
+| Tests | pytest, Jest/Testing Library y un E2E Playwright |
 
-## Selección de settings (¡no es DJANGO_ENV!)
+No se crea Vite paralelo ni se cambia el stack acordado.
 
-- **`DJANGO_SETTINGS_MODULE` elige el módulo**: `manage.py` → default `base_feature_project.settings_dev` (sqlite hardcoded); `wsgi.py`/`asgi.py` → default `settings_prod` (mysql); `pytest.ini` fija `base_feature_project.settings`.
-- `DJANGO_ENV` es una variable LEÍDA POR settings (default `development`) que sólo controla `IS_PRODUCTION` y lo que reporta `api/health/`.
-- `settings.py` toma la DB de `DJANGO_DB_ENGINE` (default sqlite3) — sin `backend/.env`, los tests corren en sqlite.
+## Estado previo a fase 00
 
-## Setup dev local
+- Next.js 16.2.6, React 19.2.6 y Zustand 5.0.13.
+- Django 6.0.5 y DRF 3.17.1.
+- Comercio, auth, CAPTCHA, JWT, Redis/Huey, MySQL y themes siguen presentes.
+- MapLibre, PostGIS, app `weather` y assets demo aún no existen.
 
-```bash
-# Backend
-cd backend && python3 -m venv venv && venv/bin/pip install -r requirements.txt
-venv/bin/python manage.py migrate
-venv/bin/python manage.py create_fake_data 5
+## Contratos técnicos
 
-# Frontend
-cd frontend && npm install
-npm run dev            # Next en :3000
+- Escenario `demo-colombia-001`, fecha `2026-01-15`.
+- Bbox `[-82, -5, -66, 14]`; seis timestamps 00Z–15Z.
+- Default `wind/06Z`, playback fijo `1500 ms`.
+- Cámara `[-73.5, 4.5]`, zoom `4.7`, límites regionales.
+- API pública same-origin bajo `/api/v1`, sin JWT ni slash final.
+- Store no contiene MapLibre, viewport, opacity, quality ni URL state.
+- Frame anterior permanece visible durante loading.
+- Cada adapter y renderer limpia recursos de forma idempotente.
 
-# E2E (Playwright levanta ambos webServers solo; requiere backend/venv)
-cd frontend && npx playwright test
-```
+Detalle completo: `docs/MVP_roadmap/phase_scopes/00_shared_contracts.md`.
 
-## Patrones de diseño
+## Renderer de viento
 
-- **Vistas FBV delgadas** (`@api_view`) por módulo en `base_feature_app/views/` (10 módulos); lógica de negocio en `services/` (hoy: `email_service.py`) y modelos.
-- **Serializers por operación**: `*_list`, `*_detail`, `*_create_update` separados (16 archivos) — nunca `fields = '__all__'`.
-- **URLs como paquete**: `base_feature_app/urls/` con un módulo por dominio (auth 7, blog 3, captcha 2, product 3, sale 3, staging_phase_banner 1, user 2 = 21 rutas API + 5 de proyecto). ⚠️ existe un `urls.py` legacy shadowed por el paquete (residuo, ver tasks_plan).
-- **Stores Zustand por dominio**: `frontend/lib/stores/` (auth, blog, cart, locale, product, stagingBanner).
-- **Custom User** (`AbstractBaseUser` + manager propio); galería de imágenes vía app vendorizada `django_attachments`.
+WeatherLayers GL es la opción primaria, encapsulada y sometida al gate de fase
+03. Si no pasa compatibilidad, alineación, lifecycle o FPS, se implementa un
+custom layer WebGL2 mínimo bajo la misma interfaz. Fallback runtime: flechas
+GeoJSON derivadas del U/V.
 
-## Estrategia de testing (medida 2026-08-13)
+No se expone quality, densidad u opacidad al usuario. El tuning fija un único
+valor para el equipo de reunión.
 
-| Layer | Runner | Ubicación | Volumen |
-|---|---|---|---|
-| Backend | pytest (sqlite, `pytest.ini`) | `backend/base_feature_app/tests/` + `django_attachments` | 26 archivos / 197 tests |
-| Frontend unit | Jest 30 (`**/__tests__/**/*.test.ts(x)`, threshold 50%) | colocalizados en `app/`, `components/`, `lib/` | 29 archivos / 184 tests |
-| E2E | Playwright (project "Desktop Chrome") | `frontend/e2e/` (8 specs / 40 tests) | flow map: `e2e/flow-definitions.json` (33 flows) |
+## Persistencia y datos
 
-- Quality gate: `scripts/test_quality_gate.py` + `.testquality.yml` (≤50 líneas/test, ≤7 asserts, timeout ≤100ms) con baseline `.junk-baseline.json` (15 findings frontend grandfathered, keyed `file::rule::test_name`).
-- CI (`.github/workflows/`): `ci.yml` (backend sqlite + unit + e2e con fake data + coverage summary) y `test-quality-gate.yml` (`--junk-severity=error`).
-- Reglas de ejecución: ≤20 tests por batch, ≤3 comandos por ciclo, e2e ≤2 archivos por invocación, `E2E_REUSE_SERVER=1` si el dev server ya corre.
+- `Airport.location`: `PointField(srid=4326)`.
+- Exactamente seis aeropuertos seeded de forma idempotente.
+- Catálogo/frames: `manifest.json`, no tablas Django.
+- Seis WebP, seis U/V y treinta y seis registros aeroportuarios: archivos
+  versionados.
+- Temperatura/viento se producen una vez con Python determinístico; se permite
+  autoría manual si el generador amenaza el plazo y los validadores pasan.
+- `airport-weather.json` se cura explícitamente para seis ICAO × seis timestamps.
+- Runtime es de solo lectura: sin `random`, Faker, reloj ni generación por request.
+- Postgres no almacena imágenes, matrices, texturas ni partículas.
+- No existen queries bbox/nearest/picker en esta demo.
 
-## Constraints técnicos
+## Testing
 
-- Los tags E2E viven como constantes en `e2e/helpers/flow-tags.ts` (`@flow:`/`@module:`/`@priority:`; `@outcome:` inline) — specs nuevos reutilizan ese idioma.
-- Sin `data-testid` en el source de producción (salvo `components/staging/`): selectores por rol/label; el copy es bilingüe, evitar `getByText` con strings hardcodeados.
-- Playwright projects Mobile/Tablet están comentados; los scripts `e2e:mobile`/`e2e:tablet` de package.json fallan si se invocan.
+- Backend con `backend/venv`; máximo veinte tests y tres comandos por ciclo.
+- Frontend unitario por archivo.
+- Un único spec E2E desktop para el recorrido de reunión.
+- Fase 07 actualiza/audita flow map; fase 08 ejecuta `qa` y quality gate.
+- Rendimiento y estabilidad se validan manualmente a `1920×1080`.
+
+## Seguridad y operación
+
+- `.env` ignorado y `.env.example` solo con placeholders.
+- Endpoints demo públicos, validados y sin autenticación de producto.
+- Errores no exponen paths, trazas ni DSN.
+- Assets/dependencias registran fuente, versión y licencia.
+- Warning permanece en loading, error y fallback.
+- URL HTTPS y ejecución local se validan; no se construye infraestructura HA.
+
+## Entrega paralela
+
+- Ola 1: mapa, backend/datos y renderer de viento.
+- Ola 2: aeropuertos, temperatura y controles.
+- Fase 07 realiza el único wiring transversal.
+- Fase 08 valida/despliega; no añade funcionalidades.

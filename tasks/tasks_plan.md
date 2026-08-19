@@ -1,54 +1,57 @@
-# Tasks Plan — Base Django React Next Feature
+# Tasks Plan — Demo visual meteorológica de Colombia
 
-> Memory Bank · actualizado 2026-08-13 (corrida /qa). Conteos verificados con find/grep.
+> Memory Bank · actualizado 2026-08-19. Fuente operativa:
+> `docs/MVP_roadmap/phase_scopes/README.md`.
 
-## Estado por feature (template)
+## Estado por ola
 
-| Feature | Estado | Nota |
-|---|---|---|
-| Auth (JWT + Google + passcode reset) | ✅ estable | 7 rutas API |
-| Blog público + CRUD | ✅ estable | |
-| Catálogo/Producto + galería | ✅ estable | django_attachments |
-| Carrito + checkout + ventas | ✅ estable | SoldProduct snapshot |
-| Backoffice/dashboard | ✅ estable | |
-| Staging banner/overlay | ✅ estable | único uso de data-testid |
-| i18n EN/ES | ✅ estable | next-intl |
+| Ola | Fases | Estado | Condición de salida |
+|---|---|---|---|
+| Documentación | scopes + contratos | ✅ revisada | PR integrado |
+| 0 | 00 limpieza/visual | ⏳ pendiente | starter limpio y baseline verde |
+| 1 | 01 mapa, 02 backend/datos, 03 viento | bloqueada | tres PRs integrados |
+| 2 | 04 aeropuertos, 05 temperatura, 06 controles | bloqueada | tres PRs integrados |
+| 3 | 07 integración/pulido | bloqueada | vertical slice visual |
+| 4 | 08 validación/release | bloqueada | demo desplegada y ensayada |
 
-## Estado de testing (cierre de la corrida /qa 2026-08-13, rama qa/13082026)
+## Backlog ejecutable
 
-| Layer | Volumen | Estado |
-|---|---|---|
-| Backend (pytest, sqlite) | 26 archivos / 197 tests | gate 0 errores (clock congelado con freezegun; contrato del banner pinneado a 9 claves) |
-| Frontend unit (Jest 30) | 29 archivos / 179 tests | gate 0 errores; 6 tests no-subject borrados; excepciones documentadas con markers |
-| E2E (Playwright) | 8 specs / 48 tests | gate 0 errores; cero condicionales en bodies (Regla 7); 48/48 verdes en vivo |
-| Flow map | 36 flows | **36 covered · 0 partial · 0 missing · 0 junk-only** |
+- [ ] Fase 00 — limpiar starter y congelar dirección visual.
+- [ ] Fase 01 — mapa Colombia, shell, controller y store.
+- [ ] Fase 02 — API mínima, PostGIS, doce frames y treinta y seis condiciones.
+- [ ] Fase 03 — renderer de viento WebGL y fallback.
+- [ ] Fase 04 — aeropuertos y panel meteorológico.
+- [ ] Fase 05 — temperatura y metadata de leyenda.
+- [ ] Fase 06 — timeline y controles del visor.
+- [ ] Fase 07 — integración vertical y acabado visual.
+- [ ] Fase 08 — E2E, rendimiento, despliegue y ensayo.
 
-`.junk-baseline.json`: **0 entradas** (era 15; 14 sanadas + 1 convertida en excepción documentada `allow-mock-only`).
+## Gates operativos
 
-Gaps cerrados por la corrida 2026-08-13: los 6 partial (auth-sign-up-form, catalog-browse, catalog-product-detail, blog-list-view, home-product-carousel, purchase-loading-state), los 3 módulos sin clases negativas (flows nuevos: checkout-submit-failure P1, cart-quantity-zero-removes-item P2, navigation-unknown-route P3), y 12 false-greens e2e cuyas aserciones vivían tras guards condicionales.
+- Una ola parte de `master` solo después de integrar la anterior.
+- Una fase usa su propia rama/worktree/PR y respeta ownership.
+- Fases 04–06 no editan página, store o controller.
+- Fase 07 es el único wiring compartido.
+- Fase 08 no añade features; solo corrige bloqueos de aceptación.
+- Ola 1 no cierra si falta un frame, una combinación ICAO/timestamp o existe
+  generación meteorológica en runtime.
 
-## Known issues (residuos y drift detectados 2026-08-13)
+## Recortes congelados
 
-1. `backend/base_feature_app/urls.py` (271 B) quedó **shadowed** por el paquete `urls/` — código muerto, candidato a repo-cleanup.
-2. `docs/USER_FLOW_MAP.md` stale (2026-02-24, anterior al staging banner); `flow-definitions.json` sí está fresco (2026-07-27).
-3. `.junk-baseline.json`: 15 findings frontend grandfathered — deuda de calidad declarada (no re-freezear sin veredicto del auditor).
-4. Scripts `e2e:mobile` / `e2e:tablet` huérfanos: los projects Mobile/Tablet están comentados en `playwright.config.ts`.
-5. `CLAUDE.md` (raíz) describe una app `content/` que no existe — la app real es `base_feature_app` (drift del template).
-6. pytest instalado a nivel usuario (8.3.2) difiere del pin (9.0.3); usar SIEMPRE `backend/venv`.
-7. **BlogDetailPage sin rama not-found** (bug de producto): con un blogId inválido el usuario queda en "Loading..." para siempre — a diferencia de ProductDetailPage. El test unit correspondiente quedó KEEP con marker `allow-mock-only` hasta ese fix.
-8. **Footer.tsx huérfano**: `components/layout/Footer.tsx` no se monta en ningún lado (`app/layout.tsx` inlinea su propio footer). Decisión de producto pendiente: cablearlo o borrarlo (su test `layout.test.tsx::renders footer copy` testea código muerto).
-9. **Selectores muertos**: `selectBlogs*`/`selectProducts*` (blogStore.ts:44-46, productStore.ts:44-46) no tienen consumidores — candidatos a remoción de producto.
-10. **Deuda pydocstyle latente**: ~153 findings D (ruff select curado del gate toolkit) en 24 archivos de test backend. El CI está verde sólo porque su job de gate no instala ruff; si se agrega `pip install`, master pasa a rojo. Burn-down antes de tocar ese workflow.
-11. **~19 selectores posicionales e2e bounded**: seleccionar cards de listas seedeadas requiere un hook estable (`data-testid` per-card en ProductCard/BlogCard) — cambio de producto que destrabaría los warnings fragile_locator restantes.
+No hay backlog P1 dentro de esta ejecución. Quedan fuera search, picker,
+opacity, quality, mobile, dark/light, URL state, auth, comercio y backend no
+consumido por el guion.
 
-## Backlog
+## Riesgos abiertos
 
-- [x] Corrida /qa --apply 2026-08-13: partial flows + clases negativas + purga de junk (25 rewrites, 6 deletes, 2 merges) + baseline a 0 — COMPLETADA (rama qa/13082026).
-- [ ] Producto: rama not-found en BlogDetailPage (issue 7) → habilita rewrite del test marcado.
-- [ ] Producto: decidir destino de Footer.tsx (issue 8) y remover selectores muertos (issue 9).
-- [ ] Producto: `data-testid` per-card en ProductCard/BlogCard (issue 11).
-- [ ] Burn-down de docstrings backend (issue 10) — patrón D212: summary en la línea de apertura.
-- [ ] Refrescar `docs/USER_FLOW_MAP.md` desde el código real (qa-analyst) cuando el flow map se toque.
-- [ ] repo-cleanup: eliminar `base_feature_app/urls.py` shadowed y scripts e2e huérfanos.
-- [ ] Corregir la sección Directory Structure de `CLAUDE.md` (content/ → base_feature_app/).
-- [ ] Registrar `db:` y `branch:` de este proyecto en `projects.yml` del toolkit.
+1. Limpieza amplia del template en fase 00.
+2. GEOS/GDAL/PostGIS aún no validados.
+3. WeatherLayers/WebGL debe superar el gate de fase 03.
+4. Basemap/meteorología deben funcionar sin red externa.
+5. Autoría manual de assets requiere validación estricta de completitud/coherencia.
+6. Equipo `1920×1080`, URL y HTTPS deben confirmarse para fase 08.
+
+## Deuda deliberada
+
+La muestra no pretende ser operacional ni production-ready. Todo hallazgo no
+bloqueante se registra después de la reunión y no reabre el alcance actual.

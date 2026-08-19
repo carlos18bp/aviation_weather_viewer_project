@@ -1,33 +1,39 @@
 ---
 trigger: manual
-description: Error documentation and known issues tracking. Reference when debugging, fixing bugs, or encountering recurring issues.
+description: Registro de errores conocidos y resoluciones del Aviation Weather Viewer.
 ---
 
-# Error Documentation — Base Django React Next Feature
+# Error Documentation — Aviation Weather Viewer
 
-This file tracks known errors, their context, and resolutions. When a reusable fix or correction is found during development, document it here to avoid repeating the same mistake.
+> Memory Bank · actualizado 2026-08-19.
 
----
+## Formato
 
-## Format
-
+```text
+### [ERROR-NNN] Descripción corta
+- Fecha
+- Contexto
+- Causa raíz
+- Resolución
+- Archivos afectados
+- Test de regresión
 ```
-### [ERROR-NNN] Short description
-- **Date**: YYYY-MM-DD
-- **Context**: Where/when this error occurs
-- **Root Cause**: Why it happens
-- **Resolution**: How to fix it
-- **Files Affected**: List of files
-```
 
----
+## Errores conocidos
 
-## Known Issues
+No hay errores de producto documentados: la implementación meteorológica aún no
+ha comenzado.
 
-_No errors documented yet. This file will be updated as issues are discovered and resolved._
+## Riesgos registrados, no errores
 
----
+- El código actual sigue siendo el template; fase 00 hace la limpieza completa.
+- GeoDjango/PostGIS y GEOS/GDAL aún no fueron validados en este repo.
+- WeatherLayers/WebGL2 debe superar el gate de fase 03 o usar custom layer.
+- Basemap y assets deben comprobarse sin red externa.
+- La contingencia de assets manuales puede introducir pares faltantes o datos
+  incoherentes; fase 02 valida doce frames y las treinta y seis combinaciones.
+- Cualquier generación meteorológica en startup/request viola el contrato de
+  repetibilidad y debe tratarse como bloqueo de release.
+- Dominio, HTTPS y equipo de reunión se validan en fase 08.
 
-## Resolved Issues
-
-_None yet._
+Un riesgo solo se promueve a error cuando exista un fallo reproducible.
