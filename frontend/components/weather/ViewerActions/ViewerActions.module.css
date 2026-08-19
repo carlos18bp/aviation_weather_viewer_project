@@ -1,0 +1,46 @@
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+}
+
+.actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 8px 11px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 8px;
+  color: var(--viewer-text);
+  background: rgb(7 19 31 / 68%);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.actions svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.actions button:hover:not(:disabled),
+.actions button:focus-visible {
+  color: var(--viewer-accent);
+  border-color: var(--viewer-accent);
+  outline: 2px solid rgb(34 211 238 / 24%);
+  outline-offset: 2px;
+}
+
+.actions button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
