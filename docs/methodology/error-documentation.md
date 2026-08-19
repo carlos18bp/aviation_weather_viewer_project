@@ -62,3 +62,33 @@ Chromium cargó el worker, los cuatro GeoJSON y los glyphs con respuestas 200;
 el shell alcanzó `ready` sin requests externas ni errores de consola.
 
 No hay errores de producto conocidos pendientes en Fase 01.
+
+## 2026-08-19 — `backend-health` quedó bloqueado durante APT
+
+### Síntoma
+
+El check de backend de la Fase 06 permaneció más de 45 minutos en la
+preparación de librerías GeoDjango. Un intento anterior tampoco produjo salida
+APT durante 16 minutos y terminó sólo después de cancelarlo. Los checks de
+frontend y calidad estaban verdes.
+
+### Causa
+
+El workflow ejecutaba `apt-get update` e instalación dentro de un único step,
+con salida `-qq`, sin reintentos acotados ni timeout propio. Una espera de red o
+del mirror de Ubuntu quedaba silenciosa hasta el límite global del runner. El
+job nunca alcanzó Python, Django, PostGIS ni los tests dirigidos.
+
+### Resolución
+
+Se separaron actualización e instalación APT, se habilitó salida visible y se
+agregaron tres reintentos, timeout de conexión de 30 segundos y límites de
+5/10 minutos por step. El job completo queda acotado a 20 minutos sin cambiar
+los paquetes ni los tests ejecutados.
+
+### Verificación
+
+- El workflow conserva los paquetes GDAL, GEOS y PostgreSQL originales.
+- Un fallo externo termina con un error visible y acotado.
+- Un run sano continúa hasta `manage.py check` y
+  `weather/tests/test_health.py`.
