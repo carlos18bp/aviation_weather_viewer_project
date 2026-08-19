@@ -29,7 +29,7 @@ mínimo, sin integrar módulos meteorológicos de las fases 02/03.
 
 ## Verificación completada
 
-- Controller: 14 tests passed.
+- Controller: 16 tests passed.
 - Store: 11 tests passed.
 - Shell: 10 tests passed.
 - Página heredada: 3 regression tests passed.
@@ -40,6 +40,7 @@ mínimo, sin integrar módulos meteorológicos de las fases 02/03.
 - Red externa bloqueada: 0 requests externas y 0 errores de consola.
 - Flow audit: 1 flow de Fase 00 todavía exento; su actualización semántica se
   difiere por ownership al handoff de integración.
+- Test Quality Gate: 100/100, sin errores ni warnings de tests.
 
 ## Handoff
 

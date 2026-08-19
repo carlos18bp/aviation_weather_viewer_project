@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type { FeatureCollection } from 'geojson';
 import type { Map as MapLibreMap, MapOptions } from 'maplibre-gl';
 
 import type {
@@ -239,21 +238,37 @@ describe('DefaultWeatherMapController', () => {
     expect(harness.map.remove).toHaveBeenCalledTimes(1);
   });
 
-  it('references only bundled map resources', () => {
+  it('uses only local style sources', () => {
     const publicMap = path.join(process.cwd(), 'public', 'map');
     const style = JSON.parse(fs.readFileSync(path.join(publicMap, 'style.json'), 'utf8'));
     const serializedStyle = JSON.stringify(style);
+    const sourcePaths = Object.values(style.sources).map(
+      (source) => (source as { data: string }).data,
+    );
 
     expect(serializedStyle).not.toMatch(/https?:\/\//);
-    for (const source of Object.values(style.sources) as Array<{ data: string }>) {
-      expect(source.data).toMatch(/^\/map\//);
-      expect(fs.existsSync(path.join(process.cwd(), 'public', source.data))).toBe(true);
-    }
+    expect(sourcePaths.every((sourcePath) => sourcePath.startsWith('/map/'))).toBe(true);
+    expect(sourcePaths.every((sourcePath) => (
+      fs.existsSync(path.join(process.cwd(), 'public', sourcePath))
+    ))).toBe(true);
+  });
+
+  it('ships local runtime assets', () => {
+    const publicMap = path.join(process.cwd(), 'public', 'map');
+
     expect(fs.existsSync(path.join(publicMap, 'fonts', 'Noto Sans Regular', '0-255.pbf'))).toBe(true);
     expect(LOCAL_MAP_WORKER_URL).toBe('/map/maplibre-gl-worker.mjs');
     expect(fs.existsSync(path.join(publicMap, 'maplibre-gl-worker.mjs'))).toBe(true);
     expect(fs.existsSync(path.join(publicMap, 'maplibre-gl-shared.mjs'))).toBe(true);
     expect(fs.existsSync(path.join(publicMap, 'MAPLIBRE-LICENSE.txt'))).toBe(true);
+  });
+
+  it('reserves the basemap identifiers', () => {
+    const style = JSON.parse(fs.readFileSync(
+      path.join(process.cwd(), 'public', 'map', 'style.json'),
+      'utf8',
+    ));
+
     expect(Object.keys(style.sources)).toEqual(Object.values(BASEMAP_SOURCE_IDS));
     expect(style.layers.map((layer: { id: string }) => layer.id)).toEqual(Object.values(BASEMAP_LAYER_IDS));
   });
