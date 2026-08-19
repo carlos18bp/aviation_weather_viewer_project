@@ -14,7 +14,7 @@ mínimo, sin integrar módulos meteorológicos de las fases 02/03.
 - Rama: `feat/19082026-phase-01-map-shell`.
 - Worktree: `~/webapps/.wt/aviation_weather_viewer_project/phase-01-map-shell`.
 - Gate: Fase 00/PR #3 integrada y contenida en `origin/master`.
-- Handoff: PR de Fase 01 pendiente de abrir; esta sesión no hace merge.
+- Handoff: PR #5 abierto contra `master`; esta sesión no hace merge.
 
 ## Cambios implementados
 
@@ -43,10 +43,11 @@ mínimo, sin integrar módulos meteorológicos de las fases 02/03.
 
 ## Handoff
 
-Antes del cierre se abrirá el PR de sesión contra `master`. El handoff debe
-actualizar el flow map compartido: la exención `viewer-phase-00-placeholder` ya
-no describe la raíz interactiva, pero `frontend/e2e/**` queda fuera del
-ownership exclusivo de Fase 01.
+La implementación está publicada en
+`https://github.com/carlos18bp/aviation_weather_viewer_project/pull/5`. El
+handoff debe actualizar el flow map compartido: la exención
+`viewer-phase-00-placeholder` ya no describe la raíz interactiva, pero
+`frontend/e2e/**` queda fuera del ownership exclusivo de Fase 01.
 
 ## Límites activos
 

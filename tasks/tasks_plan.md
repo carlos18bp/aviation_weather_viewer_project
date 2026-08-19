@@ -21,7 +21,7 @@ Estado: **integrada en `master` mediante PR #3**.
 
 ## Fase 01 — Mapa de Colombia y shell GIS
 
-Estado: **implementada y verificada; PR de sesión pendiente de abrir**.
+Estado: **implementada y verificada; PR #5 abierto sin merge**.
 
 - [x] Validar que Fase 00 está integrada en la base resuelta.
 - [x] Versionar style, GeoJSON, glyphs y worker completamente locales.
@@ -32,7 +32,7 @@ Estado: **implementada y verificada; PR de sesión pendiente de abrir**.
 - [x] Montar shell fullscreen con slots vacíos y estados WebGL2/ready/error.
 - [x] Registrar procedencia y licencias de assets.
 - [x] Pasar tests dirigidos, build y validación Chromium offline.
-- [ ] Abrir PR contra `master` sin hacer merge.
+- [x] Abrir PR #5 contra `master` sin hacer merge.
 
 ## Fases siguientes
 
