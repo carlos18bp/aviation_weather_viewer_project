@@ -1,68 +1,80 @@
-# Technical — Base Django React Next Feature
+# Technical — Aviation Weather Viewer MVP
 
-> Memory Bank · actualizado 2026-08-13 (corrida /qa). Versiones verificadas contra `backend/requirements.txt` y `frontend/package.json`.
+> Memory Bank · actualizado 2026-08-19. Distingue stack actual del scaffold y
+> decisiones objetivo; las versiones nuevas se fijan en fase 00/06.
 
-## Stack
+## Stack congelado
 
-| Capa | Tecnología | Versión pineada |
-|---|---|---|
-| Backend | Django / DRF / simplejwt | 6.0.5 / 3.17.1 / 5.5.1 |
-| Tareas | Huey + Redis | huey≥2.5, redis≥4.0 |
-| DB dev/test | sqlite3 (default `DJANGO_DB_ENGINE`) | — |
-| DB prod | MySQL (mysqlclient≥2.2, settings_prod) | — |
-| Frontend | Next.js (App Router) / React | 16.2.6 / 19.2.6 |
-| Estado | Zustand | ^5.0.13 |
-| i18n | next-intl | ^4.12.0 |
-| HTTP | axios | ^1.16.1 |
-| Testing backend | pytest / pytest-django / freezegun / factory-boy | 9.0.3 / 4.12.0 / 1.5.5 / 3.3.3 |
-| Testing unit | Jest 30 + Testing Library (jsdom) | ^30.4.2 |
-| Testing E2E | Playwright | ^1.60.0 |
-| Estilos | Tailwind CSS | ^4.3.0 |
+| Capa | Decisión |
+|---|---|
+| Frontend | Next.js existente + React + TypeScript |
+| Estado | Zustand |
+| Cartografía | MapLibre GL JS |
+| Meteorología | WebGL2 detrás de `WindRenderer` |
+| Backend | Django 6 + Django REST Framework |
+| Geográfico | GeoDjango + PostgreSQL/PostGIS |
+| Temperatura | WebP RGBA local |
+| Viento | JSON U/V `128×160` local |
+| Tests | pytest, Jest/Testing Library, Playwright |
 
-## Selección de settings (¡no es DJANGO_ENV!)
+No se migra React ni se crea un frontend Vite paralelo.
 
-- **`DJANGO_SETTINGS_MODULE` elige el módulo**: `manage.py` → default `base_feature_project.settings_dev` (sqlite hardcoded); `wsgi.py`/`asgi.py` → default `settings_prod` (mysql); `pytest.ini` fija `base_feature_project.settings`.
-- `DJANGO_ENV` es una variable LEÍDA POR settings (default `development`) que sólo controla `IS_PRODUCTION` y lo que reporta `api/health/`.
-- `settings.py` toma la DB de `DJANGO_DB_ENGINE` (default sqlite3) — sin `backend/.env`, los tests corren en sqlite.
+## Estado antes de fase 00
 
-## Setup dev local
+- Next.js 16.2.6, React 19.2.6, Zustand 5.0.13.
+- Django 6.0.5 y DRF 3.17.1.
+- SQLite/MySQL, JWT, Redis/Huey, comercio y auth todavía presentes.
+- MapLibre, PostGIS, app `weather` y assets demo aún no existen.
 
-```bash
-# Backend
-cd backend && python3 -m venv venv && venv/bin/pip install -r requirements.txt
-venv/bin/python manage.py migrate
-venv/bin/python manage.py create_fake_data 5
+Fase 00 elimina residuos y registra las versiones resultantes; esta documentación
+no afirma que la arquitectura objetivo ya esté implementada.
 
-# Frontend
-cd frontend && npm install
-npm run dev            # Next en :3000
+## Contratos técnicos clave
 
-# E2E (Playwright levanta ambos webServers solo; requiere backend/venv)
-cd frontend && npx playwright test
-```
+- Escenario `demo-colombia-001`, fecha default `2026-01-15`.
+- Bbox WGS84 `[-82, -5, -66, 14]`; seis timestamps 00Z–15Z.
+- Estado inicial temperature/06Z, opacity `0.72`, zoom `4.5`.
+- API pública sin slash final bajo `/api/v1`.
+- Paths de DB relativos a `MEDIA_ROOT`; URLs same-origin.
+- Store separa intención `activeTimestamp` de visible `committedTimestamp`.
+- Cada adapter implementa stage/commit y cleanup idempotente.
 
-## Patrones de diseño
+Detalle: `docs/MVP_roadmap/phase_scopes/00_shared_contracts.md`.
 
-- **Vistas FBV delgadas** (`@api_view`) por módulo en `base_feature_app/views/` (10 módulos); lógica de negocio en `services/` (hoy: `email_service.py`) y modelos.
-- **Serializers por operación**: `*_list`, `*_detail`, `*_create_update` separados (16 archivos) — nunca `fields = '__all__'`.
-- **URLs como paquete**: `base_feature_app/urls/` con un módulo por dominio (auth 7, blog 3, captcha 2, product 3, sale 3, staging_phase_banner 1, user 2 = 21 rutas API + 5 de proyecto). ⚠️ existe un `urls.py` legacy shadowed por el paquete (residuo, ver tasks_plan).
-- **Stores Zustand por dominio**: `frontend/lib/stores/` (auth, blog, cart, locale, product, stagingBanner).
-- **Custom User** (`AbstractBaseUser` + manager propio); galería de imágenes vía app vendorizada `django_attachments`.
+## Renderer de viento
 
-## Estrategia de testing (medida 2026-08-13)
+Opción primaria: WeatherLayers GL/deck.gl encapsulada, sin modificar vendor.
+Fase 06 ejecuta el spike. Si falla compatibilidad, lifecycle o alineación, usa
+un custom MapLibre WebGL2 layer mínimo bajo la misma interfaz. El fallback
+runtime son flechas estáticas derivadas del U/V.
 
-| Layer | Runner | Ubicación | Volumen |
-|---|---|---|---|
-| Backend | pytest (sqlite, `pytest.ini`) | `backend/base_feature_app/tests/` + `django_attachments` | 26 archivos / 197 tests |
-| Frontend unit | Jest 30 (`**/__tests__/**/*.test.ts(x)`, threshold 50%) | colocalizados en `app/`, `components/`, `lib/` | 29 archivos / 184 tests |
-| E2E | Playwright (project "Desktop Chrome") | `frontend/e2e/` (8 specs / 40 tests) | flow map: `e2e/flow-definitions.json` (33 flows) |
+## Persistencia
 
-- Quality gate: `scripts/test_quality_gate.py` + `.testquality.yml` (≤50 líneas/test, ≤7 asserts, timeout ≤100ms) con baseline `.junk-baseline.json` (15 findings frontend grandfathered, keyed `file::rule::test_name`).
-- CI (`.github/workflows/`): `ci.yml` (backend sqlite + unit + e2e con fake data + coverage summary) y `test-quality-gate.yml` (`--junk-severity=error`).
-- Reglas de ejecución: ≤20 tests por batch, ≤3 comandos por ciclo, e2e ≤2 archivos por invocación, `E2E_REUSE_SERVER=1` si el dev server ya corre.
+- `Airport.location`: `PointField(srid=4326)`.
+- Escenario/frame: `PolygonField(srid=4326)`.
+- Unique frame por escenario/layer/timestamp/level.
+- Imágenes, matrices, texturas y partículas no se guardan en Postgres.
+- CI usa PostGIS; no se conserva SQLite para tests geográficos.
 
-## Constraints técnicos
+## Testing y límites
 
-- Los tags E2E viven como constantes en `e2e/helpers/flow-tags.ts` (`@flow:`/`@module:`/`@priority:`; `@outcome:` inline) — specs nuevos reutilizan ese idioma.
-- Sin `data-testid` en el source de producción (salvo `components/staging/`): selectores por rol/label; el copy es bilingüe, evitar `getByText` con strings hardcodeados.
-- Playwright projects Mobile/Tablet están comentados; los scripts `e2e:mobile`/`e2e:tablet` de package.json fallan si se invocan.
+- Backend siempre con `backend/venv`; máximo veinte tests/tres comandos por ciclo.
+- Frontend unit: `npm test -- <archivo>`.
+- E2E: máximo dos specs; `E2E_REUSE_SERVER=1` si aplica.
+- Outcomes observables, AAA y sin condicionales.
+- Flujos frontend cierran con `e2e-user-flows-check`; fase 10 ejecuta `qa`.
+
+## Seguridad y operación
+
+- `.env` ignorado; `.env.example` solo placeholders.
+- Endpoints demo públicos, validados y sin JWT.
+- Errores no exponen paths/trazas/DSN.
+- Assets/dependencias incluyen licencia, versión y checksum.
+- Warning simulado persiste en loading/error/fallback.
+- No se incorporan Redis, usuarios, secretos o APIs oficiales.
+
+## Entrega paralela
+
+Cada sesión edita paths exclusivos. Módulos de ola 2 entregan adapters sin
+registrarse; fase 08 hace wiring P0 y fase 13 wiring P1. Esto evita conflictos
+sobre página, store y controller.

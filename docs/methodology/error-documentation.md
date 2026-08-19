@@ -1,33 +1,33 @@
 ---
 trigger: manual
-description: Error documentation and known issues tracking. Reference when debugging, fixing bugs, or encountering recurring issues.
+description: Registro de errores conocidos y resoluciones del Aviation Weather Viewer.
 ---
 
-# Error Documentation — Base Django React Next Feature
+# Error Documentation — Aviation Weather Viewer
 
-This file tracks known errors, their context, and resolutions. When a reusable fix or correction is found during development, document it here to avoid repeating the same mistake.
+> Memory Bank · actualizado 2026-08-19.
 
----
+## Formato
 
-## Format
-
+```text
+### [ERROR-NNN] Descripción corta
+- Fecha
+- Contexto
+- Causa raíz
+- Resolución
+- Archivos afectados
+- Test de regresión
 ```
-### [ERROR-NNN] Short description
-- **Date**: YYYY-MM-DD
-- **Context**: Where/when this error occurs
-- **Root Cause**: Why it happens
-- **Resolution**: How to fix it
-- **Files Affected**: List of files
-```
 
----
+## Errores conocidos
 
-## Known Issues
+No hay errores de producto documentados: la implementación meteorológica aún no
+ha comenzado.
 
-_No errors documented yet. This file will be updated as issues are discovered and resolved._
+## Riesgos registrados, no errores
 
----
+- El código actual sigue siendo el template; fase 00 realiza la conversión.
+- No existe dominio ni PostGIS operativo; son gates explícitos de fases 00/10.
+- WebGL/partículas se decide mediante el spike objetivo de fase 06.
 
-## Resolved Issues
-
-_None yet._
+Los riesgos no se promueven a error hasta tener un fallo reproducible.

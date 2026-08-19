@@ -1,42 +1,72 @@
-# Product Requirement Docs — Base Django React Next Feature
+# Product Requirement Docs — Aviation Weather Viewer MVP
 
-> Memory Bank · actualizado 2026-08-13 (corrida /qa). Proyecto **template**: no se despliega a producción; es el punto de partida de los proyectos Django+Next del fleet.
+> Memory Bank · actualizado 2026-08-19. El código aún conserva lógica del
+> template; la ejecución del producto comienza por la fase 00.
 
-## Por qué existe
+## Propósito
 
-- Arrancar un proyecto cliente nuevo con stack, convenciones, testing y CI ya resueltos, en horas en vez de días.
-- Fijar el estándar de calidad del fleet (quality gate, flow map E2E, Memory Bank) desde el commit 0 de cada derivado.
-- Servir de banco de pruebas de las skills/workflows del toolkit (`new-project-setup`, `pre-staging-cleanup`, `/qa`) antes de tocar proyectos reales.
+Construir un prototipo funcional y comercial de un visor meteorológico
+aeronáutico sobre Colombia, inspirado en la experiencia de Windy sin copiar su
+identidad. Debe demostrar navegación GIS fluida, capas meteorológicas y una
+arquitectura evolucionable, no prestar un servicio operacional.
 
-## Alcance funcional (features demo incluidas)
+## Fuente de verdad
 
-| Módulo | Qué demuestra | Rutas API (base_feature_app/urls/) |
-|---|---|---|
-| Auth | sign-up, sign-in, Google OAuth, reset por passcode, update password, validate token (JWT simplejwt) | `auth.py` (7) |
-| Blog | listado + detalle público, CRUD admin | `blog.py` (3) |
-| Catálogo/Producto | listado, detalle, CRUD admin, galería (django_attachments) | `product.py` (3) |
-| Ventas/Checkout | carrito (frontend), venta con SoldProduct snapshot, CRUD admin | `sale.py` (3) |
-| Usuarios | CRUD admin | `user.py` (2) |
-| Captcha | verificación reCAPTCHA | `captcha.py` (2) |
-| Staging banner | fase de staging visible + overlay de expiración | `staging_phase_banner.py` (1) |
+1. [`docs/MVP_roadmap/mvp_roadmap.md`](../MVP_roadmap/mvp_roadmap.md): alcance
+   funcional y backlog original.
+2. [`00_shared_contracts.md`](../MVP_roadmap/phase_scopes/00_shared_contracts.md):
+   contratos congelados para implementación.
+3. [`phase_scopes/README.md`](../MVP_roadmap/phase_scopes/README.md): orden,
+   ownership y gates de ejecución.
 
-Frontend (Next App Router, 12 páginas): home, catalog, products/[id], blogs, blogs/[id], checkout, sign-in, sign-up, forgot-password, admin-login, dashboard, backoffice (+ manual y comingSoon).
+Los scopes proyectan el roadmap; no lo sustituyen ni amplían P0.
 
-## Usuarios
+## Usuario y recorrido P0
 
-- **Visitante**: navega home/catálogo/blogs, arma carrito.
-- **Cliente autenticado**: checkout/compra, dashboard.
-- **Admin**: admin-login → backoffice (CRUD blogs/productos/ventas/usuarios) + Django admin custom (`admin_site`).
+El usuario principal participa en una reunión de validación. Puede abrir el
+visor, reconocer la advertencia, navegar Colombia, seleccionar un aeropuerto,
+alternar temperatura/viento, observar partículas, recorrer seis timestamps UTC,
+consultar leyenda/hora y reiniciar la demostración.
 
-## Reglas de negocio del template
+## Alcance obligatorio P0
 
-- Bilingüe EN/ES end-to-end (next-intl en frontend; contenido con campos pareados o traducción según feature).
-- JWT con refresh (`/api/token/`, `/api/token/refresh/`); rutas sensibles con permisos DRF.
-- Venta congela precio en `SoldProduct` (FK `PROTECT` a Product): borrar producto no rompe historial.
-- Reset de password por código de un solo uso (`PasswordCode`, FK a User).
-- Fake data reproducible vía management commands (`create_fake_data N` / `delete_fake_data`) — obligatoria para E2E y demos.
-- `api/health/` responde `project` + `environment` para que los probes externos verifiquen QUIÉN contesta (lección F24 del fleet).
+- mapa fullscreen local, zoom, pan y aeropuertos principales;
+- selección y panel de aeropuerto;
+- temperatura WebP y viento U/V con partículas WebGL;
+- seis timestamps, timeline, play/pausa/anterior/siguiente;
+- selector, leyenda, UTC, loading, error y reset;
+- warning permanente de simulación/no operacional;
+- Django/DRF, PostgreSQL/PostGIS y archivos locales determinísticos;
+- fallback de viento, ejecución local y URL HTTPS;
+- presentación sin APIs o assets externos.
 
-## Fuera de alcance
+## Opcionales P1
 
-- Pagos reales, emails transaccionales a terceros, monitoreo/backups (excluido explícitamente en projects.yml: scaffold sin servicios ni tráfico).
+Solo después de aceptar P0: búsqueda ICAO/nombre, picker por coordenada,
+opacidad, perfiles gráficos, móvil básico, transiciones/modo oscuro, estado en
+URL y cobertura E2E ampliada.
+
+## Fuera del alcance
+
+Datos oficiales, Aerocivil APIs, autenticación, usuarios/roles, Redis, radar,
+satélite, METAR/TAF/SIGMET, GRIB2/NetCDF, modelos o niveles múltiples, histórico,
+pronóstico real, alertas, reportes/descargas, infraestructura productiva/HA,
+auditoría institucional y aplicación nativa.
+
+## Reglas no negociables
+
+- Copy permanente: **DATOS SIMULADOS — PROTOTIPO DEMOSTRATIVO — NO APTO PARA
+  USO OPERACIONAL**.
+- API meteorológica siempre incluye `is_simulated: true` y
+  `operational_use: false`.
+- React no dibuja partículas; Django no transmite posiciones animadas.
+- MapLibre se inicializa una vez detrás de `WeatherMapController`.
+- Un cambio temporal hace commit atómico de mapa, panel, hora y leyenda.
+- Matrices/imágenes viven como archivos, no como filas/celdas Postgres.
+- El demo funciona con datos/basemap same-origin y determinísticos.
+
+## Definición de listo P0
+
+Todos los RF-001–RF-030 y RNF-001–RNF-018 tienen una fase primaria en el índice
+de scopes. P0 se acepta únicamente después de fase 10: URL/local, fallback,
+pruebas, objetivo de 30 FPS, diez minutos estables y dos ensayos.

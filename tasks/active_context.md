@@ -4,31 +4,38 @@
 
 ## Foco actual
 
-Inicialización del proyecto nuevo sobre el scaffold Django + Next.js:
+Plan de ejecución paralela del MVP:
 
-1. ✅ Repositorio registrado en `vps-ops-toolkit/projects.yml` como `scaffold`.
-2. ✅ Contexto funcional conservado en `docs/MVP_roadmap/mvp_roadmap.md`.
-3. ✅ Ecosistema Codex alineado con la identidad Aviation Weather Viewer.
-4. ⏳ La lógica de producto sigue siendo la del template y aún no comenzó la implementación del MVP.
+1. ✅ Roadmap funcional versionado en `docs/MVP_roadmap/mvp_roadmap.md`.
+2. ✅ Arquitectura/stack y alcance P0/P1 confirmados.
+3. ✅ Scopes divididos en olas con ownership y contratos compartidos.
+4. ⏳ Próxima ejecución: fase 00, limpieza del template y baseline del producto.
 
 ## Decisiones activas
 
-- `CLAUDE.md`, `.claude/` y Windsurf permanecen sin cambios en esta fase.
-- Los datos del MVP serán simulados y no aptos para uso operacional.
-- La arquitectura objetivo es Django/DRF, React + TypeScript,
-  PostgreSQL/PostGIS, MapLibre GL JS y WebGL.
-- El proyecto no declara aún dominio, DB operativa ni servicios de staging.
-- `docs/MVP_roadmap/mvp_roadmap.md` es la fuente funcional vigente hasta
-  refrescar el resto del Memory Bank durante la implementación del producto.
+- P0 se ejecuta en olas 0–5; P1 queda bloqueado hasta aceptación explícita.
+- Máximo cuatro sesiones paralelas desde el mismo commit base por ola.
+- Next.js existente permanece como host React; no se crea Vite paralelo.
+- Django/DRF migra a PostgreSQL/PostGIS y una app `weather`.
+- Basemap y meteorología son locales/same-origin durante la presentación.
+- WeatherLayers es primera opción de partículas, encapsulada y gateada por spike.
+- Fase 08 es la única integración compartida P0; fase 13 integra P1.
 
 ## Cambios recientes
 
-- Registro inicial del proyecto y su coordenada de trabajo en el toolkit.
-- Identidad y contexto específicos añadidos a Codex sin modificar Claude Code.
-- Catálogo Codex depurado de skills exclusivas del toolkit.
+- Creado `phase_scopes/README.md` con matriz de olas/gates.
+- Congelados formatos, APIs, store, controller, adapters y sincronización.
+- Creados catorce scopes ejecutables, incluidos tres P1 posteriores.
+- Refrescado Memory Bank para separar scaffold actual y objetivo MVP.
+
+## Estado real del código
+
+El producto meteorológico aún no está implementado. `master` conserva la lógica
+del template de comercio; ningún scope está Done hasta ejecutar sus criterios.
 
 ## Próximos pasos
 
-1. Ejecutar la inicialización técnica del MVP desde el roadmap versionado.
-2. Refrescar arquitectura, PRD, technical y tasks al comenzar la lógica de producto.
-3. Integrar formalmente el proyecto a staging cuando existan dominio, PostGIS y servicios.
+1. Integrar este paquete documental.
+2. Ejecutar fase 00 desde su scope en una sesión/worktree nuevos.
+3. Integrar fase 00 y abrir en paralelo fases 01, 02 y 03.
+4. No abrir fases 04–07 hasta drenar toda la ola 1.
