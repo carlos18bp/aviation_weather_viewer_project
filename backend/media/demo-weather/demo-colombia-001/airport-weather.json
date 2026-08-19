@@ -1,0 +1,332 @@
+{
+  "schema_version": 1,
+  "scenario": "demo-colombia-001",
+  "is_simulated": true,
+  "operational_use": false,
+  "records": [
+    {
+      "airport": "SKBO",
+      "timestamp": "2026-01-15T00:00:00Z",
+      "temperature_c": 15,
+      "wind_speed_kt": 11,
+      "wind_direction_deg": 85,
+      "visibility_km": 10,
+      "pressure_hpa": 1017
+    },
+    {
+      "airport": "SKRG",
+      "timestamp": "2026-01-15T00:00:00Z",
+      "temperature_c": 19,
+      "wind_speed_kt": 8,
+      "wind_direction_deg": 100,
+      "visibility_km": 12,
+      "pressure_hpa": 1016
+    },
+    {
+      "airport": "SKCL",
+      "timestamp": "2026-01-15T00:00:00Z",
+      "temperature_c": 23,
+      "wind_speed_kt": 7,
+      "wind_direction_deg": 220,
+      "visibility_km": 11,
+      "pressure_hpa": 1014
+    },
+    {
+      "airport": "SKBQ",
+      "timestamp": "2026-01-15T00:00:00Z",
+      "temperature_c": 28,
+      "wind_speed_kt": 17,
+      "wind_direction_deg": 55,
+      "visibility_km": 14,
+      "pressure_hpa": 1011
+    },
+    {
+      "airport": "SKCG",
+      "timestamp": "2026-01-15T00:00:00Z",
+      "temperature_c": 29,
+      "wind_speed_kt": 15,
+      "wind_direction_deg": 45,
+      "visibility_km": 13,
+      "pressure_hpa": 1010
+    },
+    {
+      "airport": "SKSM",
+      "timestamp": "2026-01-15T00:00:00Z",
+      "temperature_c": 28,
+      "wind_speed_kt": 19,
+      "wind_direction_deg": 60,
+      "visibility_km": 12,
+      "pressure_hpa": 1011
+    },
+    {
+      "airport": "SKBO",
+      "timestamp": "2026-01-15T03:00:00Z",
+      "temperature_c": 14,
+      "wind_speed_kt": 10,
+      "wind_direction_deg": 80,
+      "visibility_km": 9,
+      "pressure_hpa": 1018
+    },
+    {
+      "airport": "SKRG",
+      "timestamp": "2026-01-15T03:00:00Z",
+      "temperature_c": 18,
+      "wind_speed_kt": 7,
+      "wind_direction_deg": 95,
+      "visibility_km": 11,
+      "pressure_hpa": 1017
+    },
+    {
+      "airport": "SKCL",
+      "timestamp": "2026-01-15T03:00:00Z",
+      "temperature_c": 22,
+      "wind_speed_kt": 6,
+      "wind_direction_deg": 215,
+      "visibility_km": 10,
+      "pressure_hpa": 1015
+    },
+    {
+      "airport": "SKBQ",
+      "timestamp": "2026-01-15T03:00:00Z",
+      "temperature_c": 27,
+      "wind_speed_kt": 16,
+      "wind_direction_deg": 50,
+      "visibility_km": 13,
+      "pressure_hpa": 1012
+    },
+    {
+      "airport": "SKCG",
+      "timestamp": "2026-01-15T03:00:00Z",
+      "temperature_c": 28,
+      "wind_speed_kt": 14,
+      "wind_direction_deg": 40,
+      "visibility_km": 12,
+      "pressure_hpa": 1011
+    },
+    {
+      "airport": "SKSM",
+      "timestamp": "2026-01-15T03:00:00Z",
+      "temperature_c": 27,
+      "wind_speed_kt": 18,
+      "wind_direction_deg": 55,
+      "visibility_km": 11,
+      "pressure_hpa": 1012
+    },
+    {
+      "airport": "SKBO",
+      "timestamp": "2026-01-15T06:00:00Z",
+      "temperature_c": 13,
+      "wind_speed_kt": 9,
+      "wind_direction_deg": 75,
+      "visibility_km": 8,
+      "pressure_hpa": 1019
+    },
+    {
+      "airport": "SKRG",
+      "timestamp": "2026-01-15T06:00:00Z",
+      "temperature_c": 17,
+      "wind_speed_kt": 6,
+      "wind_direction_deg": 90,
+      "visibility_km": 10,
+      "pressure_hpa": 1018
+    },
+    {
+      "airport": "SKCL",
+      "timestamp": "2026-01-15T06:00:00Z",
+      "temperature_c": 21,
+      "wind_speed_kt": 5,
+      "wind_direction_deg": 210,
+      "visibility_km": 9,
+      "pressure_hpa": 1016
+    },
+    {
+      "airport": "SKBQ",
+      "timestamp": "2026-01-15T06:00:00Z",
+      "temperature_c": 26,
+      "wind_speed_kt": 15,
+      "wind_direction_deg": 45,
+      "visibility_km": 12,
+      "pressure_hpa": 1013
+    },
+    {
+      "airport": "SKCG",
+      "timestamp": "2026-01-15T06:00:00Z",
+      "temperature_c": 27,
+      "wind_speed_kt": 13,
+      "wind_direction_deg": 35,
+      "visibility_km": 11,
+      "pressure_hpa": 1012
+    },
+    {
+      "airport": "SKSM",
+      "timestamp": "2026-01-15T06:00:00Z",
+      "temperature_c": 26,
+      "wind_speed_kt": 17,
+      "wind_direction_deg": 50,
+      "visibility_km": 10,
+      "pressure_hpa": 1013
+    },
+    {
+      "airport": "SKBO",
+      "timestamp": "2026-01-15T09:00:00Z",
+      "temperature_c": 12,
+      "wind_speed_kt": 8,
+      "wind_direction_deg": 70,
+      "visibility_km": 8,
+      "pressure_hpa": 1019
+    },
+    {
+      "airport": "SKRG",
+      "timestamp": "2026-01-15T09:00:00Z",
+      "temperature_c": 16,
+      "wind_speed_kt": 5,
+      "wind_direction_deg": 85,
+      "visibility_km": 9,
+      "pressure_hpa": 1018
+    },
+    {
+      "airport": "SKCL",
+      "timestamp": "2026-01-15T09:00:00Z",
+      "temperature_c": 20,
+      "wind_speed_kt": 4,
+      "wind_direction_deg": 205,
+      "visibility_km": 9,
+      "pressure_hpa": 1016
+    },
+    {
+      "airport": "SKBQ",
+      "timestamp": "2026-01-15T09:00:00Z",
+      "temperature_c": 25,
+      "wind_speed_kt": 14,
+      "wind_direction_deg": 40,
+      "visibility_km": 11,
+      "pressure_hpa": 1013
+    },
+    {
+      "airport": "SKCG",
+      "timestamp": "2026-01-15T09:00:00Z",
+      "temperature_c": 26,
+      "wind_speed_kt": 12,
+      "wind_direction_deg": 30,
+      "visibility_km": 10,
+      "pressure_hpa": 1012
+    },
+    {
+      "airport": "SKSM",
+      "timestamp": "2026-01-15T09:00:00Z",
+      "temperature_c": 25,
+      "wind_speed_kt": 16,
+      "wind_direction_deg": 45,
+      "visibility_km": 10,
+      "pressure_hpa": 1013
+    },
+    {
+      "airport": "SKBO",
+      "timestamp": "2026-01-15T12:00:00Z",
+      "temperature_c": 14,
+      "wind_speed_kt": 10,
+      "wind_direction_deg": 80,
+      "visibility_km": 10,
+      "pressure_hpa": 1018
+    },
+    {
+      "airport": "SKRG",
+      "timestamp": "2026-01-15T12:00:00Z",
+      "temperature_c": 18,
+      "wind_speed_kt": 7,
+      "wind_direction_deg": 95,
+      "visibility_km": 12,
+      "pressure_hpa": 1017
+    },
+    {
+      "airport": "SKCL",
+      "timestamp": "2026-01-15T12:00:00Z",
+      "temperature_c": 22,
+      "wind_speed_kt": 6,
+      "wind_direction_deg": 215,
+      "visibility_km": 11,
+      "pressure_hpa": 1015
+    },
+    {
+      "airport": "SKBQ",
+      "timestamp": "2026-01-15T12:00:00Z",
+      "temperature_c": 27,
+      "wind_speed_kt": 16,
+      "wind_direction_deg": 50,
+      "visibility_km": 14,
+      "pressure_hpa": 1012
+    },
+    {
+      "airport": "SKCG",
+      "timestamp": "2026-01-15T12:00:00Z",
+      "temperature_c": 28,
+      "wind_speed_kt": 14,
+      "wind_direction_deg": 40,
+      "visibility_km": 13,
+      "pressure_hpa": 1011
+    },
+    {
+      "airport": "SKSM",
+      "timestamp": "2026-01-15T12:00:00Z",
+      "temperature_c": 27,
+      "wind_speed_kt": 18,
+      "wind_direction_deg": 55,
+      "visibility_km": 12,
+      "pressure_hpa": 1012
+    },
+    {
+      "airport": "SKBO",
+      "timestamp": "2026-01-15T15:00:00Z",
+      "temperature_c": 18,
+      "wind_speed_kt": 13,
+      "wind_direction_deg": 95,
+      "visibility_km": 12,
+      "pressure_hpa": 1016
+    },
+    {
+      "airport": "SKRG",
+      "timestamp": "2026-01-15T15:00:00Z",
+      "temperature_c": 22,
+      "wind_speed_kt": 10,
+      "wind_direction_deg": 110,
+      "visibility_km": 14,
+      "pressure_hpa": 1015
+    },
+    {
+      "airport": "SKCL",
+      "timestamp": "2026-01-15T15:00:00Z",
+      "temperature_c": 26,
+      "wind_speed_kt": 9,
+      "wind_direction_deg": 230,
+      "visibility_km": 13,
+      "pressure_hpa": 1013
+    },
+    {
+      "airport": "SKBQ",
+      "timestamp": "2026-01-15T15:00:00Z",
+      "temperature_c": 30,
+      "wind_speed_kt": 19,
+      "wind_direction_deg": 65,
+      "visibility_km": 16,
+      "pressure_hpa": 1010
+    },
+    {
+      "airport": "SKCG",
+      "timestamp": "2026-01-15T15:00:00Z",
+      "temperature_c": 31,
+      "wind_speed_kt": 17,
+      "wind_direction_deg": 55,
+      "visibility_km": 15,
+      "pressure_hpa": 1009
+    },
+    {
+      "airport": "SKSM",
+      "timestamp": "2026-01-15T15:00:00Z",
+      "temperature_c": 30,
+      "wind_speed_kt": 21,
+      "wind_direction_deg": 70,
+      "visibility_km": 14,
+      "pressure_hpa": 1010
+    }
+  ]
+}

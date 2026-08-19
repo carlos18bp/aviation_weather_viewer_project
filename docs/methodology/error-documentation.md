@@ -37,4 +37,28 @@ PostGIS se habilitó una sola vez con el rol administrador `postgres`. El rol de
 aplicación conserva privilegios mínimos y puede usar la extensión sin ser
 superusuario.
 
-No hay errores de producto conocidos pendientes en Fase 00.
+## 2026-08-19 — MapLibre no iniciaba su worker en el build de Next.js
+
+### Síntoma
+
+El canvas y `/map/style.json` cargaban, pero el mapa permanecía en estado
+`loading` y no solicitaba los GeoJSON locales.
+
+### Causa
+
+MapLibre 6 deriva por defecto el Web Worker desde `import.meta.url`. Después del
+bundle de Turbopack esa resolución no apuntaba a los módulos distribuidos por
+MapLibre.
+
+### Resolución
+
+Se versionaron `maplibre-gl-worker.mjs` y `maplibre-gl-shared.mjs` bajo
+`frontend/public/map/`, se fijó el worker con `setWorkerUrl()` antes de crear el
+mapa y se incluyó la licencia BSD completa.
+
+### Verificación
+
+Chromium cargó el worker, los cuatro GeoJSON y los glyphs con respuestas 200;
+el shell alcanzó `ready` sin requests externas ni errores de consola.
+
+No hay errores de producto conocidos pendientes en Fase 01.

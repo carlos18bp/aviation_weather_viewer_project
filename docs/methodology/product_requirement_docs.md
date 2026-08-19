@@ -25,28 +25,31 @@ debe presentarse como fuente de información para vuelo.
 5. Exponer una API pública, same-origin, sin auth de producto.
 6. Mantener el warning operacional visible durante toda la experiencia.
 
-## Alcance actual — Fase 00
+## Alcance actual — Fase 01
 
-La Fase 00 limpia el starter y congela la base visual. Incluye únicamente:
+La Fase 00 ya está integrada. La Fase 01 sustituye el placeholder visual por la
+base GIS navegable y conserva el backend sin cambios. Incluye únicamente:
 
-- Django/DRF con proyecto `aviation_weather_project` y app `weather`.
-- PostgreSQL/PostGIS como único motor.
-- `GET /api/v1/health`.
-- Next.js en `/` con placeholder fullscreen y tema oscuro definitivo.
-- MapLibre y Zustand disponibles para fases posteriores, sin inicializar mapa.
-- CI mínimo para PostGIS, health, test de página y build.
+- MapLibre fullscreen con Colombia, costa, países vecinos, departamentos y
+  labels servidos desde assets locales.
+- Cámara inicial, zoom `4–9` y límites regionales congelados.
+- `WeatherMapController` con lifecycle idempotente y registry de adapters vacío.
+- Store Zustand con el estado mínimo de los contratos compartidos.
+- Shell visual con slots vacíos para paneles y timeline.
+- Detección de WebGL2, estados loading/ready/error, resize y cleanup.
 
-No incluye mapa, aeropuertos, assets meteorológicos, partículas, temperatura,
-timeline, paneles interactivos, despliegue ni responsive avanzado.
+No incluye aeropuertos, datos o API meteorológica, viento, temperatura,
+timeline funcional, leyendas, controles, búsqueda, opacidad, quality, URL state
+ni cambio de tema.
 
-## Criterios de éxito de Fase 00
+## Criterios de éxito de Fase 01
 
-- El starter de comercio y sus dependencias funcionales no existen.
-- No quedan OAuth, CAPTCHA, JWT, Redis, Huey, MySQL, attachments ni
-  `next-themes`.
-- Health cumple exactamente su contrato y PostGIS responde localmente y en CI.
-- La raíz muestra identidad, composición congelada y warning permanente.
-- Los tests dirigidos y el build pasan por separado.
+- Colombia abre centrada y el mapa no permite navegar fuera de la región.
+- Pan, zoom y resize funcionan con una única instancia MapLibre.
+- Style, GeoJSON, glyphs y Web Worker se resuelven desde `/map/`, sin red externa.
+- Controller y store mantienen exactamente las fronteras congeladas.
+- Unmount y `destroy()` repetido liberan listeners, adapters, mapa y worker.
+- Los tres tests dirigidos y el build pasan por separado.
 
 ## Fuentes de verdad
 
