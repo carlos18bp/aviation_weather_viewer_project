@@ -107,6 +107,21 @@ El build se ejecuta en un ciclo separado:
 cd frontend && npm run build
 ```
 
+## CI de `backend-health`
+
+El job usa un servicio efímero `postgis/postgis:16-3.4` y conserva un límite
+global de 20 minutos. La preparación de GeoDjango separa la actualización de
+índices APT de la instalación para que una espera externa sea identificable:
+
+- actualización de índices: máximo 5 minutos;
+- instalación de GDAL, GEOS y cliente PostgreSQL: máximo 10 minutos;
+- tres reintentos por descarga y timeout HTTP/HTTPS de 30 segundos;
+- salida APT visible y ejecución no interactiva.
+
+Después de preparar el sistema, el job instala `requirements.txt`, verifica
+PostGIS, ejecuta `manage.py check` y corre únicamente
+`weather/tests/test_health.py`.
+
 ## Decisiones técnicas
 
 - `APPEND_SLASH=False`; el health exacto no termina en `/`.

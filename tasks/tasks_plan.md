@@ -48,3 +48,14 @@ Estado: **implementada y verificada; PR #5 abierto sin merge**.
 
 Los scopes normativos y dependencias entre olas están en
 `docs/MVP_roadmap/phase_scopes/README.md`.
+
+## Corrección operativa — confiabilidad APT en CI
+
+Estado: **implementada en rama separada; pendiente de CI y merge**.
+
+- [x] Confirmar que la demora ocurre antes de Python/Django y no en Fase 06.
+- [x] Separar actualización e instalación APT con logs visibles.
+- [x] Agregar retries y timeouts de conexión, step y job.
+- [x] Mantener paquetes, servicio PostGIS y tests dirigidos sin cambios.
+- [ ] Confirmar `backend-health` verde en GitHub Actions.
+- [ ] Integrar el fix, sincronizar PR #7 y completar su merge.
