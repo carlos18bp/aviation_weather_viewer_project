@@ -1,0 +1,326 @@
+.shell {
+  isolation: isolate;
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--viewer-bg);
+}
+
+.mapViewport,
+.mapCanvas,
+.mapScrim {
+  position: absolute;
+  inset: 0;
+}
+
+.mapViewport {
+  z-index: -2;
+  background: var(--viewer-bg);
+}
+
+.mapCanvas {
+  width: 100%;
+  height: 100%;
+}
+
+.mapScrim {
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgb(7 19 31 / 72%) 0, transparent 18%, transparent 74%, rgb(7 19 31 / 78%) 100%),
+    linear-gradient(90deg, rgb(7 19 31 / 38%) 0, transparent 18%, transparent 82%, rgb(7 19 31 / 32%) 100%);
+  pointer-events: none;
+}
+
+.header,
+.footer,
+.stage {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--viewer-border);
+  background: linear-gradient(180deg, var(--viewer-surface), rgb(7 19 31 / 16%));
+}
+
+.header h1 {
+  margin: 0;
+  font-size: clamp(20px, 1.8vw, 30px);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--viewer-accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.headerMeta {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.mapStatus {
+  padding: 7px 10px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 999px;
+  color: var(--viewer-muted);
+  background: rgb(7 19 31 / 64%);
+  font-size: 11px;
+}
+
+.shell[data-map-status="ready"] .mapStatus {
+  color: var(--viewer-accent);
+  border-color: rgb(34 211 238 / 36%);
+}
+
+.shell[data-map-status="error"] .mapStatus {
+  color: var(--viewer-warning);
+  border-color: rgb(245 158 11 / 36%);
+}
+
+.time {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 10px;
+  color: var(--viewer-muted);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+
+.time strong {
+  color: var(--viewer-text);
+  font-size: 20px;
+  letter-spacing: 0.04em;
+}
+
+.stage {
+  display: grid;
+  grid-template-columns: minmax(210px, 280px) minmax(0, 1fr) minmax(190px, 240px);
+  align-items: center;
+  gap: 24px;
+  min-height: 0;
+  padding: 24px 28px;
+}
+
+.panelSlot {
+  min-height: 150px;
+  padding: 18px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 12px;
+  background: var(--viewer-surface);
+  box-shadow: 0 18px 60px rgb(0 0 0 / 22%);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+}
+
+.airportSlot {
+  grid-column: 1;
+}
+
+.layerSlot {
+  grid-column: 3;
+}
+
+.slotSkeleton {
+  display: grid;
+  gap: 12px;
+}
+
+.slotSkeleton span {
+  display: block;
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--viewer-border);
+}
+
+.slotSkeleton span:first-child {
+  width: 52%;
+  height: 10px;
+  margin-bottom: 12px;
+  background: rgb(34 211 238 / 24%);
+}
+
+.slotSkeleton span:last-child {
+  width: 68%;
+}
+
+.loadingSurface,
+.errorSurface {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--viewer-border);
+  background: rgb(7 19 31 / 90%);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 40%);
+  backdrop-filter: blur(16px);
+}
+
+.loadingSurface {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 999px;
+  color: var(--viewer-muted);
+  font-size: 12px;
+}
+
+.loadingPulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--viewer-accent);
+  box-shadow: 0 0 18px var(--viewer-accent);
+  animation: map-pulse 1.2s ease-in-out infinite;
+}
+
+.errorSurface {
+  width: min(420px, calc(100vw - 40px));
+  padding: 24px;
+  border-radius: 14px;
+  pointer-events: auto;
+}
+
+.errorSurface h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.errorSurface > p:not(.eyebrow) {
+  margin: 12px 0 0;
+  color: var(--viewer-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.errorSurface button {
+  margin-top: 18px;
+  padding: 9px 14px;
+  border: 1px solid rgb(34 211 238 / 42%);
+  border-radius: 8px;
+  color: var(--viewer-text);
+  background: rgb(34 211 238 / 14%);
+  cursor: pointer;
+}
+
+.errorSurface button:hover,
+.errorSurface button:focus-visible {
+  background: rgb(34 211 238 / 22%);
+  outline: none;
+}
+
+.footer {
+  display: grid;
+  gap: 13px;
+  padding: 12px 28px 20px;
+  border-top: 1px solid var(--viewer-border);
+  background: linear-gradient(0deg, var(--viewer-surface), rgb(7 19 31 / 14%));
+}
+
+.warning {
+  margin: 0;
+  color: var(--viewer-warning);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+}
+
+.timelineSlot {
+  width: min(620px, 100%);
+  margin: 0 auto;
+  padding: 10px 14px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 10px;
+  background: rgb(7 19 31 / 58%);
+  pointer-events: auto;
+}
+
+.timelineSkeleton {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--viewer-border);
+}
+
+.timelineSkeleton i {
+  width: 5px;
+  height: 5px;
+  margin-top: -3px;
+  border-radius: 50%;
+  background: var(--viewer-muted);
+}
+
+.timelineSkeleton i:nth-child(3) {
+  width: 7px;
+  height: 7px;
+  margin-top: -4px;
+  background: var(--viewer-accent);
+  box-shadow: 0 0 14px var(--viewer-accent);
+}
+
+.shell :global(.maplibregl-ctrl-bottom-right) {
+  right: 16px;
+  bottom: 92px;
+}
+
+.shell :global(.maplibregl-ctrl-attrib) {
+  color: var(--viewer-muted);
+  background: rgb(7 19 31 / 70%);
+}
+
+.shell :global(.maplibregl-ctrl-attrib a) {
+  color: var(--viewer-accent);
+}
+
+@keyframes map-pulse {
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
+}
+
+@media (max-width: 900px) {
+  .header,
+  .footer {
+    padding-inline: 18px;
+  }
+
+  .mapStatus,
+  .time > span {
+    display: none;
+  }
+
+  .stage {
+    display: block;
+    padding: 0;
+    pointer-events: none;
+  }
+
+  .panelSlot {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadingPulse {
+    animation: none;
+  }
+}
