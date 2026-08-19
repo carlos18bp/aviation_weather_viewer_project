@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import HomePage from '../page';
 
 
-describe('Aviation weather placeholder', () => {
+describe('Aviation weather viewer page', () => {
   it('shows the frozen product identity', () => {
     render(<HomePage />);
 
@@ -15,10 +15,10 @@ describe('Aviation weather placeholder', () => {
     ).toBeInTheDocument();
   });
 
-  it('identifies the map as future work', () => {
+  it('mounts the Colombia map surface', () => {
     render(<HomePage />);
 
-    expect(screen.getByText('El mapa se incorpora en la Fase 01.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Mapa meteorológico navegable de Colombia')).toBeInTheDocument();
   });
 
   it('shows the permanent operational warning', () => {

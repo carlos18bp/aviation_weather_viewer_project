@@ -1,0 +1,125 @@
+{
+  "version": 8,
+  "name": "Aviation Weather Viewer · Colombia",
+  "glyphs": "/map/fonts/{fontstack}/{range}.pbf",
+  "sources": {
+    "basemap-regional-countries": {
+      "type": "geojson",
+      "data": "/map/data/regional-countries.geojson",
+      "attribution": "Natural Earth · dominio público"
+    },
+    "basemap-regional-coastline": {
+      "type": "geojson",
+      "data": "/map/data/regional-coastline.geojson",
+      "attribution": "Natural Earth · dominio público"
+    },
+    "basemap-colombia-departments": {
+      "type": "geojson",
+      "data": "/map/data/colombia-departments.geojson",
+      "attribution": "Natural Earth · dominio público"
+    },
+    "basemap-labels": {
+      "type": "geojson",
+      "data": "/map/data/map-labels.geojson",
+      "attribution": "Natural Earth · dominio público"
+    }
+  },
+  "layers": [
+    {
+      "id": "basemap-background",
+      "type": "background",
+      "paint": {
+        "background-color": "#07131f"
+      }
+    },
+    {
+      "id": "basemap-regional-land",
+      "type": "fill",
+      "source": "basemap-regional-countries",
+      "paint": {
+        "fill-color": "#0d2635",
+        "fill-opacity": 0.92
+      }
+    },
+    {
+      "id": "basemap-colombia-land",
+      "type": "fill",
+      "source": "basemap-regional-countries",
+      "filter": ["==", ["get", "code"], "COL"],
+      "paint": {
+        "fill-color": "#12384a",
+        "fill-opacity": 0.98
+      }
+    },
+    {
+      "id": "basemap-coastline",
+      "type": "line",
+      "source": "basemap-regional-coastline",
+      "paint": {
+        "line-color": "#63a7b8",
+        "line-opacity": 0.7,
+        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.8, 9, 1.6]
+      }
+    },
+    {
+      "id": "basemap-country-boundaries",
+      "type": "line",
+      "source": "basemap-regional-countries",
+      "paint": {
+        "line-color": "#8db6c3",
+        "line-opacity": 0.5,
+        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.7, 9, 1.4]
+      }
+    },
+    {
+      "id": "basemap-department-boundaries",
+      "type": "line",
+      "source": "basemap-colombia-departments",
+      "paint": {
+        "line-color": "#b8d4dc",
+        "line-opacity": 0.34,
+        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.35, 9, 1]
+      }
+    },
+    {
+      "id": "basemap-country-labels",
+      "type": "symbol",
+      "source": "basemap-labels",
+      "filter": ["==", ["get", "kind"], "country"],
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 4, 11, 9, 15],
+        "text-letter-spacing": 0.08,
+        "text-transform": "uppercase",
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#c7d9df",
+        "text-opacity": 0.72,
+        "text-halo-color": "#07131f",
+        "text-halo-width": 1.4
+      }
+    },
+    {
+      "id": "basemap-department-labels",
+      "type": "symbol",
+      "source": "basemap-labels",
+      "minzoom": 5.2,
+      "filter": ["==", ["get", "kind"], "department"],
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 5.2, 9, 9, 12],
+        "text-allow-overlap": false,
+        "text-padding": 3
+      },
+      "paint": {
+        "text-color": "#dce9ed",
+        "text-opacity": 0.66,
+        "text-halo-color": "#0b2533",
+        "text-halo-width": 1.2
+      }
+    }
+  ]
+}

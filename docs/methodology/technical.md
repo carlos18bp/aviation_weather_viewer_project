@@ -38,6 +38,40 @@ SQLite o MySQL.
 - `NEXT_PUBLIC_BACKEND_ORIGIN=http://localhost:8000`: origen usado por el
   servidor Next.js para rewrites same-origin.
 
+## Basemap local de Fase 01
+
+- Cámara: `[-73.5, 4.5]`, zoom `4.7`, bearing/pitch `0`.
+- Zoom permitido: `4–9`.
+- Bounds regionales: `[[-84, -7], [-64, 16]]`.
+- Style: `/map/style.json`.
+- Web Worker MapLibre: `/map/maplibre-gl-worker.mjs`, fijado explícitamente
+  para que Turbopack no tenga que inferirlo desde `import.meta.url`.
+- GeoJSON: seis países regionales, costa recortada, 33 departamentos y 39
+  labels.
+- Glyphs: Noto Sans Regular, rango `0-255`.
+
+IDs de source reservados:
+
+```text
+basemap-regional-countries
+basemap-regional-coastline
+basemap-colombia-departments
+basemap-labels
+```
+
+IDs de layer reservados:
+
+```text
+basemap-background
+basemap-regional-land
+basemap-colombia-land
+basemap-coastline
+basemap-country-boundaries
+basemap-department-boundaries
+basemap-country-labels
+basemap-department-labels
+```
+
 ## PostGIS local validado
 
 El host de trabajo usa el cluster PostgreSQL `16/main` en el puerto `5432`. La
@@ -62,6 +96,9 @@ como no secretas.
 cd backend && source venv/bin/activate && python manage.py check
 cd backend && source venv/bin/activate && pytest weather/tests/test_health.py -v
 cd frontend && npm test -- app/__tests__/page.test.tsx
+cd frontend && npm test -- map/__tests__/WeatherMapController.test.ts
+cd frontend && npm test -- lib/stores/__tests__/weatherViewerStore.test.ts
+cd frontend && npm test -- components/weather/WeatherViewerShell/__tests__/WeatherViewerShell.test.tsx
 ```
 
 El build se ejecuta en un ciclo separado:
@@ -75,5 +112,11 @@ cd frontend && npm run build
 - `APPEND_SLASH=False`; el health exacto no termina en `/`.
 - DRF no registra autenticadores y usa `AllowAny`.
 - `django.contrib.gis` y el backend PostGIS se cargan en todos los ambientes.
-- MapLibre está instalado y fijado, pero no se importa en la UI de Fase 00.
+- MapLibre se importa solo desde el controller client-side y se construye una
+  vez por montaje.
+- El worker y su módulo compartido se copian sin modificar desde
+  `maplibre-gl@6.3.0`; su licencia completa vive en `public/map/`.
+- `trackResize` queda desactivado: el controller responde al window resize y el
+  shell a `ResizeObserver`, ambos convergen en `map.resize()`.
+- El store conserva estado serializable; nunca guarda mapa, cámara ni viewport.
 - El tema usa únicamente los siete tokens `--viewer-*` del contrato.

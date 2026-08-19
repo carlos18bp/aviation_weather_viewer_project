@@ -21,6 +21,15 @@
   scope de Fase 01.
 - Las siluetas de controles deben ser elementos no interactivos para no prometer
   funcionalidad ni crear falsos flujos E2E.
+- En Next.js/Turbopack, la ruta implícita del Web Worker de MapLibre no es una
+  frontera estable; fijarla a un módulo same-origin versionado hace explícito el
+  contrato offline.
+- MapLibre debe construirse después de resolver el import dinámico y antes de
+  cualquier `await` adicional, para registrar `load`/`error` sin carreras.
+- La instancia, cámara y listeners pertenecen al controller; Zustand solo
+  publica estado serializable para evitar recreaciones por renders React.
+- GeoJSON simplificado por zoom objetivo mantiene el contexto regional sin
+  introducir tiles ni servicios externos.
 
 ## Datos y seguridad
 
@@ -39,3 +48,6 @@
   Next.js se ejecuta por separado para detectar imports/rutas huérfanos.
 - Una vista puramente informativa puede declararse exenta de E2E solo si no
   contiene controles calificables y la razón queda registrada en el flow map.
+- Para el mapa real, los tests unitarios cubren opciones y cleanup; la prueba
+  Chromium confirma además pan, zoom, resize, carga offline y liberación del
+  worker.

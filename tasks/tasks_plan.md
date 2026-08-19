@@ -4,7 +4,7 @@ Actualizado: 2026-08-19.
 
 ## Fase 00 — Limpieza y dirección visual
 
-Estado: **implementada y verificada; PR #3 abierto sin merge**.
+Estado: **integrada en `master` mediante PR #3**.
 
 - [x] Verificar integración del PR documental #2.
 - [x] Ejecutar `git-sync` y trabajar desde rama/worktree propios.
@@ -17,19 +17,34 @@ Estado: **implementada y verificada; PR #3 abierto sin merge**.
 - [x] Ajustar CI, ignores, media versionable e identidad documental.
 - [x] Completar tests dirigidos, build separado y auditoría de residuos.
 - [x] Completar `e2e-user-flows-check` sin flujos faltantes ni junk tests.
-- [x] Abrir PR #3 contra `master` sin hacer merge.
+- [x] Integrar PR #3 en `master` (`f1747230b1f86519af5bd69520b309f22d30c9e6`).
+
+## Fase 01 — Mapa de Colombia y shell GIS
+
+Estado: **implementada y verificada; PR #5 abierto sin merge**.
+
+- [x] Validar que Fase 00 está integrada en la base resuelta.
+- [x] Versionar style, GeoJSON, glyphs y worker completamente locales.
+- [x] Congelar cámara, zoom y bounds regionales.
+- [x] Implementar una única instancia MapLibre con cleanup idempotente.
+- [x] Entregar `WeatherMapController` y registry de adapters vacío.
+- [x] Entregar store Zustand con el estado mínimo compartido.
+- [x] Montar shell fullscreen con slots vacíos y estados WebGL2/ready/error.
+- [x] Registrar procedencia y licencias de assets.
+- [x] Pasar tests dirigidos, build y validación Chromium offline.
+- [x] Abrir PR #5 contra `master` sin hacer merge.
 
 ## Fases siguientes
 
 | Fase | Entrega | Estado |
 |---:|---|---|
-| 01 | Mapa base y cámara Colombia | Bloqueada por Fase 00 |
-| 02 | Manifiesto y catálogo de assets | Bloqueada por Fase 00 |
-| 03 | Campo de viento | Pendiente |
-| 04 | Temperatura | Pendiente |
-| 05 | Aeropuertos y clima | Pendiente |
-| 06 | Controles, timeline e integración | Pendiente |
-| 07 | Validación de demo y despliegue | Pendiente |
+| 02 | Backend y datos mínimos de demo | Habilitada por Fase 00; sesión independiente |
+| 03 | Renderer de viento | Habilitada por Fase 00; sesión independiente |
+| 04 | Aeropuertos | Pendiente de integrar ola 1 |
+| 05 | Temperatura | Pendiente de integrar ola 1 |
+| 06 | Controles y timeline | Pendiente de integrar ola 1 |
+| 07 | Integración y acabado | Pendiente de integrar ola 2 |
+| 08 | Entrega de la demo | Pendiente de Fase 07 |
 
 Los scopes normativos y dependencias entre olas están en
 `docs/MVP_roadmap/phase_scopes/README.md`.
