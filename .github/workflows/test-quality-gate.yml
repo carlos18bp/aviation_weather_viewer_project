@@ -30,6 +30,9 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      - name: Install Python lint dependency
+        run: pip install ruff==0.15.13
+
       - name: Run test quality gate
         run: |
           python3 scripts/test_quality_gate.py --repo-root . --report-path test-results/test-quality-report.json --external-lint run --semantic-rules strict --verbose --junk-severity=error

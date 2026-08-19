@@ -1,5 +1,5 @@
 # ============================================================================
-# Backend (Django) - .gitignore
+# Aviation Weather Viewer backend - .gitignore
 # ============================================================================
 
 # ============================================================================
@@ -32,8 +32,12 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
-# Media and Static Files
-media/
+# Media and static files. Only the frozen demo scenario is versioned.
+/media/*
+!/media/demo-weather/
+/media/demo-weather/*
+!/media/demo-weather/demo-colombia-001/
+!/media/demo-weather/demo-colombia-001/**
 staticfiles/
 static_root/
 

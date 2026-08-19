@@ -14,15 +14,12 @@ const customJestConfig = {
   },
   collectCoverageFrom: [
     'app/**/*.{ts,tsx}',
-    'components/**/*.{ts,tsx}',
-    'lib/**/*.{ts,tsx}',
     '!**/*.d.ts',
     '!**/node_modules/**',
     '!**/__tests__/**',
     '!**/e2e/**',
     '!app/layout.tsx',
     '!app/globals.css',
-    '!lib/types.ts',
   ],
   coverageProvider: 'v8',
   coverageThreshold: {

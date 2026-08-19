@@ -4,7 +4,7 @@ trigger: always_on
 ---
 
 <!-- fleet-base:begin v=1 -->
-# Reglas base del fleet — Base Django+React+Next (scaffold)
+# Reglas base del fleet — Aviation Weather Viewer
 
 ## Convencion de lenguaje
 

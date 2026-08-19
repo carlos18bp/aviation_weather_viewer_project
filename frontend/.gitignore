@@ -1,5 +1,5 @@
 # ============================================================================
-# Frontend (Next.js + React) - .gitignore
+# Aviation Weather Viewer frontend - .gitignore
 # ============================================================================
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
@@ -28,8 +28,6 @@ yarn.lock
 # ============================================================================
 # Next.js
 # ============================================================================
-/.next/
-/out/
 .next/
 out/
 
