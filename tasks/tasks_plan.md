@@ -4,7 +4,7 @@ Actualizado: 2026-08-19.
 
 ## Fase 00 — Limpieza y dirección visual
 
-Estado: **implementada y verificada; PR pendiente de apertura**.
+Estado: **implementada y verificada; PR #3 abierto sin merge**.
 
 - [x] Verificar integración del PR documental #2.
 - [x] Ejecutar `git-sync` y trabajar desde rama/worktree propios.
@@ -17,7 +17,7 @@ Estado: **implementada y verificada; PR pendiente de apertura**.
 - [x] Ajustar CI, ignores, media versionable e identidad documental.
 - [x] Completar tests dirigidos, build separado y auditoría de residuos.
 - [x] Completar `e2e-user-flows-check` sin flujos faltantes ni junk tests.
-- [ ] Abrir PR contra `master` sin hacer merge.
+- [x] Abrir PR #3 contra `master` sin hacer merge.
 
 ## Fases siguientes
 

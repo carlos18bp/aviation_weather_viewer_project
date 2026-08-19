@@ -14,6 +14,7 @@ meteorológica de Colombia.
 - Rama: `feat/19082026-phase-00-visual-foundation`.
 - Worktree: `~/webapps/.wt/aviation_weather_viewer_project/phase-00-visual-foundation`.
 - Gate: PR documental #2 integrado y contenido en la base.
+- Handoff: PR #3 abierto contra `master`; no mergeado.
 
 ## Cambios implementados
 
@@ -36,9 +37,11 @@ meteorológica de Colombia.
 - Auditoría `rg`: 0 rutas, imports, copy o dependencias funcionales del starter.
 - Flow audit: 1 flow exento deliberadamente, 0 missing, 0 junk-only.
 
-## Cierre pendiente
+## Handoff
 
-Commit, push y PR contra `master`; no hacer merge.
+La implementación está commiteada y publicada en el PR #3 contra `master`.
+La siguiente acción corresponde a revisión/CI e integración externa; esta sesión
+no hace merge.
 
 ## Límites activos
 
