@@ -39,6 +39,8 @@ describe('WindField parser', () => {
   it('returns detached component arrays', () => {
     const result = parseWindField(WIND_FIELD_FIXTURE);
 
+    expect(result.u).toEqual(WIND_FIELD_FIXTURE.u);
+    expect(result.v).toEqual(WIND_FIELD_FIXTURE.v);
     expect(result.u).not.toBe(WIND_FIELD_FIXTURE.u);
     expect(result.v).not.toBe(WIND_FIELD_FIXTURE.v);
   });
@@ -55,7 +57,7 @@ describe('WindField parser', () => {
     const first = createDeterministicWindField('2026-01-15T00:00:00Z');
     const second = createDeterministicWindField('2026-01-15T15:00:00Z');
 
-    expect(first.u[4_000]).not.toBe(second.u[4_000]);
+    expect([first.u[4_000], second.u[4_000]]).toEqual([22.103, 6.255]);
   });
 
   it('rejects a non-object field', () => {

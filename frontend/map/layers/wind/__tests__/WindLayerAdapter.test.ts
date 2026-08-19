@@ -109,8 +109,10 @@ describe('Wind layer adapter', () => {
     const adapter = new WindLayerAdapter(map);
 
     adapter.reset();
+    adapter.setFrame(WIND_FIELD_FIXTURE);
 
-    expect(renderer.setField).not.toHaveBeenCalled();
+    expect(renderer.setField).toHaveBeenCalledTimes(1);
+    expect(renderer.setField).toHaveBeenCalledWith(WIND_FIELD_FIXTURE);
   });
 
   it('destroys renderer once', () => {
