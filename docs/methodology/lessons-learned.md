@@ -46,6 +46,9 @@
   driver Python está instalado; ambos niveles son necesarios.
 - Los tests de esta fase se mantienen dirigidos al health y a la raíz. El build
   Next.js se ejecuta por separado para detectar imports/rutas huérfanos.
+- Las instalaciones APT de CI no deben combinar red silenciosa y espera sin
+  límites: separar índices/paquetes, mostrar salida y fijar retries/timeouts
+  convierte un runner trabado en un fallo diagnosticable.
 - Una vista puramente informativa puede declararse exenta de E2E solo si no
   contiene controles calificables y la razón queda registrada en el flow map.
 - Para el mapa real, los tests unitarios cubren opciones y cleanup; la prueba
