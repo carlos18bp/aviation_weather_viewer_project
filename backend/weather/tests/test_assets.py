@@ -1,5 +1,7 @@
 """Contract tests for the versioned deterministic weather artifacts."""
 
+# quality: disable misplaced_file (the Phase 02 scope fixes this exact directed test path)
+
 from copy import deepcopy
 from itertools import product
 from pathlib import Path
@@ -27,11 +29,11 @@ from weather.demo.validators import (
     validate_wind_field,
 )
 
-
 SCENARIO_ROOT = Path(settings.DEMO_WEATHER_SCENARIO_ROOT)
 
 
 def test_manifest_declares_frozen_catalog():
+    """Declare exactly the contracted layers, timestamps, and safety flags."""
     manifest = validate_manifest(load_json_document(SCENARIO_ROOT / "manifest.json"))
 
     assert manifest["layers"] == [dict(layer) for layer in LAYER_DEFINITIONS]
@@ -41,6 +43,7 @@ def test_manifest_declares_frozen_catalog():
 
 
 def test_manifest_declares_complete_frame_product():
+    """Declare one frame for every layer and frozen timestamp combination."""
     manifest = validate_manifest(load_json_document(SCENARIO_ROOT / "manifest.json"))
 
     pairs = set(
@@ -53,6 +56,7 @@ def test_manifest_declares_complete_frame_product():
 
 @pytest.mark.parametrize(("timestamp", "label"), TIMESTAMP_LABELS.items())
 def test_temperature_frame_matches_image_contract(timestamp, label):
+    """Validate each temperature WebP against the raster contract."""
     path = SCENARIO_ROOT / "temperature" / f"{label}.webp"
 
     validate_temperature_image(path)
@@ -62,6 +66,7 @@ def test_temperature_frame_matches_image_contract(timestamp, label):
 
 @pytest.mark.parametrize(("timestamp", "label"), TIMESTAMP_LABELS.items())
 def test_wind_frame_matches_vector_contract(timestamp, label):
+    """Validate each wind JSON against the vector-grid contract."""
     payload = load_json_document(SCENARIO_ROOT / "wind" / f"{label}.json")
 
     validate_wind_field(payload, expected_timestamp=timestamp)
@@ -71,6 +76,7 @@ def test_wind_frame_matches_vector_contract(timestamp, label):
 
 
 def test_airport_fixture_covers_frozen_product():
+    """Cover all 36 unique airport and timestamp combinations."""
     manifest = load_manifest()
     fixture = load_airport_weather(manifest)
 
@@ -83,6 +89,7 @@ def test_airport_fixture_covers_frozen_product():
 
 
 def test_airport_fixture_uses_canonical_order():
+    """Keep airport conditions in deterministic timestamp-major order."""
     fixture = load_airport_weather(load_manifest())
 
     actual_order = list(
@@ -93,6 +100,7 @@ def test_airport_fixture_uses_canonical_order():
 
 
 def test_loaders_return_identical_values_for_two_reads():
+    """Return identical manifest and airport values across two reads."""
     clear_demo_asset_caches()
 
     first_manifest = load_manifest()
@@ -105,6 +113,7 @@ def test_loaders_return_identical_values_for_two_reads():
 
 
 def test_manifest_rejects_traversal_frame_path():
+    """Reject frame paths that escape the versioned scenario directory."""
     manifest = deepcopy(load_manifest())
     manifest["frames"][0]["data_path"] = "../private.webp"
 

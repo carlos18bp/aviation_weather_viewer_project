@@ -1,5 +1,7 @@
 """Behavior tests for deterministic demo-data management commands."""
 
+# quality: disable misplaced_file (the Phase 02 scope fixes this exact directed test path)
+
 import hashlib
 from pathlib import Path
 
@@ -7,13 +9,11 @@ import pytest
 from django.contrib.gis.geos import Point
 from django.core.management import call_command
 
-from weather.demo.airports import AIRPORTS, AIRPORT_ICAO_CODES
+from weather.demo.airports import AIRPORT_ICAO_CODES, AIRPORTS
 from weather.demo.constants import AIRPORT_WEATHER_FILENAME
 from weather.demo.exceptions import DemoAssetError
 from weather.demo.generation import replace_scenario_atomically
-from weather.demo.validators import validate_scenario
 from weather.models import Airport
-
 
 pytestmark = pytest.mark.django_db
 
@@ -27,6 +27,7 @@ def _directory_hashes(root: Path) -> dict[str, str]:
 
 
 def test_seed_creates_exact_canonical_airports():
+    """Create exactly the six airports in the frozen catalog."""
     call_command("seed_demo_airports")
 
     assert Airport.objects.count() == 6
@@ -36,6 +37,7 @@ def test_seed_creates_exact_canonical_airports():
 
 
 def test_seed_stores_wgs84_points():
+    """Store airport coordinates as SRID 4326 point geometry."""
     call_command("seed_demo_airports")
 
     airport = Airport.objects.get(icao_code="SKBO")
@@ -46,6 +48,7 @@ def test_seed_stores_wgs84_points():
 
 
 def test_seed_is_idempotent():
+    """Preserve every seeded airport value and primary key on a second run."""
     call_command("seed_demo_airports")
     snapshot_fields = (
         "id",
@@ -67,6 +70,7 @@ def test_seed_is_idempotent():
 
 
 def test_seed_removes_noncanonical_airport():
+    """Reconcile the table back to exactly the frozen six-airport catalog."""
     Airport.objects.create(
         icao_code="SKZZ",
         iata_code="ZZZ",
@@ -83,6 +87,7 @@ def test_seed_removes_noncanonical_airport():
 
 
 def test_seed_repairs_canonical_drift():
+    """Repair a changed canonical field when the seed is rerun."""
     call_command("seed_demo_airports")
     Airport.objects.filter(icao_code="SKBO").update(name="Drifted name")
 
@@ -92,6 +97,7 @@ def test_seed_repairs_canonical_drift():
 
 
 def test_generation_is_byte_reproducible(tmp_path):
+    """Produce identical file hashes in two independent directories."""
     first_output = tmp_path / "first"
     second_output = tmp_path / "second"
 
@@ -102,6 +108,7 @@ def test_generation_is_byte_reproducible(tmp_path):
 
 
 def test_generation_failure_preserves_existing_scenario(tmp_path):
+    """Keep the prior scenario intact when replacement validation fails."""
     scenario_root = tmp_path / "scenario"
     scenario_root.mkdir()
     sentinel = scenario_root / "sentinel.txt"
@@ -117,7 +124,8 @@ def test_generation_failure_preserves_existing_scenario(tmp_path):
     assert sentinel.read_text(encoding="utf-8") == "preserve"
 
 
-def test_validate_only_accepts_versioned_scenario(settings):
-    validate_scenario(Path(settings.DEMO_WEATHER_SCENARIO_ROOT))
-
+def test_validate_only_accepts_versioned_scenario(settings, capsys):
+    """Validate the versioned scenario without modifying its assets."""
     call_command("generate_demo_weather", validate_only=True)
+
+    assert str(Path(settings.DEMO_WEATHER_SCENARIO_ROOT)) in capsys.readouterr().out
