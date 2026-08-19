@@ -1,0 +1,70 @@
+.status {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: min(100%, 360px);
+  padding: 10px 12px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 10px;
+  color: var(--viewer-text);
+  background: rgb(7 19 31 / 76%);
+}
+
+.indicator {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  margin-top: 3px;
+  border-radius: 50%;
+  background: var(--viewer-accent);
+  box-shadow: 0 0 12px rgb(34 211 238 / 54%);
+}
+
+.status span {
+  display: grid;
+  gap: 3px;
+}
+
+.status strong {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.status small {
+  color: var(--viewer-muted);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.status[data-status="loading"] .indicator {
+  animation: status-pulse 1.2s ease-in-out infinite;
+}
+
+.status[data-status="error"] {
+  border-color: rgb(245 158 11 / 42%);
+}
+
+.status[data-status="error"] .indicator {
+  background: var(--viewer-warning);
+  box-shadow: 0 0 12px rgb(245 158 11 / 54%);
+}
+
+.status[data-status="fallback"] .indicator {
+  border-radius: 2px;
+  background: var(--viewer-muted);
+  box-shadow: none;
+  transform: rotate(45deg);
+}
+
+@keyframes status-pulse {
+  50% {
+    opacity: 0.4;
+    transform: scale(0.76);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status[data-status="loading"] .indicator {
+    animation: none;
+  }
+}
