@@ -134,13 +134,20 @@ describe('Airport layer adapter', () => {
     });
   });
 
-  it('ignores focus for an unknown ICAO', async () => {
+  it('skips an unknown ICAO during focus resolution', async () => {
     const { adapter, map } = await createHarness();
     adapter.setFrame(createAirportCollectionFixture());
 
     adapter.focusFeature('SKZZ');
+    adapter.focusFeature('SKBO');
 
-    expect(map.easeTo).not.toHaveBeenCalled();
+    expect(map.easeTo).toHaveBeenCalledTimes(1);
+    expect(map.easeTo).toHaveBeenCalledWith({
+      center: [-74.1469, 4.70159],
+      zoom: 6,
+      duration: 600,
+      essential: false,
+    });
   });
 
   it('updates visibility on every airport layer', async () => {
