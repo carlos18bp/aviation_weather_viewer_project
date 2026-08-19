@@ -25,12 +25,17 @@ def required_environment_variable(name: str) -> str:
 
 DJANGO_ENV = os.getenv("DJANGO_ENV", "development").strip() or "development"
 IS_PRODUCTION = DJANGO_ENV == "production"
-DEBUG = False if IS_PRODUCTION else os.getenv("DJANGO_DEBUG", "true").lower() in {
-    "1",
-    "true",
-    "yes",
-    "on",
-}
+DEBUG = (
+    False
+    if IS_PRODUCTION
+    else os.getenv("DJANGO_DEBUG", "true").lower()
+    in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+)
 SECRET_KEY = required_environment_variable("DJANGO_SECRET_KEY")
 
 default_allowed_hosts = "" if IS_PRODUCTION else "localhost,127.0.0.1"
@@ -67,6 +72,12 @@ DATABASES = {
         "HOST": required_environment_variable("POSTGRES_HOST"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
         "CONN_MAX_AGE": 60,
+        "TEST": {
+            "TEMPLATE": os.getenv(
+                "POSTGRES_TEST_TEMPLATE",
+                required_environment_variable("POSTGRES_DB"),
+            )
+        },
     }
 }
 
@@ -86,6 +97,7 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+DEMO_WEATHER_SCENARIO_ROOT = MEDIA_ROOT / "demo-weather" / "demo-colombia-001"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 SERVICE_NAME = "aero-meteo-mvp"
