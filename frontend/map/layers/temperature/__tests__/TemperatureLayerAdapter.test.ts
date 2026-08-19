@@ -93,15 +93,21 @@ function createHarness(imageLoader: TemperatureImageLoader) {
 }
 
 describe('TemperatureLayerAdapter', () => {
-  it('exports the contracted legend and stable MapLibre identifiers', () => {
+  it('exports stable MapLibre identifiers and frozen image geometry', () => {
     expect(TEMPERATURE_SOURCE_ID).toBe('weather-temperature-image');
     expect(TEMPERATURE_RASTER_LAYER_ID).toBe('weather-temperature-raster');
     expect(Object.isFrozen(TEMPERATURE_BBOX)).toBe(true);
     expect(Object.isFrozen(TEMPERATURE_IMAGE_COORDINATES)).toBe(true);
     expect(TEMPERATURE_IMAGE_COORDINATES.every(Object.isFrozen)).toBe(true);
+  });
+
+  it('keeps the legend definition and its color stops immutable', () => {
     expect(Object.isFrozen(TEMPERATURE_COLOR_STOPS)).toBe(true);
     expect(TEMPERATURE_COLOR_STOPS.every(Object.isFrozen)).toBe(true);
     expect(Object.isFrozen(TEMPERATURE_LEGEND)).toBe(true);
+  });
+
+  it('exports the contracted temperature legend', () => {
     expect(TEMPERATURE_LEGEND).toEqual({
       title: 'Temperatura',
       unit: '°C',

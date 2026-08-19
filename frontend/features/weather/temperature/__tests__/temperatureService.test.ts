@@ -101,7 +101,10 @@ describe('temperature service', () => {
 
     await expect(fetchTemperatureFrame('2026-01-15T01:00:00Z', {
       fetcher: fetcher as typeof fetch,
-    })).rejects.toBeInstanceOf(TemperatureFrameValidationError);
+    })).rejects.toMatchObject({
+      name: TemperatureFrameValidationError.name,
+      message: 'Temperature timestamp is outside the frozen catalog.',
+    });
     expect(fetcher).not.toHaveBeenCalled();
   });
 
@@ -210,7 +213,10 @@ describe('temperature service', () => {
         blob: jest.fn(async () => new Blob(['png'], { type: 'image/png' })),
       })) as typeof fetch,
       createObjectURL,
-    })).rejects.toBeInstanceOf(TemperatureImageLoadError);
+    })).rejects.toMatchObject({
+      name: TemperatureImageLoadError.name,
+      message: 'Temperature image response is not WebP.',
+    });
 
     expect(createObjectURL).not.toHaveBeenCalled();
   });
