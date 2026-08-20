@@ -89,3 +89,14 @@
   la consulta local es solo un borrador y no otra fuente de selección.
 - Cachear la serie por ICAO dentro del hook evita seis requests por render y
   mantiene requests, abort y respuestas tardías fuera del store serializable.
+
+## Fase 11 — narrativa temporal
+
+- Precargar y transicionar son responsabilidades distintas: la cache prepara
+  datos, pero sólo el runner puede abrir la ventana de commit atómico.
+- Un fade seguro oculta el frame anterior, conmuta una sola escena a opacidad
+  cero y luego entra; dos timestamps nunca deben coexistir para “suavizar”.
+- El codec puro permite validar y probar escenas futuras sin activar features ni
+  acoplar URL a Zustand, MapLibre o `window`.
+- Clipboard y Fullscreen deben nacer de gestos explícitos y degradar a estados
+  inline; un rechazo del navegador no debe desactivar presentación interna.

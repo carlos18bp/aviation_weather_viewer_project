@@ -39,9 +39,19 @@ callbacks con store/controller y la Fase 12 consumirá el ranking público.
 - Captura aislada: `/tmp/phase-09-airport-intelligence.png` a `1920×1080`.
 - Wiring, E2E y flow map quedan explícitamente para Fase 14.
 - PR: `https://github.com/carlos18bp/aviation_weather_viewer_project/pull/16`;
-  queda abierto y sin merge para el drenaje de la ola.
+  en proceso de integración mediante `merge-when-green`.
 
-## Estado validado
+## Estado integrado de Fase 11
+
+- Cache LRU abortable de máximo tres keys y plan circular adyacente listos.
+- Timeline controlado con progreso de 1500 ms y contrato de transición listo.
+- Codec/sincronizador URL puros y controles PresentationMode/SceneShare listos.
+- Harness aislado y guía de integración preparados para Fase 14.
+- No se editaron archivos centrales ni flows E2E.
+- Verificación dirigida: 99/99 tests, quality gate 100/100, ESLint del ownership y build Next verdes.
+- Integrada en `master` mediante PR #17 (`5f6f624`).
+
+## Estado validado de entrada — Fase 08
 
 - URL: `https://aviation-weather-platform.projectapp.co`.
 - Django check y build de producción verdes.
@@ -59,7 +69,7 @@ aproximadamente 0,6–1,4 FPS y no permiten acreditar el objetivo de ~30 FPS par
 una GPU física. La densidad ya está fija en 2500 y el fallback de flechas es
 fluido. Repetir el ensayo en el portátil de la reunión antes de presentar.
 
-## Cierre alcanzado
+## Cierre alcanzado de Fase 08
 
 1. El PR QA #13 pasó los cuatro checks obligatorios y se integró con
    `merge-when-green`.

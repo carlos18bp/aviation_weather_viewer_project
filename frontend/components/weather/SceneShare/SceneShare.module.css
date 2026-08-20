@@ -1,0 +1,46 @@
+.share {
+  display: grid;
+  gap: 7px;
+  color: var(--viewer-text);
+}
+
+.share button,
+.manualCopy input {
+  min-height: 32px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 8px;
+  color: inherit;
+  background: rgb(7 19 31 / 78%);
+  font: inherit;
+}
+
+.share button {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.share button:hover,
+.share button:focus-visible,
+.manualCopy input:focus-visible {
+  border-color: var(--viewer-accent);
+  outline: 2px solid rgb(34 211 238 / 26%);
+  outline-offset: 2px;
+}
+
+.share p,
+.manualCopy label {
+  margin: 0;
+  color: var(--viewer-muted);
+  font-size: 10px;
+}
+
+.manualCopy {
+  display: grid;
+  gap: 5px;
+}
+
+.manualCopy input {
+  width: min(100%, 460px);
+  padding: 6px 8px;
+  font-variant-numeric: tabular-nums;
+}

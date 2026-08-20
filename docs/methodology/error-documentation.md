@@ -173,3 +173,17 @@ El primer `npm ci` dejó `node_modules` sin el binario de Jest y el batch dirigi
 no pudo iniciar. Se repitió `npm ci --no-audit --no-fund` dentro del worktree;
 instaló 706 paquetes y los tres batches posteriores pasaron. No se modificaron
 manifest ni lockfile.
+
+## 2026-08-20 — `npm ci` quedó esperando la auditoría durante Fase 11
+
+### Síntoma
+
+La instalación aislada del worktree resolvió los paquetes desde cache, pero no
+terminó después de que npm registró un fallo de la solicitud bulk de audit.
+
+### Resolución y verificación
+
+Se repitió la instalación reproducible con
+`npm ci --no-audit --prefer-offline --progress=false`. Instaló 706 paquetes en
+el worktree sin tocar dependencias de otras sesiones y habilitó los tests
+dirigidos. No se cambió `package.json` ni `package-lock.json`.

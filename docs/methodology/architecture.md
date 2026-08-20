@@ -115,3 +115,21 @@ DemoAirportIcao → useAirportWeatherSeries/cache → 6 GET existentes
 La cache `Map` y los `AbortController` viven dentro del hook, nunca en Zustand.
 `AirportSearch` y `AirportTrend` no conocen MapLibre, controller u orquestador;
 Fase 14 será dueña del wiring y Fase 12 consumirá el ranking público.
+
+## Módulos aislados de Fase 11
+
+```mermaid
+flowchart LR
+    F14[Fase 14 · wiring] --> Codec[ViewerScene codec]
+    F14 --> Sync[replaceState + debounce moveend]
+    F14 --> Runner[Transición temporal atómica]
+    F14 --> Cache[Preloader por producto · máximo 3]
+    F14 --> Controls[Timeline + PresentationMode + SceneShare]
+```
+
+- `features/timeline` posee plan adyacente, cache abortable y runner de fases;
+  no publica timestamps ni errores globales.
+- `features/presentation` posee tipos de escena, codec puro y sincronizador
+  browser inyectable; no importa store, controller ni orquestador.
+- Los componentes nuevos reciben estado/callbacks. Fase 14 decide composición,
+  restauración y qué chrome secundario ocultar.
