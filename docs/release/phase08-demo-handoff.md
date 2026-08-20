@@ -17,6 +17,11 @@ repetición pasó 1/1 en 1,9 min sin cambios de producción ni aserciones
 relajadas. El SHA final del cierre documental se reporta fuera del commit porque
 un commit no puede contener su propio hash.
 
+El producto y su repo están integrados y desplegados. El cierre operativo global
+no se declara verde todavía: el CI del toolkit no recibió runner por un bloqueo
+de billing/spending de GitHub. Ese bloqueo externo no afecta la URL ni los gates
+del proyecto, pero debe corregirse y reejecutarse antes del cierre formal.
+
 ## Entorno validado
 
 | Elemento | Evidencia |
@@ -162,12 +167,13 @@ versionados, determinísticos y no operacionales.
 
 ## Hallazgos operativos fuera del producto
 
-- `projects.yml` ya contiene dominio, Postgres, servicios, puerto y límites del
-  demo. El guard del toolkit impide promover `scaffold → active` porque exige
+- `projects.yml` ya publicó dominio, Postgres, servicios, puerto y límites del
+  demo en `b0f2a244`. El guard impide promover `scaffold → active` porque exige
   escribir `server:` mediante el resolver, pero el resolver declara ese campo
   report-only. No se evadió el guard.
-- El toolkit conserva un error global ajeno a esta fase: faltan las unidades de
-  backup de `crushme_project`. Por política, ese gate rojo impide publicar los
-  cambios del toolkit hasta que su sesión dueña lo resuelva.
+- La exención Huey explícita de `crushme_project` dejó schema/integridad/roster y
+  el resto de gates locales verdes. El CI remoto `32328692139` no inició ningún
+  step: GitHub exige corregir payments/spending. Tras esa acción, reejecutar
+  `Validation Coverage` y exigir verde antes del cierre formal.
 - `/favicon.ico` 404 queda para después de la reunión; no se amplió producto para
   corregirlo.

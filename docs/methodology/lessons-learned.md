@@ -78,3 +78,7 @@
 - `test.slow()` amplía el límite total, no el timeout default de cada `expect`.
   Un bootstrap WebGL live debe declarar explícitamente su espera de 60 s en el
   arranque y el reload para evitar flakes sin debilitar el resto del viaje.
+- Un workflow con todos los jobs rojos, cero steps y `runner_id=0` debe
+  investigarse en las annotations antes de tocar código. Si GitHub señala
+  billing/spending, los gates locales sirven como evidencia, pero no sustituyen
+  el rerun remoto exigido para un cierre completamente verde.

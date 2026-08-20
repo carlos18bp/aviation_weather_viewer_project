@@ -152,6 +152,12 @@ PostGIS, ejecuta `manage.py check` y corre únicamente
 - El spec live conserva aserciones estrictas y usa 60 s únicamente para el
   bootstrap/reload de MapLibre; el recorrido completo sigue acotado por
   `test.slow()`.
+- Metadata fleet publicada: toolkit SHA
+  `b0f2a244f99f2477bd828b69a45c8296e38a4d35`; schema 24/24, integridad 72/72,
+  roster 9/9, doc-claims 15/15, parity y 94 units systemd verdes en local.
+- El run remoto `32328692139` terminó sin asignar runner (`runner_id=0`, sin
+  steps). Su anotación exige corregir payments/spending de GitHub; no representa
+  un fallo del código ni puede convertirse en verde desde el repositorio.
 
 Comandos de release dirigidos:
 

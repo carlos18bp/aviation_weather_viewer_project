@@ -99,3 +99,7 @@ flowchart LR
 - La topología quedó congelada con la integración del PR QA #13. El SHA
   `054ebdd27b459ba24cff3d65f580ea7bbae95f0d` fue desplegado y recorrió health +
   E2E live sin cambios de arquitectura ni dependencias externas.
+- La coordenada operativa quedó publicada en `vps-ops-toolkit` mediante
+  `b0f2a244f99f2477bd828b69a45c8296e38a4d35`. Conserva `status: scaffold`
+  hasta que el resolver canónico pueda asignar `server:`; esto no altera la
+  topología ya desplegada en staging.
