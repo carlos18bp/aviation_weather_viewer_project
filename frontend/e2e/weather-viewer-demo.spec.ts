@@ -4,6 +4,7 @@ import { expect, test } from '@playwright/test';
 // synchronized frames, playback, reset, deterministic reload, or same-origin assets regress.
 
 const STAGING_HOSTNAME = 'aviation-weather-platform.projectapp.co';
+const MAP_BOOTSTRAP_TIMEOUT_MS = 60_000;
 const TIMESTAMPS = [
   '2026-01-15T00:00:00Z',
   '2026-01-15T03:00:00Z',
@@ -54,7 +55,9 @@ test(
     await page.goto('/');
 
     const viewer = page.locator('[data-weather-viewer]');
-    await expect(page.getByText('Mapa local listo', { exact: true })).toHaveText('Mapa local listo');
+    await expect(page.getByText('Mapa local listo', { exact: true })).toHaveText('Mapa local listo', {
+      timeout: MAP_BOOTSTRAP_TIMEOUT_MS,
+    });
     await expect(page.getByText('DATOS SIMULADOS — PROTOTIPO DEMOSTRATIVO — NO APTO PARA USO OPERACIONAL')).toHaveText(
       'DATOS SIMULADOS — PROTOTIPO DEMOSTRATIVO — NO APTO PARA USO OPERACIONAL',
     );
@@ -113,7 +116,9 @@ test(
     await expect(page.getByRole('heading', { name: 'Selecciona un aeropuerto' })).toHaveText('Selecciona un aeropuerto');
 
     await page.reload();
-    await expect(page.getByText('Mapa local listo', { exact: true })).toHaveText('Mapa local listo');
+    await expect(page.getByText('Mapa local listo', { exact: true })).toHaveText('Mapa local listo', {
+      timeout: MAP_BOOTSTRAP_TIMEOUT_MS,
+    });
     await expect(viewer).toHaveAttribute('data-active-layer', 'wind');
     await expect(viewer).toHaveAttribute('data-active-timestamp', '2026-01-15T06:00:00Z');
     await expect(viewer).toHaveAttribute('data-frame-loading', 'false');

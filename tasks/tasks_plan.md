@@ -44,7 +44,7 @@ Estado: **integrada en `master` mediante PR #5**.
 | 05 | Temperatura | Integrada mediante PR #9 |
 | 06 | Controles y timeline | Integrada mediante PR #7 |
 | 07 | Integración y acabado | Integrada mediante PR #12 (`fcd8a8ae`) |
-| 08 | Entrega de la demo | Release candidate validado; PR QA pendiente de integración |
+| 08 | Entrega de la demo | Integrada mediante PR #13 (`054ebdd2`) y verificada en HTTPS |
 
 Los scopes normativos y dependencias entre olas están en
 `docs/MVP_roadmap/phase_scopes/README.md`.
@@ -62,14 +62,14 @@ Estado: **integrada en `master` mediante PR #10**.
 
 ## Roadmap de enriquecimiento posterior
 
-Estado: **documentado; ejecución bloqueada hasta integrar y validar Fase 08**.
+Estado: **documentado; Fase 08 integrada y validada, enriquecimiento no iniciado**.
 
 - [x] Evaluar candidatos visuales y aeronáuticos inspirados en Windy.
 - [x] Seleccionar seis fases en dos olas de implementación.
 - [x] Congelar contratos de datos, API, estado, URL, picker y ruta.
 - [x] Definir ownership sin solapamientos para fases paralelas.
 - [x] Definir gates, pruebas, fallback y criterios de release enriquecido.
-- [ ] Integrar y validar Fase 08.
+- [x] Integrar y validar Fase 08.
 - [ ] Abrir ola E1: fases 09, 10 y 11.
 - [ ] Abrir ola E2: fases 12 y 13.
 - [ ] Ejecutar fase 14 de integración, QA y ensayo.
@@ -78,8 +78,8 @@ Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 
 ## Fase 08 — Validación, despliegue y ensayo
 
-Estado: **release candidate validado; cierre formal pendiente de integrar el PR
-QA y verificar el SHA resultante en HTTPS**.
+Estado: **integrada en `master` mediante PR #13 y SHA `054ebdd2` validado en
+HTTPS**.
 
 - [x] Confirmar Fase 07 integrada y árbol limpio.
 - [x] Desplegar Django + Next detrás de Nginx con HTTPS.
@@ -90,5 +90,5 @@ QA y verificar el SHA resultante en HTTPS**.
 - [x] Validar Chrome, Edge y copia local a `1920×1080`.
 - [x] Completar 615 s de estabilidad, fallback y reset sin errores críticos.
 - [x] Registrar heap, FPS, red, captura, guion y contingencia.
-- [ ] Integrar el PR QA con `merge-when-green`.
-- [ ] Desplegar/verificar el SHA de merge en la URL final.
+- [x] Integrar el PR QA con `merge-when-green`.
+- [x] Desplegar/verificar el SHA de merge en la URL final.

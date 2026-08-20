@@ -147,6 +147,11 @@ PostGIS, ejecuta `manage.py check` y corre únicamente
 - Browsers validados a `1920×1080`: Chrome 147 y Edge 151.
 - Host de medición: 1 vCPU, ANGLE/Vulkan SwiftShader; no representa una GPU
   física del equipo de reunión.
+- Release QA integrado: PR #13, SHA desplegado y verificado
+  `054ebdd27b459ba24cff3d65f580ea7bbae95f0d`.
+- El spec live conserva aserciones estrictas y usa 60 s únicamente para el
+  bootstrap/reload de MapLibre; el recorrido completo sigue acotado por
+  `test.slow()`.
 
 Comandos de release dirigidos:
 

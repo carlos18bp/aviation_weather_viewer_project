@@ -96,3 +96,6 @@ flowchart LR
   inutilizar controles/timeline.
 - La copia local usa la misma composición y fixtures. Django debe arrancarse en
   `development` para que `runserver` sirva `/media/*`; staging usa Nginx.
+- La topología quedó congelada con la integración del PR QA #13. El SHA
+  `054ebdd27b459ba24cff3d65f580ea7bbae95f0d` fue desplegado y recorrió health +
+  E2E live sin cambios de arquitectura ni dependencias externas.

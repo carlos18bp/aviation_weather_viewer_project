@@ -75,3 +75,6 @@
 - En la contingencia local, Next puede proxyear media pero Django `runserver`
   necesita `development`/`DEBUG=True`; staging mantiene `DEBUG=False` y deja esa
   responsabilidad a Nginx.
+- `test.slow()` amplía el límite total, no el timeout default de cada `expect`.
+  Un bootstrap WebGL live debe declarar explícitamente su espera de 60 s en el
+  arranque y el reload para evitar flakes sin debilitar el resto del viaje.

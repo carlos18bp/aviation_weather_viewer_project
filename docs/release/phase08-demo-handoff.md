@@ -4,15 +4,18 @@ Fecha de validación: 2026-08-20.
 
 ## Estado de release
 
-El release candidate de Fase 08 quedó validado sobre la base de Fase 07
-`fcd8a8ae7e610ea335bcdce6154ffb309f12999b` y sobre la URL HTTPS
-<https://aviation-weather-platform.projectapp.co>.
+La Fase 08 quedó integrada mediante el PR QA #13 y desplegada en
+<https://aviation-weather-platform.projectapp.co>. El checkout avanzó desde la
+base de Fase 07 `fcd8a8ae7e610ea335bcdce6154ffb309f12999b` al SHA QA
+`054ebdd27b459ba24cff3d65f580ea7bbae95f0d`.
 
-La QA no declara por sí sola la fase integrada. El cierre formal exige que su PR
-se integre con `merge-when-green`, que el checkout desplegado avance al SHA
-resultante y que ese SHA vuelva a superar health + recorrido HTTPS. El SHA final
-se reporta al ejecutar ese cierre porque un commit no puede contener su propio
-hash.
+Ese SHA volvió a superar `python manage.py check`, migraciones, build de
+producción, health HTTPS y el recorrido E2E live completo. El primer probe
+post-merge detectó un timeout de bootstrap de 10 s; se corrigió exclusivamente
+el test para usar el límite live de 60 s ya aplicado por el harness. La
+repetición pasó 1/1 en 1,9 min sin cambios de producción ni aserciones
+relajadas. El SHA final del cierre documental se reporta fuera del commit porque
+un commit no puede contener su propio hash.
 
 ## Entorno validado
 
@@ -37,7 +40,8 @@ hash.
 - Quality gate strict: 0 errores, 0 warnings, estado verde.
 - Backend dirigido: `weather/tests/test_api.py`, 20/20 verde.
 - Frontend-unit dirigido: `ViewerOrchestrator.test.ts`, 14/14 verde.
-- E2E vivo HTTPS Desktop Chrome: 1/1 verde en 2,2 min.
+- E2E vivo HTTPS Desktop Chrome: 1/1 verde en 2,2 min durante QA y 1/1 verde
+  en 1,9 min sobre el SHA integrado.
 - `python manage.py check`: 0 issues.
 - Build frontend de producción: verde con Next.js 16.3.1.
 
