@@ -12,6 +12,7 @@ from django.conf import settings
 from weather.demo.airports import AIRPORT_ICAO_CODES
 from weather.demo.constants import (
     LAYER_DEFINITIONS,
+    TEMPERATURE_VALUE_COUNT,
     TIMESTAMP_LABELS,
     TIMESTAMPS,
     WIND_VALUE_COUNT,
@@ -26,6 +27,7 @@ from weather.demo.validators import (
     load_json_document,
     validate_manifest,
     validate_temperature_image,
+    validate_temperature_value_grid,
     validate_wind_field,
 )
 
@@ -37,7 +39,9 @@ def test_manifest_declares_frozen_catalog():
     manifest = validate_manifest(load_json_document(SCENARIO_ROOT / "manifest.json"))
 
     assert manifest["layers"] == [dict(layer) for layer in LAYER_DEFINITIONS]
+    assert manifest["schema_version"] == 2
     assert manifest["timestamps"] == list(TIMESTAMPS)
+    assert manifest["overlays"] == []
     assert manifest["scenario"]["is_simulated"] is True
     assert manifest["scenario"]["operational_use"] is False
 
@@ -52,6 +56,21 @@ def test_manifest_declares_complete_frame_product():
 
     assert len(manifest["frames"]) == 12
     assert pairs == set(product(("temperature", "wind"), TIMESTAMPS))
+    temperature_frames = [
+        frame for frame in manifest["frames"] if frame["layer"] == "temperature"
+    ]
+    wind_frames = [frame for frame in manifest["frames"] if frame["layer"] == "wind"]
+    assert all("value_data_path" in frame for frame in temperature_frames)
+    assert all("value_data_path" not in frame for frame in wind_frames)
+
+
+def test_manifest_rejects_schema_one_after_migration():
+    """Reject the retired manifest version without changing airport-fixture schema."""
+    manifest = deepcopy(load_manifest())
+    manifest["schema_version"] = 1
+
+    with pytest.raises(DemoAssetError):
+        validate_manifest(manifest)
 
 
 @pytest.mark.parametrize(("timestamp", "label"), TIMESTAMP_LABELS.items())
@@ -62,6 +81,58 @@ def test_temperature_frame_matches_image_contract(timestamp, label):
     validate_temperature_image(path)
 
     assert path.is_file()
+
+
+@pytest.mark.parametrize(("timestamp", "label"), TIMESTAMP_LABELS.items())
+def test_temperature_value_grid_matches_scalar_contract(timestamp, label):
+    """Validate every scalar grid against shape, metadata, flags, and range."""
+    path = SCENARIO_ROOT / "temperature-values" / f"{label}.json"
+    payload = load_json_document(path)
+
+    validate_temperature_value_grid(payload, expected_timestamp=timestamp)
+
+    assert path.is_file()
+    assert len(payload["values"]) == TEMPERATURE_VALUE_COUNT
+    assert min(payload["values"]) >= 0
+    assert max(payload["values"]) <= 38
+
+
+@pytest.mark.parametrize(
+    ("field", "invalid_value"),
+    [
+        ("width", 64),
+        ("height", 80),
+        ("bbox", [-81, -5, -66, 14]),
+        ("unit", "K"),
+        ("timestamp", TIMESTAMPS[0]),
+        ("is_simulated", False),
+        ("operational_use", True),
+    ],
+)
+def test_temperature_value_grid_rejects_invalid_metadata(field, invalid_value):
+    """Reject drift in every frozen scalar-grid metadata class."""
+    payload = load_json_document(SCENARIO_ROOT / "temperature-values" / "06Z.json")
+    payload[field] = invalid_value
+
+    with pytest.raises(DemoAssetError):
+        validate_temperature_value_grid(payload, expected_timestamp=TIMESTAMPS[2])
+
+
+@pytest.mark.parametrize(
+    "invalid_values",
+    [
+        [0.0],
+        [float("nan")] * TEMPERATURE_VALUE_COUNT,
+        [39.0] * TEMPERATURE_VALUE_COUNT,
+    ],
+)
+def test_temperature_value_grid_rejects_invalid_values(invalid_values):
+    """Reject wrong scalar shape and non-finite values."""
+    payload = load_json_document(SCENARIO_ROOT / "temperature-values" / "06Z.json")
+    payload["values"] = invalid_values
+
+    with pytest.raises(DemoAssetError):
+        validate_temperature_value_grid(payload, expected_timestamp=TIMESTAMPS[2])
 
 
 @pytest.mark.parametrize(("timestamp", "label"), TIMESTAMP_LABELS.items())
@@ -116,6 +187,18 @@ def test_manifest_rejects_traversal_frame_path():
     """Reject frame paths that escape the versioned scenario directory."""
     manifest = deepcopy(load_manifest())
     manifest["frames"][0]["data_path"] = "../private.webp"
+
+    with pytest.raises(DemoAssetError):
+        validate_manifest(manifest, require_complete=False)
+
+
+def test_manifest_rejects_traversal_temperature_value_path():
+    """Reject scalar-grid paths that escape the versioned scenario directory."""
+    manifest = deepcopy(load_manifest())
+    temperature_frame = next(
+        frame for frame in manifest["frames"] if frame["layer"] == "temperature"
+    )
+    temperature_frame["value_data_path"] = "../private.json"
 
     with pytest.raises(DemoAssetError):
         validate_manifest(manifest, require_complete=False)

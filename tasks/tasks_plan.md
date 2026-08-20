@@ -62,8 +62,7 @@ Estado: **integrada en `master` mediante PR #10**.
 
 ## Roadmap de enriquecimiento posterior
 
-Estado: **documentado; enriquecimiento no iniciado mientras el gate externo de
-Fase 08 permanezca bloqueado**.
+Estado: **ola E1 en ejecución; Fase 10 implementada aisladamente para revisión**.
 
 - [x] Evaluar candidatos visuales y aeronáuticos inspirados en Windy.
 - [x] Seleccionar seis fases en dos olas de implementación.
@@ -71,7 +70,8 @@ Fase 08 permanezca bloqueado**.
 - [x] Definir ownership sin solapamientos para fases paralelas.
 - [x] Definir gates, pruebas, fallback y criterios de release enriquecido.
 - [x] Integrar y validar Fase 08.
-- [ ] Abrir ola E1: fases 09, 10 y 11.
+- [x] Implementar Fase 10 sin wiring central ni E2E.
+- [ ] Completar ola E1: integrar fases 09, 10 y 11.
 - [ ] Abrir ola E2: fases 12 y 13.
 - [ ] Ejecutar fase 14 de integración, QA y ensayo.
 

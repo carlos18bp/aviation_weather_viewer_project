@@ -3,11 +3,13 @@
 # quality: disable misplaced_file (the Phase 02 scope fixes this exact directed test path)
 
 import json
+import shutil
 from copy import deepcopy
 from pathlib import Path
 from urllib.parse import urlsplit
 
 import pytest
+from django.conf import settings
 from django.core.management import call_command
 from django.test import override_settings
 from rest_framework.test import APIClient
@@ -70,11 +72,19 @@ def test_catalog_returns_frozen_contract(api_client):
 
 
 @pytest.mark.parametrize(
-    ("layer", "expected_unit", "expected_suffix"),
-    [("temperature", "°C", ".webp"), ("wind", "kt", ".json")],
+    ("layer", "expected_unit", "expected_suffix", "expected_value_url"),
+    [
+        (
+            "temperature",
+            "°C",
+            ".webp",
+            "/media/demo-weather/demo-colombia-001/temperature-values/06Z.json",
+        ),
+        ("wind", "kt", ".json", None),
+    ],
 )
 def test_frame_returns_same_origin_descriptor(
-    api_client, settings, layer, expected_unit, expected_suffix
+    api_client, settings, layer, expected_unit, expected_suffix, expected_value_url
 ):
     """Return a safe same-origin descriptor for every supported layer."""
     response = api_client.get(
@@ -91,6 +101,11 @@ def test_frame_returns_same_origin_descriptor(
     assert parsed_url.netloc == ""
     assert str(settings.MEDIA_ROOT) not in payload["data_url"]
     assert (payload["is_simulated"], payload["operational_use"]) == (True, False)
+    assert payload.get("value_data_url") == expected_value_url
+    value_url = urlsplit(payload.get("value_data_url", ""))
+    assert value_url.scheme == ""
+    assert value_url.netloc == ""
+    assert str(settings.MEDIA_ROOT) not in payload.get("value_data_url", "")
 
 
 def test_airports_returns_geojson_collection(api_client):
@@ -222,6 +237,28 @@ def test_frame_returns_unavailable_asset_error(api_client, tmp_path):
         response = api_client.get(
             "/api/v1/demo/weather/frames",
             {"layer": "wind", "timestamp": TIMESTAMPS[0]},
+        )
+
+    assert response.status_code == 503
+    _assert_error(response, status_code=503, code="asset_unavailable")
+
+
+def test_temperature_frame_returns_unavailable_when_value_grid_is_missing(
+    api_client, tmp_path
+):
+    """Refuse to publish a thermal descriptor whose scalar grid is unavailable."""
+    scenario_root = tmp_path / "scenario"
+    _write_manifest(scenario_root, load_manifest())
+    temperature_dir = scenario_root / "temperature"
+    temperature_dir.mkdir()
+    source = Path(settings.DEMO_WEATHER_SCENARIO_ROOT) / "temperature" / "00Z.webp"
+    shutil.copy2(source, temperature_dir / "00Z.webp")
+
+    with override_settings(DEMO_WEATHER_SCENARIO_ROOT=scenario_root):
+        clear_demo_asset_caches()
+        response = api_client.get(
+            "/api/v1/demo/weather/frames",
+            {"layer": "temperature", "timestamp": TIMESTAMPS[0]},
         )
 
     assert response.status_code == 503

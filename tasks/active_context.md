@@ -1,61 +1,46 @@
-# Contexto activo — Fase 08, release de la demo
+# Contexto activo — Fase 10, picker meteorológico
 
 Actualizado: 2026-08-20.
 
-## Objetivo actual
+## Estado
 
-El producto de Fase 08 está integrado y validado. Falta únicamente que el
-operador restablezca billing/spending de GitHub Actions y reejecute el CI remoto
-del toolkit; hasta entonces no declarar cierre global verde. No se autorizan
-features, refactors ni expansión del producto.
+La implementación aislada de Fase 10 está completa y validada en la rama
+`feat/20082026-phase-10-weather-picker`, cortada de `master` en
+`d1b57673c1dad6e959aea5bf029371f41e324dae`. No se conectó el picker a la vista
+principal y no se modificaron controller, store, orquestador, tipos centrales ni
+flows E2E.
 
-## Coordenada Git
+## Entrega
 
-- Base resuelta: `master`.
-- SHA de Fase 07: `fcd8a8ae7e610ea335bcdce6154ffb309f12999b`.
-- PR QA integrado: #13.
-- SHA QA desplegado y verificado: `054ebdd27b459ba24cff3d65f580ea7bbae95f0d`.
-- Rama de QA: `qa/20082026-phase-08-demo-release`.
-- Worktree: `~/webapps/.wt/aviation_weather_viewer_project/phase-08-demo-release`.
-- Host: `vps-projectapp-staging` (`host_status=on-work-host`).
+- Manifiesto schema 2 con `overlays: []` y `value_data_path` sólo térmico.
+- Seis grids térmicos `128×160` versionados; los seis WebP permanecen intactos.
+- API con `value_data_url` sólo para temperatura y validación previa a publicar.
+- Servicio frontend con cache activo ± adyacentes, U/V inyectable, abort y
+  protección contra respuestas tardías.
+- Muestreo bilineal local de temperatura/U/V, cobertura previa y dirección
+  meteorológica.
+- Adapter MapLibre y panel React controlado, sin wiring central.
 
-## Estado validado
+## Hashes de grids térmicos
 
-- URL: `https://aviation-weather-platform.projectapp.co`.
-- Django check y build de producción verdes.
-- Backend 20/20; frontend-unit 14/14; E2E live Desktop Chrome 1/1.
-- QA: 1 flow covered, 5 exempt, 0 missing/junk-only/unvalidated.
-- Quality gate strict: 0 errors, 0 warnings.
-- Chrome 147, Edge 151 y ejecución local completan el recorrido a `1920×1080`.
-- Estabilidad: 615 s, 9 ciclos, sin errores críticos ni requests externas;
-  heap post-GC estabilizado y fallback estático a 60,8 FPS.
+| Frame | SHA-256 |
+|---|---|
+| `00Z.json` | `fb94cea7aae08eb143fb8d8e808285582330231b1396302af0c2ccb6fe64952c` |
+| `03Z.json` | `643ebf93950730d0cc030a28d8775ca9da7c65d5930248d046ca5562607041c3` |
+| `06Z.json` | `b5501333551ce893e7eb44a24c48be3d82d5730793a49bab36bf747ef1f631b2` |
+| `09Z.json` | `63b68ef09a11a6b7c387b3a62ce9a9624e1fb785ac57a819ae0b6bdad15ee4ee` |
+| `12Z.json` | `7584912c890f9d09ad1f267266176fcdf36c73a9e4dd9a3ed61095573677e99f` |
+| `15Z.json` | `8780d69800396fa494dfff65e43c3a692e21f3261ef30093a6c102094d82310c` |
 
-## Riesgo abierto de equipo
+Dos generaciones temporales completas produjeron hashes idénticos. El
+manifiesto resultante tiene SHA-256
+`8ad5fc27b9963a89b0dc7fa42187071ecc42bf4a4f8dd1be4ffa5f63bf1687e8`.
 
-El host sólo tiene 1 vCPU y ANGLE/SwiftShader: las partículas miden
-aproximadamente 0,6–1,4 FPS y no permiten acreditar el objetivo de ~30 FPS para
-una GPU física. La densidad ya está fija en 2500 y el fallback de flechas es
-fluido. Repetir el ensayo en el portátil de la reunión antes de presentar.
+## Handoff
 
-## Cierre alcanzado
-
-1. El PR QA #13 pasó los cuatro checks obligatorios y se integró con
-   `merge-when-green`.
-2. El checkout de staging avanzó a `054ebdd27b459ba24cff3d65f580ea7bbae95f0d`.
-3. Django check, migraciones, build, servicios, health y raíz HTTPS quedaron
-   verdes sobre ese SHA.
-4. El recorrido E2E live final pasó 1/1 después de ampliar exclusivamente la
-   espera de bootstrap a 60 s; no se modificó producción ni se relajaron
-   aserciones funcionales.
-
-## Hallazgos operativos separados
-
-- El toolkit publicó dominio/servicios en `b0f2a244`; el guard no permite
-  asignar `server:` y el resolver tampoco lo escribe, por lo que el registro
-  conserva `status: scaffold` con la explicación operativa.
-- El falso rojo de backup de `crushme_project` se resolvió mediante su exención
-  Huey explícita; los gates locales quedaron completamente verdes.
-- El CI remoto del toolkit no arrancó ningún step: GitHub reporta payments
-  fallidos o spending limit. Requiere acción de billing del operador y rerun del
-  workflow `32328692139`.
-- El 404 de favicon es no bloqueante y queda para después de la reunión.
+- Fase 12 importa `isCoordinateInsideCoverage`, `sampleScalarGrid` y
+  `sampleWeatherAtCoordinate` desde `frontend/features/weather/picker`.
+- Fase 13 extiende el mismo schema 2; no crea schema 3 y conserva
+  `value_data_path` exclusivo de temperatura.
+- Fase 14 registra adapter/servicio/panel, arbitra clicks de aeropuerto mediante
+  `shouldHandleClick` y limpia marcador/resultado al cerrar.

@@ -171,3 +171,18 @@ cd frontend && PLAYWRIGHT_BASE_URL=https://aviation-weather-platform.projectapp.
 
 La evidencia manual y los comandos de contingencia viven en
 `docs/release/phase08-demo-handoff.md`.
+
+## Contrato técnico — Fase 10
+
+- Manifiesto: schema `2`, doce frames originales y `overlays: []`.
+- Valores térmicos: seis JSON `128×160`, row-major norte-sur/oeste-este, rango
+  `0–38 °C`, bajo `temperature-values/`.
+- API: `value_data_url` existe sólo para frames de temperatura; viento conserva
+  su descriptor anterior.
+- Exports públicos: `isCoordinateInsideCoverage`, `sampleScalarGrid` y
+  `sampleWeatherAtCoordinate` desde `frontend/features/weather/picker`.
+- IDs MapLibre reservados: `weather-picker-source` y `weather-picker-point`.
+- Cache: timestamp activo más anterior/siguiente; abort y versión de request
+  impiden publicar respuestas tardías.
+- El manifiesto de aeropuertos conserva schema `1`; su versión es independiente
+  de la versión del manifiesto meteorológico.

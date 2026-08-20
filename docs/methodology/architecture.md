@@ -103,3 +103,17 @@ flowchart LR
   `b0f2a244f99f2477bd828b69a45c8296e38a4d35`. Conserva `status: scaffold`
   hasta que el resolver canónico pueda asignar `server:`; esto no altera la
   topología ya desplegada en staging.
+
+## Arquitectura aislada — Fase 10
+
+El endpoint de frames valida y publica `value_data_url` únicamente para
+temperatura. En el navegador, `WeatherPickerDataService` carga el grid térmico y
+el campo U/V del mismo timestamp, acepta un U/V ya disponible y conserva como
+máximo el activo y sus adyacentes. El sampler puro verifica cobertura antes de
+reutilizar la interpolación de viento que clampa bordes, por lo que un punto
+externo nunca se convierte en un valor válido.
+
+`CoordinatePickerAdapter` es dueño sólo de su source, layer y listener; el panel
+React es controlado. Ambos quedan sin registrar en el controller, store u
+orquestador hasta la Fase 14. No se añadió endpoint de muestreo, generación en
+runtime ni dependencia externa.
