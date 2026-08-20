@@ -201,3 +201,18 @@ Se repitió la instalación reproducible con
 `npm ci --no-audit --prefer-offline --progress=false`. Instaló 706 paquetes en
 el worktree sin tocar dependencias de otras sesiones y habilitó los tests
 dirigidos. No se cambió `package.json` ni `package-lock.json`.
+
+## 2026-08-20 — Riesgo de publicar schema 3 antes del frontend
+
+### Riesgo detectado
+
+El parser de catálogo vigente exige un conjunto exacto de capas. Si una fase de
+datos añadiera los cuatro productos nuevos al manifest/API mientras las ramas
+frontend siguen aisladas, la demo completa rechazaría el catálogo.
+
+### Prevención planificada
+
+La Fase 18 genera y valida 48 assets staged sin modificar manifest, loaders,
+views o catálogo. La Fase 23 cambia manifest a schema 3, API, parser, store y
+controller en el mismo vertical slice. El Gate M1 exige una prueba de regresión
+que confirme que el catálogo vivo conserva schema 2 hasta entonces.

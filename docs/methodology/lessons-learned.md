@@ -109,3 +109,20 @@
   acoplar URL a Zustand, MapLibre o `window`.
 - Clipboard y Fullscreen deben nacer de gestos explícitos y degradar a estados
   inline; un rechazo del navegador no debe desactivar presentación interna.
+
+## Roadmap móvil y capas
+
+- Ocultar paneles bajo un breakpoint evita overflow, pero no crea una
+  experiencia móvil: cada función necesita una ruta táctil visible.
+- Safe areas, orientación, foco y targets deben congelarse como contratos antes
+  de repartir componentes responsive entre sesiones.
+- El estado de panel, orientación y calidad es efímero; llevarlo a Zustand o URL
+  acoplaría presentación con meteorología.
+- Nuevas capas paralelas deben publicar adapters/descriptores aislados y dejar
+  el registry/controller a una sola fase de integración.
+- Cuando el consumidor valida catálogos estrictamente, los assets pueden
+  aterrizar staged, pero manifest/API/frontend deben evolucionar juntos.
+- Ráfagas reutilizan el campo U/V; crear otro motor de partículas no añade valor
+  y duplica riesgo.
+- Playwright WebKit ayuda con layout/interacción, pero no sustituye un smoke en
+  Safari físico para una reunión que puede ocurrir desde teléfono.

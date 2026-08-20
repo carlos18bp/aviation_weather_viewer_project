@@ -109,3 +109,16 @@ la hora activa y sus adyacentes, progreso temporal de 1500 ms, transición con
 commit atómico, codec canónico de escena y controles de presentación/copia. El
 codec reconoce precipitación, ruta e isobaras sólo para preparar Fase 14; no las
 activa ni amplía por sí mismo el recorrido visible de Fase 08.
+
+## Roadmap móvil y capas aeronáuticas
+
+Después de integrar y validar la Fase 14 existe una tercera iteración opcional,
+Fases 15–23, destinada a hacer la demo completa en teléfonos/tabletas y añadir
+nubosidad, base de nubes, visibilidad y ráfagas simuladas. También incorpora
+renderizado adaptativo, interacción táctil, evolución por coordenada y un
+explorador categorizado de capas.
+
+La iteración no puede comenzar sobre una Fase 14 parcial. Conserva Colombia,
+fecha, seis timestamps, warning, una sola instancia MapLibre, datos locales y
+ausencia de uso operacional. Su fuente normativa vive en
+docs/MVP_roadmap/mobile_layer_enrichment/README.md.

@@ -1,17 +1,18 @@
-# Contexto activo — Ola E1 de enriquecimiento
+# Contexto activo — Enriquecimiento y roadmap móvil
 
 Actualizado: 2026-08-20.
 
 ## Estado
 
-Las Fases 10 y 11 quedaron integradas en `master` mediante PR #18 (`e6d2f28`) y
-PR #17 (`5f6f624`). La Fase 09 está completa en su PR #16 y absorbe ambas bases
-sin conectar todavía composición, store, controller, orquestador o flows E2E;
-ese wiring permanece reservado para Fase 14.
+Las Fases 09, 10 y 11 quedaron integradas en `master` mediante PR #16
+(`6795540`), PR #18 (`e6d2f28`) y PR #17 (`5f6f624`). Ninguna conecta
+todavía composición, store, controller, orquestador o flows E2E; ese wiring
+permanece reservado para Fase 14. Las Fases 12 y 13 aún deben implementarse
+antes de abrir la integración.
 
-## Entrega de Fase 09
+## Entrega integrada de Fase 09
 
-- Rama `feat/20082026-phase-09-airport-intelligence`, PR #16 contra `master`.
+- Integrada en `master` mediante PR #16 y SHA `6795540`.
 - Host: `vps-projectapp-staging` (`host_status=on-work-host`).
 - Búsqueda pura y `AirportSearch`: completos; 18 tests verdes.
 - Serie, validación, abort y cache: completos; 16 tests verdes.
@@ -66,3 +67,17 @@ manifiesto resultante tiene SHA-256
 - Fase 14 registra adapter/servicio/panel, arbitra clicks de aeropuerto mediante
   `shouldHandleClick`, conecta `AirportSearch`/`AirportTrend`, integra
   transición/URL/presentación y limpia recursos al cerrar o destruir.
+
+## Roadmap posterior condicionado
+
+Se definió una ronda adicional Fases 15–23 bajo
+`docs/MVP_roadmap/mobile_layer_enrichment/`. Su implementación no comienza
+hasta que la Fase 14 esté integrada, desplegada y verde.
+
+- Ola M1: responsive, rendimiento adaptativo, touch GIS y 48 assets staged.
+- Ola M2: adapters de cuatro capas, point forecast y explorador de capas.
+- Cierre M3: schema 3, wiring central, QA multidispositivo y release.
+
+Objetivos congelados: iOS/Android en phone/tablet, portrait/landscape; capas
+cloud-cover, cloud-base, visibility y wind-gusts; una sola instancia MapLibre;
+datos simulados/locales; warning permanente.
