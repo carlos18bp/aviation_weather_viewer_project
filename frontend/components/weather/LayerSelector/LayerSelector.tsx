@@ -20,6 +20,7 @@ interface LayerOption {
 const LAYER_OPTIONS: readonly LayerOption[] = [
   { id: 'temperature', label: 'Temperatura', unit: '°C' },
   { id: 'wind', label: 'Viento', unit: 'kt' },
+  { id: 'precipitation', label: 'Precipitación', unit: 'mm/h' },
 ];
 
 function LayerIcon({ layer }: { layer: WeatherLayerId }) {
@@ -32,11 +33,20 @@ function LayerIcon({ layer }: { layer: WeatherLayerId }) {
     );
   }
 
+  if (layer === 'wind') {
+    return (
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <path d="M3 7h9.5a2.5 2.5 0 1 0-2.2-3.7" />
+        <path d="M3 10h12.5a2.5 2.5 0 1 1-2.2 3.7" />
+        <path d="M3 13h5" />
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 20 20" aria-hidden="true">
-      <path d="M3 7h9.5a2.5 2.5 0 1 0-2.2-3.7" />
-      <path d="M3 10h12.5a2.5 2.5 0 1 1-2.2 3.7" />
-      <path d="M3 13h5" />
+      <path d="M10 2.8c2.8 3.5 4.5 5.9 4.5 8.3a4.5 4.5 0 1 1-9 0C5.5 8.7 7.2 6.3 10 2.8Z" />
+      <path d="M7.8 12.2c.5 1 1.3 1.5 2.4 1.5" />
     </svg>
   );
 }

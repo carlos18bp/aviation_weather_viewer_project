@@ -59,7 +59,7 @@ button {
 }
 
 [data-weather-viewer] main[data-map-status] > header > div:last-child {
-  padding-right: 250px;
+  padding-right: 660px;
 }
 
 [data-weather-viewer] main[data-map-status] > section[aria-label="Shell del visor meteorológico"] > aside {
@@ -84,6 +84,19 @@ button {
 
 [data-weather-viewer][data-frame-loading="true"] footer section[aria-label="Slot para controles y línea de tiempo"] {
   border-color: rgb(50 211 220 / 30%);
+}
+
+[data-weather-viewer][data-presentation-mode="true"] main[data-map-status] > header > div:last-child {
+  padding-right: 430px;
+}
+
+[data-weather-viewer][data-presentation-mode="true"] main[data-map-status] > section[aria-label="Shell del visor meteorológico"] {
+  grid-template-columns: minmax(190px, 230px) minmax(0, 1fr) minmax(190px, 230px);
+}
+
+[data-weather-viewer][data-presentation-mode="true"] main[data-map-status] > section[aria-label="Shell del visor meteorológico"] > aside {
+  padding: 14px;
+  background: rgb(4 15 25 / 68%);
 }
 
 @media (prefers-reduced-motion: reduce) {

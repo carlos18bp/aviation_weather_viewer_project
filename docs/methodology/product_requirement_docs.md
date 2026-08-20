@@ -158,3 +158,22 @@ La entrega incluye schemas, servicios, leyenda, callbacks y adapters MapLibre
 aislados. No modifica el picker, no añade endpoints ni servicios externos y no
 conecta todavía estas capas a la composición principal; ese wiring pertenece a
 Fase 14.
+
+## Release enriquecido — Fase 14
+
+La Fase 14 conecta en una sola experiencia el vertical slice original de Fase
+08 con búsqueda y evolución aeroportuaria, picker por coordenada, escenas URL,
+ruta con viento relativo, precipitación, isobaras y modo presentación. La
+experiencia conserva Colombia, `demo-colombia-001`, los seis timestamps, datos
+locales simulados, una sola instancia MapLibre y el warning operacional
+permanente.
+
+El release mantiene exactamente una capa meteorológica principal visible;
+isobaras es un overlay independiente. Cada cambio temporal conserva el frame
+anterior durante la carga y publica capa, aeropuerto, picker, ruta, isobaras,
+UTC y leyenda mediante un único commit. El reset enriquecido vuelve a
+`wind/06Z`, cámara inicial y URL canónica sin selecciones ni recursos pendientes.
+
+La funcionalidad y los dos recorridos E2E de enriquecimiento están
+implementados. El estado de integración definitivo se publicará sólo después
+de completar el QA y quality gate de la fase.

@@ -265,3 +265,69 @@ La colección vacía se tipó como `FeatureCollection` mutable sin exponer una
 operación de mutación, y el fixture negativo hace un cast explícito para simular
 input externo inválido. Los tests dirigidos de isobaras, ESLint y el build Next
 pasaron después del ajuste; el contrato runtime continúa rechazando `998`.
+
+## 2026-08-20 — Bloqueos de integración encontrados en Fase 14
+
+### Placeholder PNG de precipitación inválido
+
+El raster transparente usado antes del primer frame tenía un CRC inválido y el
+navegador emitía `InvalidStateError: The source image could not be decoded`.
+Se reemplazó únicamente el data URL placeholder por un PNG transparente válido;
+los WebP versionados y la lógica de Fase 13 permanecen intactos.
+
+### Errores de source posteriores a `load`
+
+El controller promovía cualquier evento `error` de MapLibre a fallo fatal y la
+inicialización esperaría un style estable que un source placeholder podía dejar
+pendiente. El límite se corrigió: los errores previos a `load` siguen siendo
+fatales; después de `load` pertenecen al adapter correspondiente. Los adapters
+se inicializan en el orden del release y cada uno conserva su fallback.
+
+### Timers browser sin receiver
+
+El runner temporal guardaba referencias nativas no ligadas de `setTimeout` y
+`clearTimeout`. Chrome real lanzó `Illegal invocation` al ejecutar la
+transición. Los defaults se ligaron a `globalThis` y una regresión dirigida
+verifica el receiver; los timers inyectados de tests conservan el mismo contrato.
+
+### Catálogo aeroportuario anterior al lifecycle de adapters
+
+La carga paralela de catálogo y frame podía entregar aeropuertos antes de que
+MapLibre terminara de inicializar los adapters. El controller intentaba publicar
+el `FeatureCollection` inmediatamente y el adapter rechazaba el frame. El
+controller conserva ahora un único frame aeroportuario pendiente fuera de
+Zustand, lo publica al completar el lifecycle y el bootstrap no anuncia el frame
+inicial visible hasta que esa dependencia está lista. Un hit target geométrico
+de 10 px mantiene además la precedencia del aeropuerto mientras MapLibre termina
+de materializar su source; ese click nunca abre el picker.
+
+### Decodificación raster dentro del commit temporal
+
+Chrome real mostró que el WebP podía descargarse y decodificarse después del
+fade-out, al entrar en `setFrame()`. Eso alargaba el tramo sin frame y hacía que
+la atomicidad dependiera del rendimiento del renderer. Temperatura y
+precipitación usan ahora un slot preparado por producto, externo a Zustand: la
+imagen se resuelve durante loading y el adapter la consume una sola vez durante
+el commit. Abort, supersession, reset y destroy liberan la imagen pendiente.
+
+### Asunciones de infraestructura en el E2E legado
+
+El recorrido de Fase 08 fijaba el hostname de staging y un presupuesto global de
+180 s. Al ejecutarlo contra el build local con SwiftShader completó todo el flujo
+pero agotó el timeout durante el reset. La aserción se normalizó a same-origin y
+el timeout se hizo explícito en 360 s sin eliminar ninguna interacción ni
+expectativa. El recorrido completo pasó después en 2,2 minutos.
+
+### Pérdida de contexto usada por el harness de estabilidad
+
+Una pérdida sintética sin evento de restauración dejaba a MapLibre —de forma
+correcta— en estado de contexto perdido e impedía transiciones posteriores. La
+evidencia válida fuerza pérdida, confirma fallback y emite restauración antes de
+seguir. El recorrido definitivo completó 614,5 s sin findings.
+
+### Limitación de rendimiento del host
+
+El VPS no expone GPU física ni `/dev/dri`; partículas WebGL corren sobre
+SwiftShader y no representan el equipo de demo. Se midió el camino estático de
+fallback a 60,1 FPS y se validaron escena, interacciones y cleanup. Continúa el
+404 no bloqueante de `/favicon.ico` ya registrado en Fase 08.

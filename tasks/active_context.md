@@ -1,14 +1,51 @@
-# Contexto activo — Ola E2 / Fases 12 y 13
+# Contexto activo — Fase 14 / integración y release enriquecido
 
 Actualizado: 2026-08-20.
 
 ## Estado
 
-Las Fases 09, 10 y 11 están integradas en `master` mediante PR #16 (`6795540`),
-PR #18 (`e6d2f28`) y PR #17 (`5f6f624`); Fase 12 quedó integrada mediante PR
-#22 (`d6bc25c`). La precondición explícita del operador declara el Gate E1 en
-**GO**. Fase 13 entrega módulos atmosféricos aislados bajo ownership distinto;
-el wiring de ambas fases permanece reservado para Fase 14.
+Las Fases 09–13 están integradas en `master`; no existen PR funcionales
+pendientes de esa ola y sus handoffs están disponibles. La Fase 14 conectó sus
+módulos al vertical slice original de Fase 08 desde una rama/worktree propios.
+La funcionalidad, el mapa real de flows y la validación visual/estabilidad están
+completos; falta el QA/quality gate de cierre antes de declarar el release.
+
+## Entrega funcional de Fase 14
+
+- Store y tipos contienen coordinate, route, isobars, presentation y viewport
+  serializables; no contienen recursos runtime.
+- Controller expone setters/callbacks enriquecidos y registra meteorología,
+  isobaras, ruta, aeropuertos y picker en ese orden.
+- Click de aeropuerto selecciona/focaliza sin picker; click de fondo válido abre
+  o mueve el picker; `moveend` serializa viewport.
+- Búsqueda abre panel/tendencia y los puntos de evolución usan el cambio
+  temporal normal.
+- Picker y ruta cargan/recalculan con temperatura + U/V del timestamp activo.
+- Precipitación es una tercera capa principal exclusiva; isobaras degradan de
+  forma independiente.
+- URL completa restaura capa, timestamp, viewport, aeropuerto, picker, ruta,
+  isobaras y presentación antes del bootstrap, con defaults canonicalizados.
+- Transición conserva el frame previo durante loading y realiza fade-out,
+  commit único, fade-in y precarga adyacente sin timestamps mezclados.
+- Reset termina playback/transición, aborta trabajo, limpia escena y errores,
+  restaura cámara y publica `wind/06Z` con URL vacía.
+
+## Evidencia previa a QA
+
+- Flow map real: 21 flows; 8 cubiertos y 13 negativos exentos con pruebas
+  unitarias/integration, sin missing/partial/junk-only.
+- Dos E2E enriquecidos implementados; discovery y route-scene verdes en sus
+  pasadas dirigidas.
+- El E2E original de Fase 08 volvió a pasar completo (`1/1`) y los dos E2E
+  enriquecidos pasaron juntos (`2/2`).
+- TypeScript, ESLint acotado al diff y build Next de producción están verdes.
+- `e2e-user-flows-check`: 21 flujos, 8 covered, 13 exempt, 0 missing,
+  0 partial y 0 junk-only.
+- Chrome y Edge reales: 1920×1080, normal/presentación, reduced motion y escena
+  aeropuerto + picker + ruta sin colisiones.
+- Fallback estático: 60,1 FPS en Chrome real sobre SwiftShader.
+- Estabilidad: 614,5 s, cero fallos funcionales, cero errores console/page,
+  cuatro aborts esperados y cero requests pendientes después del reset.
 
 ## Validación del Gate E1
 

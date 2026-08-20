@@ -8,9 +8,14 @@ import {
   TEMPERATURE_LEGEND,
 } from '@/features/weather/temperature';
 import {
+  fetchPrecipitationFrame,
   PRECIPITATION_LAYER_ID,
   PRECIPITATION_LEGEND,
 } from '@/features/weather/precipitation';
+import {
+  parseIsobarCatalogResponse,
+  type IsobarFrame,
+} from '@/features/weather/isobars';
 import {
   WIND_FIELD_BBOX,
   WIND_LEGEND,
@@ -33,7 +38,7 @@ export interface WeatherCatalogLayer {
   id: WeatherLayerId;
   name: string;
   kind: 'scalar' | 'vector';
-  unit: '°C' | 'kt';
+  unit: '°C' | 'kt' | 'mm/h';
   minimum: number;
   maximum: number;
 }
@@ -47,6 +52,7 @@ export interface WeatherCatalog {
     operationalUse: false;
   };
   layers: readonly WeatherCatalogLayer[];
+  isobarFrames: readonly IsobarFrame[];
   timestamps: readonly DemoTimestamp[];
 }
 
@@ -148,7 +154,15 @@ function parseCatalogLayer(value: unknown): WeatherCatalogLayer {
           minimum: WIND_LEGEND.minimum,
           maximum: WIND_LEGEND.maximum,
         }
-      : null;
+      : layer.id === PRECIPITATION_LAYER_ID
+        ? {
+            id: PRECIPITATION_LAYER_ID,
+            kind: 'scalar' as const,
+            unit: PRECIPITATION_LEGEND.unit,
+            minimum: PRECIPITATION_LEGEND.minimum,
+            maximum: PRECIPITATION_LEGEND.maximum,
+          }
+        : null;
 
   if (
     !expected
@@ -193,28 +207,11 @@ export function parseWeatherCatalog(value: unknown): WeatherCatalog {
   if (!Array.isArray(catalog.layers) || catalog.layers.length !== 3) {
     fail('El catálogo debe contener temperatura, viento y precipitación.');
   }
-  const precipitationLayer = asRecord(
-    catalog.layers[2],
-    'La capa de precipitación del catálogo',
-  );
-  if (
-    precipitationLayer.id !== PRECIPITATION_LAYER_ID
-    || precipitationLayer.kind !== 'scalar'
-    || precipitationLayer.unit !== PRECIPITATION_LEGEND.unit
-    || precipitationLayer.minimum !== PRECIPITATION_LEGEND.minimum
-    || precipitationLayer.maximum !== PRECIPITATION_LEGEND.maximum
-    || typeof precipitationLayer.name !== 'string'
-    || precipitationLayer.name.trim() === ''
-  ) {
-    fail('El catálogo contiene una capa de precipitación inválida.');
+  const layers = catalog.layers.map(parseCatalogLayer);
+  if (new Set(layers.map((layer) => layer.id)).size !== 3) {
+    fail('El catálogo debe contener una sola definición por cada capa.');
   }
-
-  // Phase 13 publishes the frozen atmospheric contract without wiring it into
-  // the current viewer. Phase 14 will widen WeatherLayerId and expose this item.
-  const layers = catalog.layers.slice(0, 2).map(parseCatalogLayer);
-  if (new Set(layers.map((layer) => layer.id)).size !== 2) {
-    fail('El catálogo debe contener una sola definición por capa.');
-  }
+  const isobarFrames = parseIsobarCatalogResponse(value);
 
   return {
     scenario: {
@@ -225,6 +222,7 @@ export function parseWeatherCatalog(value: unknown): WeatherCatalog {
       operationalUse: false,
     },
     layers,
+    isobarFrames,
     timestamps,
   };
 }
@@ -279,6 +277,9 @@ export async function fetchWeatherFrame(
       timestamp: frame.timestamp,
       imageUrl: frame.imageUrl,
     };
+  }
+  if (layer === 'precipitation') {
+    return fetchPrecipitationFrame(requestedTimestamp, options);
   }
 
   const query = new URLSearchParams({ layer, timestamp: requestedTimestamp });

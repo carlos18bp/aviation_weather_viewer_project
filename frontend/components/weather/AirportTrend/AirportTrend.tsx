@@ -96,7 +96,7 @@ export function AirportTrend({
   return (
     <section
       className={styles.trend}
-      aria-labelledby={titleId}
+      aria-label={`Evolución simulada ${airport.properties.icao_code}`}
       aria-busy={loading}
       data-collapsed={isCollapsed ? 'true' : 'false'}
     >

@@ -18,16 +18,20 @@ function StatusWithWarning({ status }: { status: ViewerStatusKind }) {
 }
 
 describe('controlled viewer controls', () => {
-  it('offers only temperature and wind and emits one layer selection', async () => {
+  it('offers the three frozen products and emits one layer selection', async () => {
     const user = userEvent.setup();
     const onSelect = jest.fn();
     render(<LayerSelector activeLayer="wind" onSelect={onSelect} />);
 
     const group = screen.getByRole('group', { name: 'Selector de capa' });
-    expect(within(group).getAllByRole('button')).toHaveLength(2);
+    expect(within(group).getAllByRole('button')).toHaveLength(3);
     expect(screen.getByRole('button', { name: /Viento kt/ })).toHaveAttribute(
       'aria-pressed',
       'true',
+    );
+    expect(screen.getByRole('button', { name: /Precipitación mm\/h/ })).toHaveAttribute(
+      'aria-pressed',
+      'false',
     );
 
     await user.click(screen.getByRole('button', { name: /Temperatura °C/ }));

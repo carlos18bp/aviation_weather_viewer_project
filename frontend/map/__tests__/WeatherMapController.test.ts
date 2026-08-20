@@ -1,10 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import type { FeatureCollection } from 'geojson';
 import type { Map as MapLibreMap, MapOptions } from 'maplibre-gl';
 
 import type {
   WeatherLayerAdapter,
+  WeatherLayerAdapterRegistry,
   WindWeatherMapFrame,
 } from '@/lib/weather/viewerTypes';
 import {
@@ -26,6 +28,8 @@ class FakeMap {
   readonly touchZoomRotate = { disableRotation: jest.fn() };
   readonly resize = jest.fn();
   readonly jumpTo = jest.fn();
+  readonly getCenter = jest.fn(() => ({ lng: -74.14691, lat: 4.70159 }));
+  readonly getZoom = jest.fn(() => 6.24);
   readonly remove = jest.fn();
   readonly loaded = jest.fn(() => false);
 
@@ -48,7 +52,10 @@ class FakeMap {
   }
 }
 
-function createHarness(adapters = {}) {
+function createHarness(
+  adapters: WeatherLayerAdapterRegistry = {},
+  callbackOverrides: Record<string, jest.Mock> = {},
+) {
   const map = new FakeMap();
   let options: MapOptions | undefined;
   const mapFactory = jest.fn((nextOptions: MapOptions) => {
@@ -60,11 +67,25 @@ function createHarness(adapters = {}) {
   const controller = new DefaultWeatherMapController({
     container: document.createElement('div'),
     adapters,
-    callbacks: { onReady, onError },
+    callbacks: { onReady, onError, ...callbackOverrides },
     mapFactory,
   });
 
   return { controller, map, mapFactory, onReady, onError, getOptions: () => options };
+}
+
+function createAdapter(
+  id: WeatherLayerAdapter<unknown>['id'],
+  initialize?: () => Promise<void>,
+): WeatherLayerAdapter<unknown> {
+  return {
+    id,
+    initialize: initialize ?? jest.fn().mockResolvedValue(undefined),
+    setFrame: jest.fn(),
+    setVisible: jest.fn(),
+    reset: jest.fn(),
+    destroy: jest.fn(),
+  };
 }
 
 async function emitLoaded(harness: ReturnType<typeof createHarness>) {
@@ -78,6 +99,7 @@ function createWindAdapter(): WeatherLayerAdapter<WindWeatherMapFrame> {
   return {
     id: 'wind',
     initialize: jest.fn().mockResolvedValue(undefined),
+    prepareFrame: jest.fn().mockResolvedValue(undefined),
     setFrame: jest.fn(),
     setVisible: jest.fn(),
     reset: jest.fn(),
@@ -122,12 +144,17 @@ describe('DefaultWeatherMapController', () => {
     expect(harness.mapFactory).toHaveBeenCalledTimes(1);
   });
 
-  it('publishes ready after the style loads', async () => {
-    const harness = createHarness();
+  it('publishes ready after the style loads without promoting adapter source events', async () => {
+    const adapters: WeatherLayerAdapterRegistry = {};
+    const harness = createHarness(adapters);
+    adapters.temperature = createAdapter('temperature', async () => {
+      harness.map.emit('error', { error: new Error('adapter source event') });
+    });
 
     await emitLoaded(harness);
 
     expect(harness.onReady).toHaveBeenCalledTimes(1);
+    expect(harness.onError).not.toHaveBeenCalled();
   });
 
   it('publishes ready when MapLibre loaded before listener registration', async () => {
@@ -139,13 +166,18 @@ describe('DefaultWeatherMapController', () => {
     expect(harness.onReady).toHaveBeenCalledTimes(1);
   });
 
-  it('initializes each registered adapter', async () => {
-    const wind = createWindAdapter();
-    const harness = createHarness({ wind });
+  it('applies queued airports only after their adapter initializes', async () => {
+    const airports = createAdapter('airports');
+    const harness = createHarness({ airports } as WeatherLayerAdapterRegistry);
+    const collection: FeatureCollection = { type: 'FeatureCollection', features: [] };
+
+    harness.controller.setAirports(collection);
+    expect(airports.setFrame).not.toHaveBeenCalled();
 
     await emitLoaded(harness);
 
-    expect(wind.initialize).toHaveBeenCalledTimes(1);
+    expect(airports.initialize).toHaveBeenCalledTimes(1);
+    expect(airports.setFrame).toHaveBeenCalledWith(collection);
   });
 
   it('updates adapter visibility for the active layer', () => {
@@ -178,8 +210,11 @@ describe('DefaultWeatherMapController', () => {
       },
     };
 
+    const signal = new AbortController().signal;
+    await harness.controller.prepareWeatherFrame(frame, signal);
     await harness.controller.setWeatherFrame(frame);
 
+    expect(wind.prepareFrame).toHaveBeenCalledWith(frame, signal);
     expect(wind.setFrame).toHaveBeenCalledWith(frame);
   });
 
@@ -283,5 +318,104 @@ describe('DefaultWeatherMapController', () => {
     expect(featureCount('regional-coastline.geojson')).toBeGreaterThan(0);
     expect(featureCount('colombia-departments.geojson')).toBe(33);
     expect(featureCount('map-labels.geojson')).toBe(39);
+  });
+
+  it('initializes adapters in meteorology, overlay, route, airport, picker order', async () => {
+    const order: string[] = [];
+    const adapter = (id: WeatherLayerAdapter<unknown>['id']) => createAdapter(
+      id,
+      jest.fn(async () => { order.push(id); }),
+    );
+    const harness = createHarness({
+      temperature: adapter('temperature'),
+      wind: adapter('wind'),
+      precipitation: adapter('precipitation'),
+      isobars: adapter('pressure-isobars'),
+      route: adapter('route'),
+      airports: adapter('airports'),
+      picker: adapter('picker'),
+    } as WeatherLayerAdapterRegistry);
+
+    await emitLoaded(harness);
+
+    expect(order).toEqual([
+      'wind',
+      'temperature',
+      'precipitation',
+      'pressure-isobars',
+      'route',
+      'airports',
+      'picker',
+    ]);
+  });
+
+  it('keeps exactly one primary weather adapter visible', () => {
+    const temperature = createAdapter('temperature');
+    const wind = createAdapter('wind');
+    const precipitation = createAdapter('precipitation');
+    const harness = createHarness({
+      temperature,
+      wind,
+      precipitation,
+    } as WeatherLayerAdapterRegistry);
+
+    harness.controller.setLayer('precipitation');
+
+    expect(temperature.setVisible).toHaveBeenLastCalledWith(false);
+    expect(wind.setVisible).toHaveBeenLastCalledWith(false);
+    expect(precipitation.setVisible).toHaveBeenLastCalledWith(true);
+  });
+
+  // quality: allow-too-many-assertions (independent scene channels must reach only their dedicated adapters and camera)
+  it('delegates picker, route, isobars, and restored viewport independently', async () => {
+    const picker = createAdapter('picker');
+    const routeAdapter = createAdapter('route');
+    const isobars = createAdapter('pressure-isobars');
+    const harness = createHarness({
+      picker,
+      route: routeAdapter,
+      isobars,
+    } as WeatherLayerAdapterRegistry);
+    await emitLoaded(harness);
+    const route = { originIcao: 'SKBO', destinationIcao: 'SKRG' } as const;
+    const analysis = { route } as never;
+    const collection = { type: 'FeatureCollection', features: [] } as never;
+
+    harness.controller.setSelectedCoordinate([-74.15, 4.7]);
+    harness.controller.setRoute(route, analysis);
+    harness.controller.setIsobarFrame(collection);
+    harness.controller.setIsobarsVisible(true);
+    harness.controller.setViewport({ longitude: -74.15, latitude: 4.7, zoom: 6.2 });
+
+    expect(picker.setFrame).toHaveBeenCalledWith([-74.15, 4.7]);
+    expect(routeAdapter.setFrame).toHaveBeenCalledWith(analysis);
+    expect(isobars.setFrame).toHaveBeenCalledWith(collection);
+    expect(isobars.setVisible).toHaveBeenLastCalledWith(true);
+    expect(harness.map.jumpTo).toHaveBeenLastCalledWith({
+      center: [-74.15, 4.7],
+      zoom: 6.2,
+      bearing: 0,
+      pitch: 0,
+    });
+  });
+
+  it('publishes a serializable viewport only on moveend and removes that listener', async () => {
+    const onViewportChanged = jest.fn();
+    const harness = createHarness({}, { onViewportChanged });
+    await emitLoaded(harness);
+
+    harness.map.emit('move');
+    expect(onViewportChanged).not.toHaveBeenCalled();
+    harness.map.emit('moveend');
+    expect(onViewportChanged).toHaveBeenCalledWith({
+      longitude: -74.15,
+      latitude: 4.7,
+      zoom: 6.2,
+    });
+
+    harness.controller.destroy();
+    harness.map.emit('moveend');
+    expect(onViewportChanged).toHaveBeenCalledTimes(1);
+    expect(harness.map.listeners.get('moveend')?.size).toBe(0);
   });
 });

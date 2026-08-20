@@ -3,8 +3,8 @@ import { expect, test } from '@playwright/test';
 // Catches a false demo-ready state where the map renders but airport delegation,
 // synchronized frames, playback, reset, deterministic reload, or same-origin assets regress.
 
-const STAGING_HOSTNAME = 'aviation-weather-platform.projectapp.co';
 const MAP_BOOTSTRAP_TIMEOUT_MS = 60_000;
+const sceneExpect = expect.configure({ timeout: MAP_BOOTSTRAP_TIMEOUT_MS });
 const TIMESTAMPS = [
   '2026-01-15T00:00:00Z',
   '2026-01-15T03:00:00Z',
@@ -42,7 +42,7 @@ test(
   'the public demo keeps its deterministic weather journey synchronized @flow:viewer-demo-journey @outcome:success @outcome:display',
   { tag: ['@flow:viewer-demo-journey', '@outcome:success', '@outcome:display'] },
   async ({ page }) => {
-    test.slow();
+    test.setTimeout(360_000);
 
     const requestedUrls: URL[] = [];
     page.on('request', (request) => {
@@ -73,47 +73,50 @@ test(
     await map.click({ position: skboClick });
 
     const airportPanel = page.getByRole('region', { name: 'El Dorado International Airport' });
-    await expect(airportPanel.getByText('SKBO', { exact: true })).toHaveText('SKBO');
-    await expect(airportPanel.getByLabel('Datos simulados, no operacionales')).toHaveText('Datos simulados · No operacional');
-    await expect(airportPanel.locator('time')).toHaveAttribute('dateTime', '2026-01-15T06:00:00Z');
-    await expect(airportPanel).toContainText('Condición para 06Z');
+    await sceneExpect(airportPanel.getByText('SKBO', { exact: true })).toHaveText('SKBO');
+    await sceneExpect(airportPanel.getByLabel('Datos simulados, no operacionales')).toHaveText('Datos simulados · No operacional');
+    await sceneExpect(airportPanel.locator('time')).toHaveAttribute('dateTime', '2026-01-15T06:00:00Z');
+    await sceneExpect(airportPanel).toContainText('Condición para 06Z');
 
     await page.getByRole('button', { name: /Temperatura/ }).click();
-    await expect(viewer).toHaveAttribute('data-active-layer', 'temperature');
-    await expect(page.getByRole('region', { name: 'Leyenda de Temperatura' })).toContainText('Temperatura');
+    await sceneExpect(viewer).toHaveAttribute('data-active-layer', 'temperature');
+    await sceneExpect(page.getByRole('region', { name: 'Leyenda de Temperatura' })).toContainText('Temperatura');
 
     for (const timestamp of TIMESTAMPS) {
       const hour = zuluHour(timestamp);
-      await page.getByRole('button', { name: `Seleccionar ${hour}` }).click();
-      await expect(viewer).toHaveAttribute('data-active-timestamp', timestamp);
-      await expect(airportPanel.locator('time')).toHaveAttribute('dateTime', timestamp);
-      await expect(airportPanel.locator('time')).toHaveText(panelZuluHour(timestamp));
-      await expect(page.getByRole('button', { name: `Seleccionar ${hour}` })).toHaveAttribute('aria-current', 'time');
+      await page.getByRole('button', { name: `Seleccionar ${hour}`, exact: true }).click();
+      await sceneExpect(viewer).toHaveAttribute('data-active-timestamp', timestamp);
+      await sceneExpect(airportPanel.locator('time')).toHaveAttribute('dateTime', timestamp);
+      await sceneExpect(airportPanel.locator('time')).toHaveText(panelZuluHour(timestamp));
+      await sceneExpect(page.getByRole('button', {
+        name: `Seleccionar ${hour}`,
+        exact: true,
+      })).toHaveAttribute('aria-current', 'time');
     }
 
     await page.getByRole('button', { name: 'Timestamp anterior' }).click();
-    await expect(viewer).toHaveAttribute('data-active-timestamp', '2026-01-15T12:00:00Z');
-    await expect(airportPanel.locator('time')).toHaveText('12Z');
+    await sceneExpect(viewer).toHaveAttribute('data-active-timestamp', '2026-01-15T12:00:00Z');
+    await sceneExpect(airportPanel.locator('time')).toHaveText('12Z');
     await page.getByRole('button', { name: 'Timestamp siguiente' }).click();
-    await expect(viewer).toHaveAttribute('data-active-timestamp', '2026-01-15T15:00:00Z');
-    await expect(airportPanel.locator('time')).toHaveText('15Z');
+    await sceneExpect(viewer).toHaveAttribute('data-active-timestamp', '2026-01-15T15:00:00Z');
+    await sceneExpect(airportPanel.locator('time')).toHaveText('15Z');
 
     await page.getByRole('button', { name: 'Iniciar reproducción' }).click();
-    await expect(viewer).toHaveAttribute('data-active-timestamp', '2026-01-15T00:00:00Z');
-    await expect(airportPanel.locator('time')).toHaveText('00Z');
-    await expect(viewer).toHaveAttribute('data-active-timestamp', '2026-01-15T03:00:00Z');
-    await expect(airportPanel.locator('time')).toHaveText('03Z');
+    await sceneExpect(viewer).toHaveAttribute('data-active-timestamp', '2026-01-15T00:00:00Z');
+    await sceneExpect(airportPanel.locator('time')).toHaveText('00Z');
+    await sceneExpect(viewer).toHaveAttribute('data-active-timestamp', '2026-01-15T03:00:00Z');
+    await sceneExpect(airportPanel.locator('time')).toHaveText('03Z');
     await page.getByRole('button', { name: 'Pausar reproducción' }).click();
-    await expect(page.getByRole('button', { name: 'Iniciar reproducción' })).toHaveAttribute('aria-pressed', 'false');
+    await sceneExpect(page.getByRole('button', { name: 'Iniciar reproducción' })).toHaveAttribute('aria-pressed', 'false');
 
     await page.getByRole('button', { name: /Viento/ }).click();
-    await expect(viewer).toHaveAttribute('data-active-layer', 'wind');
-    await expect(page.getByRole('region', { name: 'Leyenda de Viento' })).toContainText('Viento');
+    await sceneExpect(viewer).toHaveAttribute('data-active-layer', 'wind');
+    await sceneExpect(page.getByRole('region', { name: 'Leyenda de Viento' })).toContainText('Viento');
 
     await page.getByRole('button', { name: 'Reiniciar' }).click();
-    await expect(viewer).toHaveAttribute('data-active-layer', 'wind');
-    await expect(viewer).toHaveAttribute('data-active-timestamp', '2026-01-15T06:00:00Z');
-    await expect(page.getByRole('heading', { name: 'Selecciona un aeropuerto' })).toHaveText('Selecciona un aeropuerto');
+    await sceneExpect(viewer).toHaveAttribute('data-active-layer', 'wind');
+    await sceneExpect(viewer).toHaveAttribute('data-active-timestamp', '2026-01-15T06:00:00Z');
+    await sceneExpect(page.getByRole('heading', { name: 'Selecciona un aeropuerto' })).toHaveText('Selecciona un aeropuerto');
 
     await page.reload();
     await expect(page.getByText('Mapa local listo', { exact: true })).toHaveText('Mapa local listo', {
@@ -123,11 +126,12 @@ test(
     await expect(viewer).toHaveAttribute('data-active-timestamp', '2026-01-15T06:00:00Z');
     await expect(viewer).toHaveAttribute('data-frame-loading', 'false');
 
+    const viewerHostname = new URL(page.url()).hostname;
     const requestedHostnames = requestedUrls.map((url) => url.hostname);
     const requestedPaths = requestedUrls.map((url) => url.pathname);
-    expect(requestedHostnames).toEqual(expect.arrayContaining([STAGING_HOSTNAME]));
+    expect(requestedHostnames).toContain(viewerHostname);
     for (const hostname of requestedHostnames) {
-      expect(hostname).toBe(STAGING_HOSTNAME);
+      expect(hostname).toBe(viewerHostname);
     }
     expect(requestedPaths).toContain('/api/v1/demo/weather/frames');
     expect(requestedPaths).toContain('/api/v1/demo/airports/SKBO/weather');

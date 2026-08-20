@@ -18,6 +18,19 @@ async function flushMicrotasks() {
 }
 
 describe('TemporalTransitionRunner', () => {
+  it('invokes browser timers with the global receiver', async () => {
+    const browserTimeout = jest.spyOn(globalThis, 'setTimeout').mockImplementation((handler) => {
+      void Promise.resolve().then(() => (handler as () => void)());
+      return 1 as unknown as ReturnType<typeof setTimeout>;
+    });
+    const runner = createTemporalTransitionRunner({ onTransition: jest.fn() });
+
+    await expect(runner.run(TARGET, jest.fn())).resolves.toBe(true);
+
+    expect(browserTimeout.mock.instances).toEqual([globalThis, globalThis]);
+    browserTimeout.mockRestore();
+  });
+
   beforeEach(() => {
     jest.useFakeTimers();
   });

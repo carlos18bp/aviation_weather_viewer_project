@@ -31,15 +31,28 @@ function enrichedCatalog() {
       },
     ],
     timestamps: TIMESTAMPS,
-    overlays: [{ id: 'pressure-isobars', name: 'Isobaras', unit: 'hPa', frames: [] }],
+    overlays: [{
+      id: 'pressure-isobars',
+      name: 'Isobaras',
+      unit: 'hPa',
+      frames: TIMESTAMPS.map((timestamp) => ({
+        timestamp,
+        data_url: `/media/demo-weather/demo-colombia-001/pressure-isobars/${timestamp.slice(11, 13)}Z.geojson`,
+      })),
+    }],
   };
 }
 
 describe('weather service Phase 13 compatibility', () => {
-  it('accepts the enriched catalog while keeping the visible viewer on two layers', () => {
+  it('publishes the three primary layers and six isobar descriptors', () => {
     const catalog = parseWeatherCatalog(enrichedCatalog());
 
-    expect(catalog.layers.map((layer) => layer.id)).toEqual(['temperature', 'wind']);
+    expect(catalog.layers.map((layer) => layer.id)).toEqual([
+      'temperature',
+      'wind',
+      'precipitation',
+    ]);
+    expect(catalog.isobarFrames).toHaveLength(6);
   });
 
   it('does not silently accept a malformed precipitation extension', () => {
