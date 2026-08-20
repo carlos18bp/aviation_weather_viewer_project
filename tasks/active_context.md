@@ -1,23 +1,42 @@
-# Contexto activo — Fase 08, release de la demo
+# Contexto activo — Fase 09, inteligencia aeroportuaria
 
 Actualizado: 2026-08-20.
 
 ## Objetivo actual
 
-El producto de Fase 08 está integrado y validado. Falta únicamente que el
-operador restablezca billing/spending de GitHub Actions y reejecute el CI remoto
-del toolkit; hasta entonces no declarar cierre global verde. No se autorizan
-features, refactors ni expansión del producto.
+Entregar búsqueda local y evolución simulada para los seis aeropuertos mediante
+módulos controlados, sin wiring al visor principal. La Fase 14 conectará los
+callbacks con store/controller y la Fase 12 consumirá el ranking público.
 
 ## Coordenada Git
 
 - Base resuelta: `master`.
+- Rama de sesión: `feat/20082026-phase-09-airport-intelligence`.
+- Worktree: `~/webapps/.wt/aviation_weather_viewer_project/phase-09-airport-intelligence`.
+- Ownership: `features/airports/search`, `features/airports/trend`,
+  `AirportSearch`, `AirportTrend`, servicio e índices aeroportuarios.
 - SHA de Fase 07: `fcd8a8ae7e610ea335bcdce6154ffb309f12999b`.
 - PR QA integrado: #13.
 - SHA QA desplegado y verificado: `054ebdd27b459ba24cff3d65f580ea7bbae95f0d`.
 - Rama de QA: `qa/20082026-phase-08-demo-release`.
 - Worktree: `~/webapps/.wt/aviation_weather_viewer_project/phase-08-demo-release`.
 - Host: `vps-projectapp-staging` (`host_status=on-work-host`).
+
+## Restricciones activas de Fase 09
+
+- No editar composición, store, controller, orquestador, tipos centrales ni flow map.
+- No crear endpoints, datos reales, librerías de charts ni E2E.
+- No importar internals de las fases 10–11.
+- Ejecutar solo tests dirigidos de búsqueda, serie/cache y tendencia.
+
+## Estado de implementación
+
+- Búsqueda pura y `AirportSearch`: completos; 18 tests verdes.
+- Serie, validación, abort y cache: completos; 16 tests verdes.
+- `AirportTrend`: completo; 7 tests verdes.
+- Lint dirigido: 0 errores y 0 warnings.
+- Captura aislada: `/tmp/phase-09-airport-intelligence.png` a `1920×1080`.
+- Wiring, E2E y flow map quedan explícitamente para Fase 14.
 
 ## Estado validado
 

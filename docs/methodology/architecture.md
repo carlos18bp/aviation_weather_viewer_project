@@ -103,3 +103,15 @@ flowchart LR
   `b0f2a244f99f2477bd828b69a45c8296e38a4d35`. Conserva `status: scaffold`
   hasta que el resolver canónico pueda asignar `server:`; esto no altera la
   topología ya desplegada en staging.
+
+## Módulos aislados de Fase 09
+
+```text
+AirportFeatureCollection → searchAirports → AirportSearch → onSelectAirport
+DemoAirportIcao → useAirportWeatherSeries/cache → 6 GET existentes
+                → AirportTrend → onSelectTimestamp
+```
+
+La cache `Map` y los `AbortController` viven dentro del hook, nunca en Zustand.
+`AirportSearch` y `AirportTrend` no conocen MapLibre, controller u orquestador;
+Fase 14 será dueña del wiring y Fase 12 consumirá el ranking público.

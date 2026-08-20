@@ -1,13 +1,17 @@
 import {
   AirportPayloadValidationError,
   AirportServiceError,
+  DEMO_TIMESTAMPS,
   fetchAirports,
   fetchAirportWeather,
+  fetchAirportWeatherSeries,
 } from '@/features/airports';
+import { createAirportTrendPoints } from '@/features/airports/trend/airportTrendSeries';
 
 import {
   AIRPORT_WEATHER_FIXTURE,
   createAirportCollectionFixture,
+  createAirportWeatherSeriesFixture,
 } from './airportTestFixtures';
 
 
@@ -114,5 +118,95 @@ describe('airport service', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/airports', expect.objectContaining({
       signal: controller.signal,
     }));
+  });
+
+  it('loads the six airport conditions once and returns canonical trend points', async () => {
+    const responses = createAirportWeatherSeriesFixture();
+    fetchMock.mockImplementation(async (input) => {
+      const url = new URL(String(input), 'http://localhost');
+      const timestamp = url.searchParams.get('timestamp');
+      const response = responses.find((candidate) => candidate.timestamp === timestamp);
+      return jsonResponse(response);
+    });
+
+    const points = await fetchAirportWeatherSeries('SKBO');
+
+    expect(fetchMock).toHaveBeenCalledTimes(6);
+    expect(points.map((point) => point.timestamp)).toEqual(DEMO_TIMESTAMPS);
+    expect(points[0]).toEqual({
+      timestamp: DEMO_TIMESTAMPS[0],
+      temperatureC: 13,
+      windSpeedKt: 7,
+      windDirectionDeg: 70,
+      visibilityKm: 8,
+      pressureHpa: 1019,
+    });
+  });
+
+  it('rejects duplicate timestamps in an assembled series', () => {
+    const responses = createAirportWeatherSeriesFixture();
+    responses[5] = { ...responses[5], timestamp: responses[4].timestamp };
+
+    expect(() => createAirportTrendPoints(responses)).toThrow(/duplicado/);
+  });
+
+  it('rejects a series with a missing condition', () => {
+    const responses = createAirportWeatherSeriesFixture().slice(0, 5);
+
+    expect(() => createAirportTrendPoints(responses)).toThrow(/exactamente seis/);
+  });
+
+  it('aborts sibling requests when one series condition is invalid', async () => {
+    const responses = createAirportWeatherSeriesFixture();
+    const requestSignals: AbortSignal[] = [];
+    fetchMock.mockImplementation((input, init) => {
+      const url = new URL(String(input), 'http://localhost');
+      const timestamp = url.searchParams.get('timestamp');
+      const signal = init?.signal as AbortSignal;
+      requestSignals.push(signal);
+
+      if (timestamp === DEMO_TIMESTAMPS[2]) {
+        const invalidResponse = {
+          ...responses[2],
+          operational_use: true,
+        };
+        return Promise.resolve(jsonResponse(invalidResponse));
+      }
+
+      return new Promise((_resolve, reject) => {
+        signal.addEventListener('abort', () => {
+          reject(new DOMException('The request was aborted.', 'AbortError'));
+        }, { once: true });
+      });
+    });
+
+    await expect(fetchAirportWeatherSeries('SKBO')).rejects.toBeInstanceOf(
+      AirportPayloadValidationError,
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(6);
+    expect(requestSignals).toHaveLength(6);
+    expect(requestSignals.every((signal) => signal.aborted)).toBe(true);
+  });
+
+  it('propagates external abort to all six series requests', async () => {
+    const controller = new AbortController();
+    const requestSignals: AbortSignal[] = [];
+    fetchMock.mockImplementation((_input, init) => {
+      const signal = init?.signal as AbortSignal;
+      requestSignals.push(signal);
+      return new Promise((_resolve, reject) => {
+        signal.addEventListener('abort', () => {
+          reject(new DOMException('The request was aborted.', 'AbortError'));
+        }, { once: true });
+      });
+    });
+
+    const request = fetchAirportWeatherSeries('SKBO', { signal: controller.signal });
+    controller.abort();
+
+    await expect(request).rejects.toMatchObject({ name: 'AbortError' });
+    expect(fetchMock).toHaveBeenCalledTimes(6);
+    expect(requestSignals.every((signal) => signal.aborted)).toBe(true);
   });
 });

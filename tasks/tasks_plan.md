@@ -62,8 +62,8 @@ Estado: **integrada en `master` mediante PR #10**.
 
 ## Roadmap de enriquecimiento posterior
 
-Estado: **documentado; enriquecimiento no iniciado mientras el gate externo de
-Fase 08 permanezca bloqueado**.
+Estado: **ola E1 abierta; Fase 09 en implementación aislada y fases 10–11 en
+sesiones paralelas**.
 
 - [x] Evaluar candidatos visuales y aeronáuticos inspirados en Windy.
 - [x] Seleccionar seis fases en dos olas de implementación.
@@ -71,11 +71,20 @@ Fase 08 permanezca bloqueado**.
 - [x] Definir ownership sin solapamientos para fases paralelas.
 - [x] Definir gates, pruebas, fallback y criterios de release enriquecido.
 - [x] Integrar y validar Fase 08.
-- [ ] Abrir ola E1: fases 09, 10 y 11.
+- [x] Abrir ola E1: fases 09, 10 y 11.
 - [ ] Abrir ola E2: fases 12 y 13.
 - [ ] Ejecutar fase 14 de integración, QA y ensayo.
 
 Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
+
+### Fase 09 — Inteligencia aeroportuaria
+
+- [x] Cortar rama y worktree propios desde `origin/master`.
+- [x] Implementar búsqueda local controlada y accesible.
+- [x] Implementar servicio, abort y cache de evolución aeroportuaria.
+- [x] Implementar tendencia controlada, compacta y colapsable.
+- [x] Pasar únicamente los tests unitarios y de componente dirigidos.
+- [ ] Publicar PR y handoff para fases 12 y 14, sin mergear.
 
 ## Fase 08 — Validación, despliegue y ensayo
 

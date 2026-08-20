@@ -82,3 +82,10 @@
   investigarse en las annotations antes de tocar código. Si GitHub señala
   billing/spending, los gates locales sirven como evidencia, pero no sustituyen
   el rerun remoto exigido para un cierre completamente verde.
+
+## Fase 09
+
+- Un combobox controlado debe derivar su valor cerrado desde la prop seleccionada;
+  la consulta local es solo un borrador y no otra fuente de selección.
+- Cachear la serie por ICAO dentro del hook evita seis requests por render y
+  mantiene requests, abort y respuestas tardías fuera del store serializable.

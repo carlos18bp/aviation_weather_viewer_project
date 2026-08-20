@@ -84,3 +84,11 @@ final. El producto y su repositorio están integrados sin ampliar el alcance
 visible. El cierre operativo global permanece bloqueado únicamente porque el CI
 del toolkit no recibe runner por billing/spending de GitHub; sus gates locales
 y la metadata publicada están verdes.
+
+## Enriquecimiento aislado — Fase 09
+
+La Fase 09 entrega búsqueda local de los seis aeropuertos por ICAO, IATA,
+nombre o ciudad y una evolución simulada de seis timestamps. Los componentes
+son controlados y publican callbacks; permanecen desconectados del visor hasta
+la integración de Fase 14. No se añadieron endpoints, datos reales ni
+dependencias de gráficos.

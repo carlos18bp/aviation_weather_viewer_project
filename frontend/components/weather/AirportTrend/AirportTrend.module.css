@@ -1,0 +1,333 @@
+.trend {
+  display: grid;
+  gap: 11px;
+  min-width: 0;
+  color: var(--viewer-text);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.identity {
+  min-width: 0;
+}
+
+.kicker {
+  margin: 0 0 5px;
+  color: var(--viewer-accent);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.identity h3 {
+  margin: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.codes {
+  display: flex;
+  gap: 7px;
+  margin: 5px 0 0;
+  color: var(--viewer-muted);
+  font-size: 10px;
+}
+
+.codes strong {
+  color: var(--viewer-accent);
+  letter-spacing: 0.07em;
+}
+
+.collapseButton {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  border: 1px solid var(--viewer-border);
+  border-radius: 7px;
+  color: var(--viewer-muted);
+  background: rgb(7 19 31 / 52%);
+  cursor: pointer;
+  font-size: 17px;
+}
+
+.collapseButton:hover,
+.collapseButton:focus-visible,
+.errorState button:hover,
+.errorState button:focus-visible {
+  color: var(--viewer-text);
+  border-color: var(--viewer-accent);
+  outline: 2px solid rgb(34 211 238 / 20%);
+  outline-offset: 2px;
+}
+
+.activeCondition {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 8px 9px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 8px;
+  background: rgb(7 19 31 / 42%);
+  color: var(--viewer-muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.activeCondition strong {
+  flex: 0 0 auto;
+  color: var(--viewer-accent);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.activeCondition span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail {
+  display: grid;
+  gap: 12px;
+  padding-top: 11px;
+  border-top: 1px solid var(--viewer-border);
+}
+
+.loadingState,
+.emptyState,
+.errorState {
+  min-height: 70px;
+  margin: 0;
+  color: var(--viewer-muted);
+  font-size: 11px;
+}
+
+.loadingState {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.loadingState > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--viewer-accent);
+  box-shadow: 0 0 12px var(--viewer-accent);
+  animation: airport-trend-pulse 1.2s ease-in-out infinite;
+}
+
+.emptyState {
+  display: grid;
+  align-items: center;
+}
+
+.errorState {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 10px;
+  color: var(--viewer-warning);
+}
+
+.errorState p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.errorState button {
+  padding: 6px 9px;
+  border: 1px solid rgb(34 211 238 / 34%);
+  border-radius: 7px;
+  color: var(--viewer-text);
+  background: rgb(34 211 238 / 10%);
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.chart {
+  display: grid;
+  gap: 2px;
+}
+
+.chart svg {
+  display: block;
+  width: 100%;
+  height: 82px;
+  overflow: visible;
+}
+
+.chartGrid {
+  fill: none;
+  stroke: rgb(148 163 184 / 15%);
+  stroke-width: 0.7;
+  vector-effect: non-scaling-stroke;
+}
+
+.chartLine {
+  fill: none;
+  stroke: var(--viewer-accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  vector-effect: non-scaling-stroke;
+}
+
+.chartPoint {
+  fill: var(--viewer-bg);
+  stroke: var(--viewer-accent);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.chartPoint[data-active="true"] {
+  fill: var(--viewer-accent);
+  filter: drop-shadow(0 0 3px var(--viewer-accent));
+}
+
+.pointControls {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border-top: 1px solid var(--viewer-border);
+}
+
+.pointControls button {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 0 1px 4px;
+  border: 0;
+  color: var(--viewer-muted);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pointControls button > span {
+  width: 5px;
+  height: 5px;
+  margin-top: -3px;
+  border: 1px solid currentcolor;
+  border-radius: 50%;
+  background: var(--viewer-bg);
+}
+
+.pointControls button[data-active="true"] {
+  color: var(--viewer-accent);
+  font-weight: 700;
+}
+
+.pointControls button[data-active="true"] > span {
+  background: var(--viewer-accent);
+}
+
+.pointControls button:hover,
+.pointControls button:focus-visible {
+  color: var(--viewer-accent);
+  outline: none;
+}
+
+.pointControls button:focus-visible time {
+  border-radius: 3px;
+  outline: 2px solid var(--viewer-accent);
+  outline-offset: 2px;
+}
+
+.tableWrapper {
+  max-height: 178px;
+  overflow: auto;
+  border: 1px solid var(--viewer-border);
+  border-radius: 8px;
+}
+
+.tableWrapper table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tableWrapper th,
+.tableWrapper td {
+  padding: 6px 5px;
+  border-bottom: 1px solid rgb(148 163 184 / 10%);
+  text-align: right;
+}
+
+.tableWrapper th:first-child,
+.tableWrapper td:first-child {
+  text-align: left;
+}
+
+.tableWrapper thead th {
+  position: sticky;
+  top: 0;
+  color: var(--viewer-muted);
+  background: rgb(7 19 31 / 98%);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tableWrapper tbody th {
+  color: var(--viewer-muted);
+  font-weight: 600;
+}
+
+.tableWrapper tbody tr[data-active="true"] {
+  color: var(--viewer-text);
+  background: rgb(34 211 238 / 9%);
+}
+
+.tableWrapper tbody tr[data-active="true"] th {
+  color: var(--viewer-accent);
+}
+
+.tableWrapper tbody tr:last-child th,
+.tableWrapper tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes airport-trend-pulse {
+  50% {
+    opacity: 0.42;
+    transform: scale(0.78);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadingState > span {
+    animation: none;
+  }
+}
