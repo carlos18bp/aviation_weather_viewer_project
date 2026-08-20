@@ -1,49 +1,53 @@
-# Contexto activo — Roadmap de enriquecimiento del demo
+# Contexto activo — Fase 08, release de la demo
 
 Actualizado: 2026-08-20.
 
 ## Objetivo actual
 
-Documentar una iteración posterior a la fase 08 que aumente el impacto visual y
-aeronáutico del demo sin introducir datos reales, dependencias externas ni
-funciones productivas.
+Integrar el release candidate QA y verificar el SHA resultante en la URL HTTPS.
+No se autorizan features, refactors ni expansión del producto.
 
 ## Coordenada Git
 
 - Base resuelta: `master`.
-- SHA base: `af0c31361cac54df469d08078d2d882f82732799`.
-- Rama: `docs/20082026-demo-enrichment-roadmap`.
-- Worktree: `~/webapps/.wt/aviation_weather_viewer_project/demo-enrichment-roadmap`.
+- SHA de Fase 07: `fcd8a8ae7e610ea335bcdce6154ffb309f12999b`.
+- Rama de QA: `qa/20082026-phase-08-demo-release`.
+- Worktree: `~/webapps/.wt/aviation_weather_viewer_project/phase-08-demo-release`.
 - Host: `vps-projectapp-staging` (`host_status=on-work-host`).
 
-## Estado concurrente conocido
+## Estado validado
 
-- Fases 00–06 están integradas en `master`.
-- Fase 07 se implementa en una sesión/worktree independiente.
-- Fase 08 no ha comenzado.
-- El directorio `.playwright-mcp/` del clon principal pertenece a otra sesión y
-  permanece intacto.
-- El stash previo de `master` permanece intacto.
+- URL: `https://aviation-weather-platform.projectapp.co`.
+- Django check y build de producción verdes.
+- Backend 20/20; frontend-unit 14/14; E2E live Desktop Chrome 1/1.
+- QA: 1 flow covered, 5 exempt, 0 missing/junk-only/unvalidated.
+- Quality gate strict: 0 errors, 0 warnings.
+- Chrome 147, Edge 151 y ejecución local completan el recorrido a `1920×1080`.
+- Estabilidad: 615 s, 9 ciclos, sin errores críticos ni requests externas;
+  heap post-GC estabilizado y fallback estático a 60,8 FPS.
 
-## Cambio de esta sesión
+## Riesgo abierto de equipo
 
-- Crear un paquete documental separado para fases 09–14.
-- Seleccionar candidatos equilibrados entre experiencia tipo Windy e identidad
-  aeronáutica.
-- Congelar schema 2, picker, URL, ruta, precipitación e isobaras.
-- Dividir ejecución en E1 paralela, E2 paralela y un cierre de integración.
-- Definir ownership, gates, pruebas, fallbacks y criterios de aceptación.
-- Enlazar el paquete desde el roadmap original sin reabrir fases 00–08.
+El host sólo tiene 1 vCPU y ANGLE/SwiftShader: las partículas miden
+aproximadamente 0,6–1,4 FPS y no permiten acreditar el objetivo de ~30 FPS para
+una GPU física. La densidad ya está fija en 2500 y el fallback de flechas es
+fluido. Repetir el ensayo en el portátil de la reunión antes de presentar.
 
 ## Próximo gate
 
-Integrar y validar primero las fases 07 y 08. Solo entonces se cortan, desde el
-mismo SHA, las ramas independientes de fases 09, 10 y 11.
+1. Commit/push y PR de la rama QA.
+2. Esperar CI verde.
+3. Ejecutar `merge-when-green` por instrucción del operador.
+4. Actualizar el checkout desplegado al SHA integrado.
+5. Verificar health, HTTPS y el flujo final sobre ese SHA.
 
-## Límites activos
+La Fase 08 no se declara terminada antes de completar los cinco pasos.
 
-- Esta rama modifica documentación; no implementa features de enriquecimiento.
-- No tocar el worktree de fase 07 ni el checkout principal.
-- No abrir ola E1 antes del release base.
-- Mantener todos los datos futuros simulados, determinísticos, locales y no
-  operacionales.
+## Hallazgos operativos separados
+
+- El toolkit tiene la metadata de dominio/servicios preparada, pero el guard no
+  permite asignar `server:` y el resolver tampoco lo escribe.
+- El gate global del toolkit está rojo por unidades de backup faltantes de
+  `crushme_project`, fuera del ownership de esta fase. Sus cambios no se publican
+  mientras ese error exista.
+- El 404 de favicon es no bloqueante y queda para después de la reunión.

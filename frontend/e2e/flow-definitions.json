@@ -1,86 +1,68 @@
 {
-  "version": "3.0.0",
+  "version": "3.0.1",
   "lastUpdated": "2026-08-20",
   "flows": {
     "viewer-demo-journey": {
       "name": "Complete desktop weather viewer journey",
       "module": "viewer",
-      "roles": [
-        "public"
-      ],
+      "roles": ["public"],
       "priority": "P1",
-      "description": "The public user opens the fixed Colombia scenario, inspects SKBO, switches layers and timestamps, uses playback and returns to wind/06Z with reset.",
-      "outcomes": [
-        "success",
-        "display"
-      ],
-      "knownGaps": [
-        "Phase 07 registers the real journey but cannot add its Playwright spec outside the authorized ownership. Phase 08 owns the single desktop E2E journey."
-      ]
+      "description": "The public user opens the fixed Colombia scenario, verifies wind at 06Z, selects SKBO, switches layers and timestamps, uses playback, resets, and reloads the deterministic desktop demo.",
+      "outcomes": ["success", "display"]
     },
     "viewer-catalog-recovery": {
       "name": "Recover from an unavailable weather catalog",
       "module": "viewer",
-      "roles": [
-        "public"
-      ],
+      "roles": ["public"],
       "priority": "P1",
       "description": "The viewer keeps its shell and map visible, disables weather controls, explains the catalog failure and lets the user retry once MapLibre is ready.",
       "expectedSpecs": 0,
       "knownGaps": [
-        "Intentional E2E exemption: Phase 08 freezes a single happy-path spec and validates request failures with directed integration tests and the manual contingency rehearsal."
+        "Intentional E2E exemption: Phase 08 authorizes exactly one desktop journey spec. Directed orchestrator tests cover failure and retry; the contingency rehearsal validates the browser-visible recovery."
       ]
     },
     "viewer-airports-recovery": {
       "name": "Recover airports without blocking weather",
       "module": "viewer",
-      "roles": [
-        "public"
-      ],
+      "roles": ["public"],
       "priority": "P2",
       "description": "Weather remains usable when airport GeoJSON fails, while the airport panel explains the failure and offers an independent retry.",
       "expectedSpecs": 0,
       "knownGaps": [
-        "Intentional E2E exemption: the independent failure and retry are covered by the directed orchestrator test and reserved for the Phase 08 manual rehearsal."
+        "Intentional E2E exemption: the independent failure and retry are covered by directed orchestrator tests and the Phase 08 manual rehearsal; no second Playwright spec is authorized."
       ]
     },
     "viewer-frame-recovery": {
       "name": "Preserve and retry a failed synchronized frame",
       "module": "viewer",
-      "roles": [
-        "public"
-      ],
+      "roles": ["public"],
       "priority": "P1",
       "description": "A failed weather or selected-airport request preserves the complete previous view, pauses playback and exposes retry and reset actions.",
       "expectedSpecs": 0,
       "knownGaps": [
-        "Intentional E2E exemption: races, aborts, atomic preservation and retry are covered by the directed orchestrator test; Phase 08 rehearses the failure manually."
+        "Intentional E2E exemption: races, aborts, atomic preservation and retry are covered by directed orchestrator tests; Phase 08 rehearses the visible contingency manually."
       ]
     },
     "viewer-wind-fallback": {
       "name": "Continue with static wind arrows",
       "module": "viewer",
-      "roles": [
-        "public"
-      ],
+      "roles": ["public"],
       "priority": "P2",
       "description": "If the particle renderer cannot run, the viewer announces fallback, shows static wind arrows and keeps selectors and timeline usable.",
       "expectedSpecs": 0,
       "knownGaps": [
-        "Intentional E2E exemption: renderer fallback has directed integration coverage and is part of the Phase 08 manual contingency rehearsal."
+        "Intentional E2E exemption: renderer fallback has directed renderer/orchestrator coverage and belongs to the required Phase 08 manual contingency rehearsal."
       ]
     },
     "viewer-map-recovery": {
       "name": "Explain and retry map initialization failure",
       "module": "viewer",
-      "roles": [
-        "public"
-      ],
+      "roles": ["public"],
       "priority": "P1",
       "description": "A MapLibre initialization failure shows a map-specific error and retry without hiding the permanent simulated-data warning.",
       "expectedSpecs": 0,
       "knownGaps": [
-        "Intentional E2E exemption: the shell controller test covers retryable and non-retryable map states; Phase 08 validates the target browsers manually."
+        "Intentional E2E exemption: shell/controller tests cover retryable and non-retryable map states; Phase 08 validates the target browsers manually."
       ]
     }
   }

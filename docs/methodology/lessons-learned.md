@@ -54,3 +54,24 @@
 - Para el mapa real, los tests unitarios cubren opciones y cleanup; la prueba
   Chromium confirma además pan, zoom, resize, carga offline y liberación del
   worker.
+
+## Release de la demo
+
+- Un E2E vivo debe clicar el canvas con la proyección real y verificar datos
+  sincronizados, no limitarse a `goto + visible`.
+- El flow map se vuelve obsoleto también después de autorar el spec; hay que
+  reconciliar su estado `missing → covered` antes del gate final.
+- La estabilidad debe empezar después de prevalidar por separado los clicks de
+  canvas y la inyección del fallback; así un error del harness no invalida diez
+  minutos de evidencia.
+- Perder el contexto completo de MapLibre no es una simulación válida de fallo
+  del custom renderer. Inyectar el error en su draw preserva el basemap y prueba
+  honestamente las flechas estáticas.
+- Heap inicial vs final no debe interpretarse solo: una subida de warm-up seguida
+  de meseta y descenso respecto del máximo no es crecimiento continuo.
+- Los FPS de SwiftShader/1 vCPU no predicen una GPU física. Registrar renderer y
+  equipo evita presentar el número como universal; el fallback sí debe quedar
+  medido y practicado.
+- En la contingencia local, Next puede proxyear media pero Django `runserver`
+  necesita `development`/`DEBUG=True`; staging mantiene `DEBUG=False` y deja esa
+  responsabilidad a Nginx.

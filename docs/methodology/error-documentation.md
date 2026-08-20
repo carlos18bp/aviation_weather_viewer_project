@@ -92,3 +92,58 @@ los paquetes ni los tests ejecutados.
 - Un fallo externo termina con un error visible y acotado.
 - Un run sano continúa hasta `manage.py check` y
   `weather/tests/test_health.py`.
+
+## 2026-08-20 — Bootstrap E2E intermitente en WebGL software
+
+### Síntoma
+
+Una pasada Edge y una pasada del healer quedaron temporalmente en “Cargando
+mapa local” antes del timeout, aunque la raíz HTTPS seguía respondiendo 200.
+
+### Causa
+
+El host sólo ofrece ANGLE/SwiftShader sobre 1 vCPU. Inicializar MapLibre y el
+custom layer a `1920×1080` puede exceder una espera corta bajo carga concurrente.
+
+### Resolución y verificación
+
+El harness manual espera hasta 60 s por el snapshot completo y conserva timeouts
+acotados. Chrome, Edge, E2E y estabilidad terminaron verdes; no se cambió código
+de producción para ocultar el estado de carga.
+
+## 2026-08-20 — Local `runserver` devolvía 404 para fixtures
+
+### Síntoma
+
+La copia local obtenía catálogo/API, pero `/media/demo-weather/*` devolvía 404.
+
+### Causa
+
+Django se había levantado con `DJANGO_ENV=staging` y `DEBUG=False`; en staging
+Nginx sirve media, mientras `runserver` sólo lo hace en desarrollo.
+
+### Resolución y verificación
+
+La contingencia local usa `DJANGO_ENV=development DJANGO_DEBUG=true`. El mismo
+recorrido quedó verde, con requests sólo a `127.0.0.1`.
+
+## 2026-08-20 — Fallback falso por pérdida total de contexto
+
+### Síntoma
+
+La primera simulación mostraba “Modo alternativo”, pero el canvas completo
+quedaba vacío porque el harness perdía el contexto de MapLibre.
+
+### Resolución
+
+El harness inyecta un fallo únicamente en el draw instanciado del custom layer
+de 2500 partículas. El contexto base permanece sano y la validación exige mapa,
+flechas estáticas, aviso y controles operativos. Resultado: 60,8 FPS en fallback.
+
+## Hallazgos no bloqueantes de Fase 08
+
+- `/favicon.ico` responde 404 sin afectar la demo.
+- SwiftShader no alcanza el objetivo de partículas; la GPU física del equipo de
+  reunión debe ensayarse y el fallback estático queda listo.
+- El guard de `projects.yml` y el resolver discrepan sobre quién puede asignar
+  `server:` a un scaffold ya desplegado; no se evadió el guard.
