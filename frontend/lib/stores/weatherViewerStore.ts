@@ -15,6 +15,7 @@ export const INITIAL_WEATHER_VIEWER_STATE: Readonly<WeatherViewerState> = {
 };
 
 export interface WeatherViewerActions {
+  commitVisibleFrame(layer: WeatherLayerId, timestamp: string): void;
   setActiveLayer(layer: WeatherLayerId): void;
   setActiveTimestamp(timestamp: string): void;
   setAvailableTimestamps(timestamps: string[]): void;
@@ -30,6 +31,12 @@ export type WeatherViewerStore = WeatherViewerState & WeatherViewerActions;
 
 export const useWeatherViewerStore = create<WeatherViewerStore>()((set) => ({
   ...INITIAL_WEATHER_VIEWER_STATE,
+  commitVisibleFrame: (activeLayer, activeTimestamp) => set({
+    activeLayer,
+    activeTimestamp,
+    isFrameLoading: false,
+    frameError: null,
+  }),
   setActiveLayer: (activeLayer) => set({ activeLayer }),
   setActiveTimestamp: (activeTimestamp) => set({ activeTimestamp }),
   setAvailableTimestamps: (availableTimestamps) => set({

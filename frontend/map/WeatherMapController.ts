@@ -25,10 +25,14 @@ export interface WeatherMapLifecycleCallbacks {
 }
 
 export type WeatherMapFactory = (options: MapOptions) => MapLibreMap;
+export type WeatherLayerAdapterFactory = (
+  map: MapLibreMap,
+) => WeatherLayerAdapterRegistry;
 
 export interface DefaultWeatherMapControllerOptions {
   container: HTMLElement;
   adapters?: WeatherLayerAdapterRegistry;
+  adapterFactory?: WeatherLayerAdapterFactory;
   callbacks?: WeatherMapLifecycleCallbacks;
   mapFactory?: WeatherMapFactory;
 }
@@ -59,7 +63,8 @@ function normalizeError(value: unknown, fallback: string): Error {
 
 export class DefaultWeatherMapController implements WeatherMapController {
   private readonly container: HTMLElement;
-  private readonly adapters: WeatherLayerAdapterRegistry;
+  private adapters: WeatherLayerAdapterRegistry;
+  private readonly adapterFactory?: WeatherLayerAdapterFactory;
   private readonly callbacks: WeatherMapLifecycleCallbacks;
   private readonly mapFactory?: WeatherMapFactory;
   private lifecycle: ControllerLifecycle = 'idle';
@@ -72,8 +77,13 @@ export class DefaultWeatherMapController implements WeatherMapController {
   private adaptersDestroyed = false;
 
   constructor(options: DefaultWeatherMapControllerOptions) {
+    if (options.adapters && options.adapterFactory) {
+      throw new Error('Use adapters or adapterFactory, not both.');
+    }
+
     this.container = options.container;
     this.adapters = options.adapters ?? {};
+    this.adapterFactory = options.adapterFactory;
     this.callbacks = options.callbacks ?? {};
     this.mapFactory = options.mapFactory;
     this.assertAdapterIds();
@@ -106,6 +116,10 @@ export class DefaultWeatherMapController implements WeatherMapController {
     }
 
     await this.adapters.wind?.setFrame?.(frame);
+  }
+
+  cancelPendingWeatherFrame(): void {
+    this.adapters.temperature?.reset();
   }
 
   setAirports(collection: FeatureCollection): void {
@@ -172,6 +186,10 @@ export class DefaultWeatherMapController implements WeatherMapController {
       }
 
       this.map = map;
+      if (this.adapterFactory) {
+        this.adapters = this.adapterFactory(map);
+        this.assertAdapterIds();
+      }
       map.touchZoomRotate.disableRotation();
       window.addEventListener('resize', this.handleWindowResize);
 
@@ -200,12 +218,13 @@ export class DefaultWeatherMapController implements WeatherMapController {
             .catch(reject);
         };
         this.errorListener = (event) => {
+          if (this.lifecycle !== 'initializing') {
+            return;
+          }
           const error = normalizeError(event, 'No se pudo cargar el mapa local.');
           errorWasReported = true;
           this.callbacks.onError?.(error);
-          if (this.lifecycle === 'initializing') {
-            reject(error);
-          }
+          reject(error);
         };
 
         map.on('load', this.loadListener);
@@ -265,13 +284,15 @@ export class DefaultWeatherMapController implements WeatherMapController {
   }
 
   private async initializeAdapters(): Promise<void> {
-    await Promise.all(this.registeredAdapters().map((adapter) => adapter.initialize()));
+    for (const adapter of this.registeredAdapters()) {
+      await adapter.initialize();
+    }
   }
 
   private registeredAdapters() {
     return [
-      this.adapters.temperature,
       this.adapters.wind,
+      this.adapters.temperature,
       this.adapters.airports,
     ].filter((adapter) => adapter !== undefined);
   }
@@ -319,7 +340,7 @@ export class DefaultWeatherMapController implements WeatherMapController {
 
     if (!this.adaptersDestroyed) {
       this.adaptersDestroyed = true;
-      for (const adapter of this.registeredAdapters()) {
+      for (const adapter of [...this.registeredAdapters()].reverse()) {
         try {
           adapter.destroy();
         } catch (error) {
