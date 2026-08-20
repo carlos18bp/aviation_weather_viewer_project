@@ -82,3 +82,14 @@
   investigarse en las annotations antes de tocar código. Si GitHub señala
   billing/spending, los gates locales sirven como evidencia, pero no sustituyen
   el rerun remoto exigido para un cierre completamente verde.
+
+## Fase 11 — narrativa temporal
+
+- Precargar y transicionar son responsabilidades distintas: la cache prepara
+  datos, pero sólo el runner puede abrir la ventana de commit atómico.
+- Un fade seguro oculta el frame anterior, conmuta una sola escena a opacidad
+  cero y luego entra; dos timestamps nunca deben coexistir para “suavizar”.
+- El codec puro permite validar y probar escenas futuras sin activar features ni
+  acoplar URL a Zustand, MapLibre o `window`.
+- Clipboard y Fullscreen deben nacer de gestos explícitos y degradar a estados
+  inline; un rechazo del navegador no debe desactivar presentación interna.

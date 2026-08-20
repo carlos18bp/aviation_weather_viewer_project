@@ -84,3 +84,11 @@ final. El producto y su repositorio están integrados sin ampliar el alcance
 visible. El cierre operativo global permanece bloqueado únicamente porque el CI
 del toolkit no recibe runner por billing/spending de GitHub; sus gates locales
 y la metadata publicada están verdes.
+
+## Enriquecimiento — Fase 11
+
+La Fase 11 entrega, todavía sin wiring en la vista principal, precarga acotada a
+la hora activa y sus adyacentes, progreso temporal de 1500 ms, transición con
+commit atómico, codec canónico de escena y controles de presentación/copia. El
+codec reconoce precipitación, ruta e isobaras sólo para preparar Fase 14; no las
+activa ni amplía por sí mismo el recorrido visible de Fase 08.

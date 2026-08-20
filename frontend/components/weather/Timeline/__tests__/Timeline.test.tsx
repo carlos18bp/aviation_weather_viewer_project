@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+import type { DemoTimestamp } from '@/features/airports';
+
 import { Timeline, type TimelineProps } from '../Timeline';
 
 
@@ -171,5 +173,38 @@ describe('Timeline', () => {
 
     expect(callbacks.onPause).toHaveBeenCalledTimes(1);
     expect(callbacks.onPlay).not.toHaveBeenCalled();
+  });
+
+  it('tracks controlled playback progress across state changes', () => {
+    const { rerender } = render(<Timeline {...createProps()} />);
+    const pausedProgress = screen.getByTestId('timeline-playback-progress');
+    expect(pausedProgress).toHaveAttribute('data-playing', 'false');
+
+    rerender(<Timeline {...createProps({ isPlaying: true })} />);
+    const runningProgress = screen.getByTestId('timeline-playback-progress');
+    expect(runningProgress).toHaveAttribute('data-playing', 'true');
+    expect(runningProgress).toBe(pausedProgress);
+
+    rerender(<Timeline {...createProps({
+      isPlaying: true,
+      activeTimestamp: TIMESTAMPS[3],
+    })} />);
+    expect(screen.getByTestId('timeline-playback-progress')).not.toBe(runningProgress);
+  });
+
+  it('reflects the controlled atomic transition without changing the active timestamp', () => {
+    render(<Timeline {...createProps({
+      transition: {
+        phase: 'exiting',
+        targetTimestamp: TIMESTAMPS[3] as DemoTimestamp,
+      },
+    })} />);
+
+    const timeline = screen.getByRole('region', {
+      name: 'Línea de tiempo meteorológica',
+    });
+    expect(timeline).toHaveAttribute('data-transition-phase', 'exiting');
+    expect(timeline).toHaveAttribute('data-transition-target', TIMESTAMPS[3]);
+    expect(screen.getByLabelText('Hora meteorológica seleccionada')).toHaveTextContent('06:00Z');
   });
 });
