@@ -139,9 +139,9 @@ describe('WeatherPickerDataService', () => {
       },
     });
 
-    expect(service.getCached(DEMO_TIMESTAMPS[1])).not.toBeNull();
-    expect(service.getCached(ACTIVE_TIMESTAMP)).not.toBeNull();
-    expect(service.getCached(DEMO_TIMESTAMPS[3])).not.toBeNull();
+    expect(service.getCached(DEMO_TIMESTAMPS[1])?.timestamp).toBe(DEMO_TIMESTAMPS[1]);
+    expect(service.getCached(ACTIVE_TIMESTAMP)?.timestamp).toBe(ACTIVE_TIMESTAMP);
+    expect(service.getCached(DEMO_TIMESTAMPS[3])?.timestamp).toBe(DEMO_TIMESTAMPS[3]);
 
     await service.load(DEMO_TIMESTAMPS[5], {
       fetcher: fetcher as typeof fetch,
@@ -150,7 +150,7 @@ describe('WeatherPickerDataService', () => {
 
     expect(service.getCached(DEMO_TIMESTAMPS[1])).toBeNull();
     expect(service.getCached(ACTIVE_TIMESTAMP)).toBeNull();
-    expect(service.getCached(DEMO_TIMESTAMPS[5])).not.toBeNull();
+    expect(service.getCached(DEMO_TIMESTAMPS[5])?.timestamp).toBe(DEMO_TIMESTAMPS[5]);
   });
 
   it('rejects a late response after a newer timestamp wins', async () => {

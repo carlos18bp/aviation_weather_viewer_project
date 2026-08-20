@@ -63,7 +63,7 @@ describe('CoordinatePickerAdapter', () => {
     expect(map.on).toHaveBeenCalledTimes(1);
   });
 
-  it('emits only clicks inside coverage', async () => {
+  it('emits only clicks inside the frozen bbox', async () => {
     const { map, onSelect } = await createHarness();
 
     map.click(-74.15, 4.7);

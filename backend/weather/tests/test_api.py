@@ -95,16 +95,17 @@ def test_frame_returns_same_origin_descriptor(
     payload = response.json()
     parsed_url = urlsplit(payload["data_url"])
     assert response.status_code == 200
-    assert payload["unit"] == expected_unit
-    assert payload["data_url"].endswith(expected_suffix)
-    assert parsed_url.scheme == ""
-    assert parsed_url.netloc == ""
+    assert (
+        payload["unit"],
+        payload["data_url"].endswith(expected_suffix),
+        payload["is_simulated"],
+        payload["operational_use"],
+    ) == (expected_unit, True, True, False)
+    assert (parsed_url.scheme, parsed_url.netloc) == ("", "")
     assert str(settings.MEDIA_ROOT) not in payload["data_url"]
-    assert (payload["is_simulated"], payload["operational_use"]) == (True, False)
     assert payload.get("value_data_url") == expected_value_url
     value_url = urlsplit(payload.get("value_data_url", ""))
-    assert value_url.scheme == ""
-    assert value_url.netloc == ""
+    assert (value_url.scheme, value_url.netloc) == ("", "")
     assert str(settings.MEDIA_ROOT) not in payload.get("value_data_url", "")
 
 

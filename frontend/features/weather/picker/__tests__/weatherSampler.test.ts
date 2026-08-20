@@ -50,7 +50,7 @@ describe('weather coordinate sampler', () => {
     [[-82.01, 4], false],
     [[-74, 14.01], false],
     [[Number.NaN, 4], false],
-  ] as const)('classifies coverage for %p', (coordinate, expected) => {
+  ] as const)('classifies the frozen bbox for %p', (coordinate, expected) => {
     expect(isCoordinateInsideCoverage(coordinate)).toBe(expected);
   });
 
@@ -66,7 +66,7 @@ describe('weather coordinate sampler', () => {
     expect(sampleScalarGrid(scalarGrid(), [-74, 4.5])).toBe(25);
   });
 
-  it('rejects direct scalar sampling outside coverage', () => {
+  it('rejects direct scalar sampling outside the frozen bbox', () => {
     expect(() => sampleScalarGrid(scalarGrid(), [-83, 4])).toThrow(RangeError);
   });
 
