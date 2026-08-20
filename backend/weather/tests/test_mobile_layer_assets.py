@@ -172,11 +172,18 @@ def test_normative_formulas_round_and_preserve_gust_floor():
     bias = build_frame_bias(2, fixture["records"])
     humid = evaluate_persisted_cell(-76.3, 3.6, frame_index=2, bias=bias)
     dry = evaluate_persisted_cell(-69.0, 12.0, frame_index=2, bias=bias)
+    threshold = evaluate_persisted_cell(
+        -82 + 16 * 7 / (GRID_WIDTH - 1),
+        14,
+        frame_index=0,
+        bias=build_frame_bias(0, fixture["records"]),
+    )
     assert isinstance(humid.cloud_cover, int)
     assert humid.cloud_base is None or humid.cloud_base % 100 == 0
     assert humid.visibility * 10 == int(humid.visibility * 10)
     assert humid.wind_gusts * 10 == int(humid.wind_gusts * 10)
     assert humid.cloud_cover > dry.cloud_cover
+    assert (threshold.cloud_cover, threshold.cloud_base) == (19, None)
 
 
 def test_high_precipitation_cells_have_more_cover_than_dry_cells(generated_tree):

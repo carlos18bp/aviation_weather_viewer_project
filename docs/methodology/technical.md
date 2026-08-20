@@ -347,14 +347,16 @@ al reiniciar el dev server con `true`, el mismo E2E pasó sin cambios productivo
 - Base común Ola M1: `54c61891dca39661e2e593f4715d1ef58ab37a11`, que integra
   Fase 14 y la precipitación de Fase 13.
 - Producto: cuatro capas × seis timestamps × WebP/grid = 48 assets y
-  `3.390.006` bytes bajo ocho directorios staged.
+  `3.360.836` bytes bajo ocho directorios staged.
 - Raster: WebP lossless RGBA `1024×1216`; grid: JSON `128×160`, row-major
   norte-sur/oeste-este, bbox `[-82,-5,-66,14]`.
 - Rango/unidad: cover `0–100 %`, base `300–15000 ft AGL/null`, visibility
   `1–20 km` y gust `0–80 kt`; todos declaran `is_simulated=true` y
   `operational_use=false`.
-- Persistencia: cover entero, base a 100 ft y visibility/gust a una decimal.
-  Base es `null` si y sólo si el cover persistido es menor que 20.
+- Persistencia: cover entero con redondeo que preserva el umbral crudo de 20 %,
+  base a 100 ft y visibility/gust a una decimal. Base es `null` si y sólo si
+  cover crudo es menor que 20; el cover persistido queda entonces como máximo
+  en 19 para mantener también la invariancia cross-layer observable.
 - Fórmulas puras: `cover=100(0.55m+0.45p)`,
   `base=12000-95cover-4500p+900(1-v)`,
   `vis=20-12p-7cover/100-2v` y

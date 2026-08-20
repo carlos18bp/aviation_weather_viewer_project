@@ -25,7 +25,7 @@ catálogo y API continúan publicando schema `2`.
   seguro sin mover contenido ajeno a los ocho directorios de ownership.
 - Contratos TypeScript staged con parser, sampler bilineal, fixtures y 24 frame
   descriptors para Fases 19–23; sin fetch ni wiring central.
-- Inventario definitivo: 48 assets, `3.390.006` bytes y dos generaciones
+- Inventario definitivo: 48 assets, `3.360.836` bytes y dos generaciones
   temporales con los mismos 48 hashes.
 
 ## Evidencia dirigida de Fase 18

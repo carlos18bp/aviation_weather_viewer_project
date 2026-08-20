@@ -236,11 +236,13 @@ def evaluate_persisted_cell(
         latitude,
         frame_index=frame_index,
     )
-    persisted_cover = int(_round_positive(cover, 0))
+    rounded_cover = int(_round_positive(cover, 0))
 
-    if persisted_cover < 20:
+    if cover < 20:
+        persisted_cover = min(rounded_cover, 19)
         persisted_base = None
     else:
+        persisted_cover = max(rounded_cover, 20)
         cloud_base = clamp(
             12000 - 95 * cover - 4500 * precipitation + 900 * (1 - valley),
             300,
