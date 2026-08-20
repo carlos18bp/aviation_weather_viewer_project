@@ -1,15 +1,14 @@
-# Contexto activo — Gate E1 y roadmap móvil
+# Contexto activo — Fase 12 y Ola E2
 
 Actualizado: 2026-08-20.
 
 ## Estado
 
 Las Fases 09, 10 y 11 están integradas en `master` mediante PR #16 (`6795540`),
-PR #18 (`e6d2f28`) y PR #17 (`5f6f624`). Ninguna conectó composición, store,
-controller, orquestador o flows E2E; ese wiring permanece reservado para Fase
-14. El Gate técnico está verde, pero E2 permanece en **NO-GO** hasta que el
-owner de Fase 09 confirme o corrija su desvío formal de ownership. Las Fases
-12 y 13 todavía no deben abrirse y la Fase 14 continúa condicionada a ambas.
+PR #18 (`e6d2f28`) y PR #17 (`5f6f624`). La precondición explícita del operador
+declara el Gate E1 en **GO**. La Ola E2 está abierta: Fase 12 entrega módulos de
+ruta aislados en su rama y Fase 13 avanza en paralelo bajo ownership distinto.
+El wiring de ambas permanece reservado para Fase 14.
 
 ## Validación del Gate E1
 
@@ -23,8 +22,22 @@ owner de Fase 09 confirme o corrija su desvío formal de ownership. Las Fases
 - [x] Requests, timers, layers, sources y listeners tienen cleanup probado.
 - [x] No existen datos reales, servicios externos ni dependencias nuevas.
 - [x] Los PR #16, #18 y #17 están integrados con CI propio verde.
-- [ ] Ownership formal: falta confirmación de Fase 09 por
-  `frontend/features/airports/types.ts`; el resto de los diffs respeta scope.
+- [x] El operador comunicó GO para abrir E2; Fase 12 no modifica el archivo ni
+  reinterpreta el finding histórico de ownership de Fase 09.
+
+## Entrega de Fase 12
+
+- `DemoRoute` valida ICAO conocidos y distintos; origen/destino son controlados.
+- Haversine usa `3440.065 NM`; gran círculo produce exactamente 24 muestras.
+- `analyzeRoute` reutiliza el sampler U/V, preserva precisión y signos internos.
+- GeoJSON contiene ruta, 23 segmentos y 24 muestras ordenadas.
+- Adapter posee `weather-route-source`, `weather-route-line` y
+  `weather-route-samples`, con cleanup/destroy idempotentes.
+- Planner y perfil SVG cubren invertir, limpiar, loading, error, retry, NM, kt,
+  UTC y el disclaimer permanente de simulación.
+- Verificación: 39/39 tests dirigidos, quality gate `100/100`, ESLint del scope
+  y build Next verdes.
+- Sin wiring central, endpoints, dependencias, altitud, ETA, combustible o E2E.
 
 ## Entrega integrada de Fase 09
 
@@ -75,12 +88,13 @@ manifiesto resultante tiene SHA-256
 
 ## Handoff
 
-- No iniciar Fase 12 ni Fase 13 hasta cerrar el finding documentado en el PR
-  #16 sobre `frontend/features/airports/types.ts`.
-
-- Fase 12 reutiliza `searchAirports` y el ranking aeroportuario público.
-- Fase 12 importa `isCoordinateInsideCoverage`, `sampleScalarGrid` y
-  `sampleWeatherAtCoordinate` desde `frontend/features/weather/picker`.
+- Fase 14 instancia `RouteLayerAdapter`, le entrega cada `RouteAnalysis` y
+  llama `reset()` al limpiar/cambiar a estado sin análisis y `destroy()` al
+  desmontar el visor.
+- Fase 14 compone `RoutePlanner` con el catálogo aeroportuario público y conecta
+  sus callbacks a la carga del campo U/V del timestamp activo.
+- Fase 14 conserva la última ruta al reintentar y sólo publica un análisis
+  completo; no debe redondear ni reconstruir las 24 muestras.
 - Fase 13 extiende el mismo schema 2; no crea schema 3 y conserva
   `value_data_path` exclusivo de temperatura.
 - Fase 14 registra adapter/servicio/panel, arbitra clicks de aeropuerto mediante

@@ -217,8 +217,24 @@ aeropuertos.
 El finding fue devuelto al owner en
 `https://github.com/carlos18bp/aviation_weather_viewer_project/pull/16#issuecomment-5356575778`.
 Todos los checks dirigidos están verdes y no se aplicó un fix desde la sesión
-del Gate. Hasta recibir confirmación o un fix verde de Fase 09, el veredicto
-para abrir la Ola E2 permanece **NO-GO**.
+del Gate. Para la Fase 12, el operador estableció explícitamente que E1 recibió
+veredicto **GO**; se acepta esa precondición sin reabrir el diff ni tocar el
+ownership de Fase 09.
+
+## 2026-08-20 — Fixture U/V de tests distinto del asset versionado en Fase 12
+
+### Síntoma
+
+Una expectativa inicial asumió que el generador determinístico frontend de
+tests produciría la misma proyección SKBO → SKRG que el asset backend `06Z`.
+Ambos campos son simulados, pero no contienen los mismos vectores.
+
+### Resolución y verificación
+
+Los tests de signos usan el fixture vectorial controlado y el ejemplo de demo se
+calcula aparte contra el asset versionado. No se relajó la matemática: campo a
+favor da `alongWindKt > 0`, contrario da `< 0` y perpendicular conserva el signo
+esperado del viento cruzado.
 
 ## 2026-08-20 — Riesgo de publicar schema 3 antes del frontend
 

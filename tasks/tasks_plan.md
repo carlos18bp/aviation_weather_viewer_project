@@ -62,8 +62,8 @@ Estado: **integrada en `master` mediante PR #10**.
 
 ## Roadmap de enriquecimiento posterior
 
-Estado: **Fases 09, 10 y 11 integradas y Gate E1 técnicamente verde; apertura
-de E2 en NO-GO hasta cerrar el finding de ownership de Fase 09**.
+Estado: **Fases 09, 10 y 11 integradas; Gate E1 en GO por precondición explícita
+del operador y Ola E2 abierta con Fases 12 y 13 en ramas independientes**.
 
 - [x] Evaluar candidatos visuales y aeronáuticos inspirados en Windy.
 - [x] Seleccionar seis fases en dos olas de implementación.
@@ -78,9 +78,9 @@ de E2 en NO-GO hasta cerrar el finding de ownership de Fase 09**.
 - [x] Integrar Fase 10 mediante PR #18 (`e6d2f28`).
 - [x] Integrar Fase 11 mediante PR #17 (`5f6f624`).
 - [x] Ejecutar los checks dirigidos y auditar el Gate E1 sin QA E2E completo.
-- [ ] Obtener confirmación o fix verde del owner de Fase 09 para el cambio en
-  `frontend/features/airports/types.ts`.
-- [ ] Abrir ola E2: fases 12 y 13.
+- [x] Aceptar el veredicto GO comunicado por el operador sin modificar el
+  ownership histórico de Fase 09.
+- [x] Abrir ola E2: fases 12 y 13.
 - [ ] Ejecutar fase 14 de integración, QA y ensayo.
 
 Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
@@ -104,6 +104,16 @@ Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 - [x] Mantener intactos store, controller, `page.tsx`, orquestador y flows E2E.
 - [x] Añadir harness aislado, pruebas dirigidas y guía para Fase 14.
 - [x] Integrar en `master` mediante PR #17 (`5f6f624`).
+
+### Fase 12 — Historia aeronáutica sobre ruta
+
+- [x] Validar dos ICAO distintos y construir ruta geodésica sin dependencias.
+- [x] Calcular Haversine, bearing y exactamente 24 muestras con extremos.
+- [x] Reutilizar el sampler U/V público y proyectar viento longitudinal/cruzado.
+- [x] Publicar GeoJSON y adapter MapLibre con lifecycle idempotente.
+- [x] Entregar selectores controlados, estados operativos y perfil SVG simulado.
+- [x] Mantener intactos wiring central, backend, store, controller y flows E2E.
+- [x] Pasar exclusivamente tests dirigidos, lint del scope y build separado.
 
 ## Roadmap móvil y capas aeronáuticas
 

@@ -236,6 +236,24 @@ La inspección de diffs no encontró manifests de dependencias, URLs runtime
 externas ni datos no simulados. No se ejecutó la suite completa ni QA E2E:
 estas funciones permanecen aisladas hasta Fase 14.
 
+## Contrato técnico — Fase 12
+
+- Radio terrestre Haversine: `3440.065 NM`; exactamente `24` muestras,
+  incluyendo ambos extremos, interpoladas sobre gran círculo.
+- Convención: U positivo al este, V positivo al norte,
+  `alongWindKt > 0` cola, `alongWindKt < 0` frente y `crossWindKt` conserva su
+  signo; sólo los DTO visibles se redondean.
+- El análisis puro reutiliza `parseWindField()` y `sampleWindField()` del
+  renderer público de viento, con validación previa de cobertura.
+- IDs MapLibre: `weather-route-source`, `weather-route-line` y
+  `weather-route-samples`; colores de segmentos cola `#22d3ee`, frente
+  `#fb7185` y neutral `#cbd5e1`.
+- Exports públicos: validación y tipos de ruta, geodesia, `analyzeRoute`,
+  conversión GeoJSON, `RouteLayerAdapter`, `RoutePlanner` y `RouteProfile`.
+- Verificación dirigida: 39 tests de dominio, GeoJSON, adapter y componentes;
+  quality gate acotado `100/100`, ESLint del ownership y build Next verdes. No
+  se ejecutó la suite completa.
+
 ## Contratos planificados — Fases 15–23
 
 - Viewports: phone 360–767 px, tablet 768–1199 px y desktop desde 1200 px.

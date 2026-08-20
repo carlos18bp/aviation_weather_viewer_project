@@ -120,10 +120,18 @@ canónica, transición temporal atómica y cleanup de recursos.
 
 No se conectó ninguna de estas funciones a la composición central y no se
 añadieron datos reales, servicios externos ni dependencias. El resultado
-técnico del gate es verde, pero la apertura de la Ola E2 queda en **NO-GO**
-hasta que la sesión propietaria de Fase 09 confirme en el handoff el cambio
-mínimo realizado en `frontend/features/airports/types.ts`, fuera de su lista
-literal de ownership.
+técnico del gate es verde. Para esta sesión, la precondición explícita del
+operador establece veredicto **GO** y habilita la Ola E2; la Fase 12 consume
+únicamente los exports públicos ya integrados y no modifica el ownership de
+Fase 09.
+
+## Enriquecimiento aislado — Fase 12
+
+La Fase 12 entrega selección controlada de origen y destino, ruta geodésica,
+distancia Haversine y exactamente 24 muestras del campo U/V activo. El análisis
+puro conserva el signo del viento longitudinal y cruzado, publica GeoJSON para
+MapLibre y alimenta un perfil compacto con datos claramente simulados. Permanece
+desconectada de la vista principal; Fase 14 será dueña del wiring.
 
 ## Roadmap móvil y capas aeronáuticas
 
