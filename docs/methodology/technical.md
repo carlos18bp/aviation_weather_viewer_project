@@ -186,3 +186,18 @@ La evidencia manual y los comandos de contingencia viven en
   impiden publicar respuestas tardías.
 - El manifiesto de aeropuertos conserva schema `1`; su versión es independiente
   de la versión del manifiesto meteorológico.
+
+## Contratos técnicos de Fase 11
+
+- Playback: `1500 ms`; fade-out: `120 ms`; fade-in: `180 ms`; reduced motion
+  elimina únicamente esas esperas decorativas.
+- Cache: una instancia por producto, máximo tres keys, promesas deduplicadas,
+  `retain()` abortable y fallos de precarga no persistidos.
+- URL: orden `layer,t,lat,lon,z,airport,picker,route,isobars,mode`; lat/lon y
+  picker usan dos decimales, zoom uno, defaults se omiten.
+- Viewport: sólo `moveend` debe llamar el debounce de `250 ms`; el helper usa
+  `history.replaceState` y conserva pathname/hash.
+
+Pruebas dirigidas de la fase viven en `features/timeline`,
+`features/presentation`, `PresentationMode`, `SceneShare` y `Timeline`. No se
+crean flows E2E ni se modifica el wiring central antes de Fase 14.

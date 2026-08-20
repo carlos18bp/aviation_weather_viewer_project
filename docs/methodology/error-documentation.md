@@ -180,3 +180,17 @@ rechazado el fixture de aeropuertos, cuyo contrato permanece en schema `1`.
 Se separaron `MANIFEST_SCHEMA_VERSION=2` y
 `AIRPORT_WEATHER_SCHEMA_VERSION=1`. Los tests dirigidos rechazan manifiestos
 schema 1 y conservan verdes los endpoints y validadores aeroportuarios.
+
+## 2026-08-20 — `npm ci` quedó esperando la auditoría durante Fase 11
+
+### Síntoma
+
+La instalación aislada del worktree resolvió los paquetes desde cache, pero no
+terminó después de que npm registró un fallo de la solicitud bulk de audit.
+
+### Resolución y verificación
+
+Se repitió la instalación reproducible con
+`npm ci --no-audit --prefer-offline --progress=false`. Instaló 706 paquetes en
+el worktree sin tocar dependencias de otras sesiones y habilitó los tests
+dirigidos. No se cambió `package.json` ni `package-lock.json`.

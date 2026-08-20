@@ -1,16 +1,16 @@
-# Contexto activo — Fase 10, picker meteorológico
+# Contexto activo — Ola E1 de enriquecimiento
 
 Actualizado: 2026-08-20.
 
 ## Estado
 
-La implementación aislada de Fase 10 está completa y validada en la rama
-`feat/20082026-phase-10-weather-picker`, cortada de `master` en
-`d1b57673c1dad6e959aea5bf029371f41e324dae`. No se conectó el picker a la vista
-principal y no se modificaron controller, store, orquestador, tipos centrales ni
-flows E2E.
+La Fase 11 quedó integrada en `master` mediante PR #17 y SHA `5f6f624`. La
+implementación aislada de Fase 10 está completa y validada en
+`feat/20082026-phase-10-weather-picker`; Fase 09 continúa en su PR #16. Ninguna
+de estas entregas conecta todavía composición, store, controller, orquestador o
+flows E2E: ese wiring permanece reservado para Fase 14.
 
-## Entrega
+## Entrega de Fase 10
 
 - Manifiesto schema 2 con `overlays: []` y `value_data_path` sólo térmico.
 - Seis grids térmicos `128×160` versionados; los seis WebP permanecen intactos.
@@ -21,7 +21,7 @@ flows E2E.
   meteorológica.
 - Adapter MapLibre y panel React controlado, sin wiring central.
 
-## Hashes de grids térmicos
+### Hashes de grids térmicos
 
 | Frame | SHA-256 |
 |---|---|
@@ -36,6 +36,14 @@ Dos generaciones temporales completas produjeron hashes idénticos. El
 manifiesto resultante tiene SHA-256
 `8ad5fc27b9963a89b0dc7fa42187071ecc42bf4a4f8dd1be4ffa5f63bf1687e8`.
 
+## Entrega integrada de Fase 11
+
+- Cache LRU abortable de máximo tres keys y plan circular adyacente.
+- Timeline controlado con progreso de 1500 ms y transición temporal atómica.
+- Codec/sincronizador URL puros y controles `PresentationMode`/`SceneShare`.
+- Harness aislado y guía de integración preparados para Fase 14.
+- Verificación: 99/99 tests dirigidos, quality gate 100/100, ESLint y build Next.
+
 ## Handoff
 
 - Fase 12 importa `isCoordinateInsideCoverage`, `sampleScalarGrid` y
@@ -43,4 +51,5 @@ manifiesto resultante tiene SHA-256
 - Fase 13 extiende el mismo schema 2; no crea schema 3 y conserva
   `value_data_path` exclusivo de temperatura.
 - Fase 14 registra adapter/servicio/panel, arbitra clicks de aeropuerto mediante
-  `shouldHandleClick` y limpia marcador/resultado al cerrar.
+  `shouldHandleClick`, integra transición/URL/presentación y limpia recursos al
+  cerrar o destruir.
