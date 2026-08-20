@@ -110,6 +110,20 @@
 - Clipboard y Fullscreen deben nacer de gestos explícitos y degradar a estados
   inline; un rechazo del navegador no debe desactivar presentación interna.
 
+## Gate de integración — Ola E1
+
+- Un gate debe distinguir verde técnico de conformidad operativa: un cambio
+  correcto puede bloquear la siguiente ola si no quedó documentado en el
+  ownership/handoff correspondiente.
+- Después de squash merges, `merge-tree` sobre ramas locales `[gone]` puede no
+  producir un no-op aunque el PR figure mergeado; el estado del PR y su
+  `mergeCommit` son la evidencia autoritativa del aterrizaje.
+- Si la cola ya fue drenada antes de llegar el coordinador, se audita el orden
+  real y la compatibilidad de la combinación; no se revierte ni se remergea una
+  historia verde sólo para reproducir el orden solicitado.
+- Requests, timers, layers, sources y listeners necesitan cleanup explícito y
+  tests de destrucción antes de que Fase 14 los conecte al ciclo de vida real.
+
 ## Roadmap móvil y capas
 
 - Ocultar paneles bajo un breakpoint evita overflow, pero no crea una

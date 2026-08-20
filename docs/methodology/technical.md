@@ -216,6 +216,26 @@ Pruebas dirigidas de la fase viven en `features/timeline`,
 `features/presentation`, `PresentationMode`, `SceneShare` y `Timeline`. No se
 crean flows E2E ni se modifica el wiring central antes de Fase 14.
 
+## Evidencia dirigida — Gate de la ola E1
+
+- Fase 09: `41/41` tests — búsqueda/componente `18`, servicio/hook `16` y
+  tendencia `7`.
+- Fase 10 frontend: `41/41` tests — schema/sampler `20`, panel `6` y
+  servicio/adapter `15`.
+- Fase 10 backend: `58/58` tests — assets en batches `17 + 16 + 3`, API
+  `18 + 3` y reproducibilidad byte a byte `1`.
+- Fase 11: `99/99` tests — preloader/transición `14`, timeline `18`, selección
+  de escena `18`, codec base `15`, airport/URL/harness `15` y controles `19`.
+- ESLint dirigido: PR #16, #18 y #17 sin findings; `python manage.py check`
+  sin issues; `npm run build` compiló y generó las tres páginas estáticas.
+
+El manifiesto schema 2 conserva SHA-256
+`8ad5fc27b9963a89b0dc7fa42187071ecc42bf4a4f8dd1be4ffa5f63bf1687e8`.
+Los seis grids conservaron los hashes registrados en `tasks/active_context.md`.
+La inspección de diffs no encontró manifests de dependencias, URLs runtime
+externas ni datos no simulados. No se ejecutó la suite completa ni QA E2E:
+estas funciones permanecen aisladas hasta Fase 14.
+
 ## Contratos planificados — Fases 15–23
 
 - Viewports: phone 360–767 px, tablet 768–1199 px y desktop desde 1200 px.

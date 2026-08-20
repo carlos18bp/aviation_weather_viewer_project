@@ -148,6 +148,22 @@ flowchart LR
 - Los componentes nuevos reciben estado/callbacks. Fase 14 decide composición,
   restauración y qué chrome secundario ocultar.
 
+## Integración auditada — Gate de la ola E1
+
+Los tres heads funcionales partieron de `d1b5767`. Cuando esta sesión recibió
+el gate, GitHub ya los había integrado por squash en el orden real Fase 11
+(`#17`, `5f6f624`) → Fase 10 (`#18`, `e6d2f28`) → Fase 09 (`#16`, `6795540`).
+El censo retrospectivo de `merge-queue` encontró la cola vacía y no reescribió
+historia ni repitió merges.
+
+Los diffs funcionales son disjuntos y ninguno toca `page.tsx`, store,
+`WeatherMapController`, `viewerTypes`, `ViewerOrchestrator` ni flows E2E. Fase
+14 conserva en exclusiva el wiring de búsqueda, picker, timeline, URL y modo
+presentación. La única excepción formal pendiente es el refinamiento del tipo
+`AirportFeatureCollection` en `frontend/features/airports/types.ts`; mantiene
+el `id` GeoJSON y no cruza una frontera runtime, pero requiere confirmación del
+owner de Fase 09 antes de abrir E2.
+
 ## Arquitectura objetivo posterior a Fase 14
 
 Las Fases 15–23 están planificadas, no implementadas. Mantienen una instancia

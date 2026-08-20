@@ -62,8 +62,8 @@ Estado: **integrada en `master` mediante PR #10**.
 
 ## Roadmap de enriquecimiento posterior
 
-Estado: **ola E1 integrada; Fases 09, 10 y 11 integradas mediante PR #16,
-PR #18 y PR #17**.
+Estado: **Fases 09, 10 y 11 integradas y Gate E1 técnicamente verde; apertura
+de E2 en NO-GO hasta cerrar el finding de ownership de Fase 09**.
 
 - [x] Evaluar candidatos visuales y aeronáuticos inspirados en Windy.
 - [x] Seleccionar seis fases en dos olas de implementación.
@@ -74,7 +74,12 @@ PR #18 y PR #17**.
 - [x] Abrir ola E1: fases 09, 10 y 11.
 - [x] Implementar Fase 10 sin wiring central ni E2E.
 - [x] Implementar e integrar Fase 11 sin wiring central ni E2E.
-- [x] Completar ola E1: integrar las tres entregas.
+- [x] Integrar Fase 09 mediante PR #16 (`6795540`).
+- [x] Integrar Fase 10 mediante PR #18 (`e6d2f28`).
+- [x] Integrar Fase 11 mediante PR #17 (`5f6f624`).
+- [x] Ejecutar los checks dirigidos y auditar el Gate E1 sin QA E2E completo.
+- [ ] Obtener confirmación o fix verde del owner de Fase 09 para el cambio en
+  `frontend/features/airports/types.ts`.
 - [ ] Abrir ola E2: fases 12 y 13.
 - [ ] Ejecutar fase 14 de integración, QA y ensayo.
 

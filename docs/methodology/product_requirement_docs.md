@@ -110,6 +110,21 @@ commit atómico, codec canónico de escena y controles de presentación/copia. E
 codec reconoce precipitación, ruta e isobaras sólo para preparar Fase 14; no las
 activa ni amplía por sí mismo el recorrido visible de Fase 08.
 
+## Gate de la ola E1 — 2026-08-20
+
+Las Fases 09, 10 y 11 están integradas en `master` mediante los PR #16
+(`6795540`), #18 (`e6d2f28`) y #17 (`5f6f624`). La auditoría confirmó búsqueda
+y tendencia con seis timestamps, picker con estado fuera de cobertura sin
+clamp, seis grids térmicos determinísticos, cache máxima de tres frames, URL
+canónica, transición temporal atómica y cleanup de recursos.
+
+No se conectó ninguna de estas funciones a la composición central y no se
+añadieron datos reales, servicios externos ni dependencias. El resultado
+técnico del gate es verde, pero la apertura de la Ola E2 queda en **NO-GO**
+hasta que la sesión propietaria de Fase 09 confirme en el handoff el cambio
+mínimo realizado en `frontend/features/airports/types.ts`, fuera de su lista
+literal de ownership.
+
 ## Roadmap móvil y capas aeronáuticas
 
 Después de integrar y validar la Fase 14 existe una tercera iteración opcional,
