@@ -36,7 +36,10 @@ export type AirportFeature = Feature<Point, AirportProperties> & {
   id: DemoAirportIcao;
 };
 
-export type AirportFeatureCollection = FeatureCollection<Point, AirportProperties> & {
+export type AirportFeatureCollection = Omit<
+  FeatureCollection<Point, AirportProperties>,
+  'features'
+> & {
   features: AirportFeature[];
 };
 
