@@ -124,6 +124,18 @@
 - Requests, timers, layers, sources y listeners necesitan cleanup explícito y
   tests de destrucción antes de que Fase 14 los conecte al ciclo de vida real.
 
+## Fase 12 — historia sobre ruta
+
+- El sampler del renderer clampa bordes por diseño; un consumidor analítico
+  debe validar cobertura antes de invocarlo para no fabricar muestras válidas.
+- Los fixtures de viento deben fijar vectores por dirección, no inferir signos
+  desde otro asset determinístico con una fórmula distinta.
+- Distancia, bearings y proyecciones conservan precisión interna; redondear sólo
+  en el DTO visual evita acumular error y mantiene reutilizable el análisis.
+- Un componente controlado con borrador local debe etiquetar el ICAO al que
+  pertenece ese borrador; así los cambios de props no requieren efectos de
+  sincronización ni publican selección obsoleta.
+
 ## Roadmap móvil y capas
 
 - Ocultar paneles bajo un breakpoint evita overflow, pero no crea una

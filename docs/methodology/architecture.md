@@ -159,10 +159,25 @@ historia ni repitió merges.
 Los diffs funcionales son disjuntos y ninguno toca `page.tsx`, store,
 `WeatherMapController`, `viewerTypes`, `ViewerOrchestrator` ni flows E2E. Fase
 14 conserva en exclusiva el wiring de búsqueda, picker, timeline, URL y modo
-presentación. La única excepción formal pendiente es el refinamiento del tipo
-`AirportFeatureCollection` en `frontend/features/airports/types.ts`; mantiene
-el `id` GeoJSON y no cruza una frontera runtime, pero requiere confirmación del
-owner de Fase 09 antes de abrir E2.
+presentación. La precondición explícita de esta sesión declara el Gate E1 en GO;
+Fase 12 no reabre ni modifica el refinamiento de
+`AirportFeatureCollection` registrado durante ese gate.
+
+## Arquitectura aislada — Fase 12
+
+```text
+AirportFeatureCollection + DemoRoute + DemoTimestamp + WindField
+  -> analyzeRoute (puro, 24 muestras)
+  -> RouteAnalysis
+  -> routeAnalysisToGeoJson -> RouteLayerAdapter
+  -> RouteProfile
+```
+
+`RoutePlanner` reutiliza `searchAirports` y sólo emite callbacks controlados.
+`analyzeRoute` valida cobertura antes del sampler público U/V y no redondea los
+cálculos internos. `RouteLayerAdapter` posee un source y dos layers, sin
+listeners ni registro central; Fase 14 recibe los módulos públicos y decide su
+lifecycle real junto con timestamp, loading, error y retry.
 
 ## Arquitectura objetivo posterior a Fase 14
 
