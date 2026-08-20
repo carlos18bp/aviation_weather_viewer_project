@@ -145,3 +145,16 @@ La iteración no puede comenzar sobre una Fase 14 parcial. Conserva Colombia,
 fecha, seis timestamps, warning, una sola instancia MapLibre, datos locales y
 ausencia de uso operacional. Su fuente normativa vive en
 docs/MVP_roadmap/mobile_layer_enrichment/README.md.
+
+## Enriquecimiento aislado — Fase 13
+
+La Fase 13 añade `Precipitación simulada` como tercera capa principal y
+`Isobaras` como overlay temporal, siempre con assets locales, determinísticos y
+marcados como no operacionales. El manifiesto conserva schema `2`: publica 18
+frames principales —temperatura, viento y precipitación para seis timestamps— y
+seis frames GeoJSON del overlay.
+
+La entrega incluye schemas, servicios, leyenda, callbacks y adapters MapLibre
+aislados. No modifica el picker, no añade endpoints ni servicios externos y no
+conecta todavía estas capas a la composición principal; ese wiring pertenece a
+Fase 14.

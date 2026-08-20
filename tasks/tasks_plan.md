@@ -62,8 +62,8 @@ Estado: **integrada en `master` mediante PR #10**.
 
 ## Roadmap de enriquecimiento posterior
 
-Estado: **Fases 09, 10 y 11 integradas; Gate E1 en GO por precondición explícita
-del operador y Ola E2 abierta con Fases 12 y 13 en ramas independientes**.
+Estado: **Fases 09–12 integradas; Gate E1 con GO y Fase 13 implementada,
+todavía sin wiring central reservado a Fase 14**.
 
 - [x] Evaluar candidatos visuales y aeronáuticos inspirados en Windy.
 - [x] Seleccionar seis fases en dos olas de implementación.
@@ -114,6 +114,18 @@ Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 - [x] Entregar selectores controlados, estados operativos y perfil SVG simulado.
 - [x] Mantener intactos wiring central, backend, store, controller y flows E2E.
 - [x] Pasar exclusivamente tests dirigidos, lint del scope y build separado.
+
+### Fase 13 — Precipitación e isobaras simuladas
+
+- [x] Extender schema `2` a 18 frames principales y seis overlay frames.
+- [x] Generar y reemplazar atómicamente seis WebP y seis GeoJSON determinísticos.
+- [x] Validar formatos, propiedades, bbox, paths seguros y reproducibilidad.
+- [x] Publicar precipitación e isobaras mediante los dos endpoints existentes.
+- [x] Crear schemas, servicios, leyenda, callbacks y adapters MapLibre aislados.
+- [x] Cubrir abort, request-version, fallback, hide-during-fetch y cleanup.
+- [x] Mantener sin cambios el wiring central reservado a Fase 14.
+- [x] Ejecutar exclusivamente tests dirigidos, lint, checks y build.
+- [x] Preparar capturas 06Z/09Z y handoff completo para Fase 14.
 
 ## Roadmap móvil y capas aeronáuticas
 

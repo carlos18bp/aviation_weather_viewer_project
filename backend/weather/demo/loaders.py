@@ -16,6 +16,7 @@ from weather.demo.validators import (
     validate_airport_weather,
     validate_frame_asset,
     validate_manifest,
+    validate_overlay_asset,
 )
 
 
@@ -105,8 +106,42 @@ def ensure_frame_available(frame: dict) -> None:
     )
 
 
+@lru_cache(maxsize=12)
+def _validate_overlay_cached(
+    root_value: str,
+    overlay_id: str,
+    timestamp: str,
+    data_path: str,
+    modified_ns: int,
+    size: int,
+) -> None:  # noqa: ARG001
+    validate_overlay_asset(
+        Path(root_value),
+        overlay_id,
+        {
+            "timestamp": timestamp,
+            "data_path": data_path,
+        },
+    )
+
+
+def ensure_overlay_available(overlay_id: str, frame: dict) -> None:
+    """Ensure one catalog overlay frame is safe and ready to publish."""
+    scenario_root = Path(settings.DEMO_WEATHER_SCENARIO_ROOT)
+    overlay_path = frame_path_for_scenario(scenario_root, frame["data_path"])
+    signature = _file_signature(overlay_path)
+    _validate_overlay_cached(
+        str(scenario_root),
+        overlay_id,
+        frame["timestamp"],
+        frame["data_path"],
+        *signature,
+    )
+
+
 def clear_demo_asset_caches() -> None:
     """Clear loader caches for isolated tests and controlled asset refreshes."""
     _load_manifest_cached.cache_clear()
     _load_airport_weather_cached.cache_clear()
     _validate_frame_cached.cache_clear()
+    _validate_overlay_cached.cache_clear()

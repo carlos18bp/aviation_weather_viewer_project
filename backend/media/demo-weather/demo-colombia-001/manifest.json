@@ -31,6 +31,14 @@
       "unit": "kt",
       "minimum": 0,
       "maximum": 60
+    },
+    {
+      "id": "precipitation",
+      "name": "Precipitación simulada",
+      "kind": "scalar",
+      "unit": "mm/h",
+      "minimum": 0,
+      "maximum": 40
     }
   ],
   "timestamps": [
@@ -58,6 +66,13 @@
       "maximum": 60
     },
     {
+      "layer": "precipitation",
+      "timestamp": "2026-01-15T00:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/precipitation/00Z.webp",
+      "minimum": 0,
+      "maximum": 40
+    },
+    {
       "layer": "temperature",
       "timestamp": "2026-01-15T03:00:00Z",
       "data_path": "demo-weather/demo-colombia-001/temperature/03Z.webp",
@@ -71,6 +86,13 @@
       "data_path": "demo-weather/demo-colombia-001/wind/03Z.json",
       "minimum": 0,
       "maximum": 60
+    },
+    {
+      "layer": "precipitation",
+      "timestamp": "2026-01-15T03:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/precipitation/03Z.webp",
+      "minimum": 0,
+      "maximum": 40
     },
     {
       "layer": "temperature",
@@ -88,6 +110,13 @@
       "maximum": 60
     },
     {
+      "layer": "precipitation",
+      "timestamp": "2026-01-15T06:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/precipitation/06Z.webp",
+      "minimum": 0,
+      "maximum": 40
+    },
+    {
       "layer": "temperature",
       "timestamp": "2026-01-15T09:00:00Z",
       "data_path": "demo-weather/demo-colombia-001/temperature/09Z.webp",
@@ -101,6 +130,13 @@
       "data_path": "demo-weather/demo-colombia-001/wind/09Z.json",
       "minimum": 0,
       "maximum": 60
+    },
+    {
+      "layer": "precipitation",
+      "timestamp": "2026-01-15T09:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/precipitation/09Z.webp",
+      "minimum": 0,
+      "maximum": 40
     },
     {
       "layer": "temperature",
@@ -118,6 +154,13 @@
       "maximum": 60
     },
     {
+      "layer": "precipitation",
+      "timestamp": "2026-01-15T12:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/precipitation/12Z.webp",
+      "minimum": 0,
+      "maximum": 40
+    },
+    {
       "layer": "temperature",
       "timestamp": "2026-01-15T15:00:00Z",
       "data_path": "demo-weather/demo-colombia-001/temperature/15Z.webp",
@@ -131,7 +174,46 @@
       "data_path": "demo-weather/demo-colombia-001/wind/15Z.json",
       "minimum": 0,
       "maximum": 60
+    },
+    {
+      "layer": "precipitation",
+      "timestamp": "2026-01-15T15:00:00Z",
+      "data_path": "demo-weather/demo-colombia-001/precipitation/15Z.webp",
+      "minimum": 0,
+      "maximum": 40
     }
   ],
-  "overlays": []
+  "overlays": [
+    {
+      "id": "pressure-isobars",
+      "name": "Isobaras",
+      "unit": "hPa",
+      "frames": [
+        {
+          "timestamp": "2026-01-15T00:00:00Z",
+          "data_path": "demo-weather/demo-colombia-001/pressure-isobars/00Z.geojson"
+        },
+        {
+          "timestamp": "2026-01-15T03:00:00Z",
+          "data_path": "demo-weather/demo-colombia-001/pressure-isobars/03Z.geojson"
+        },
+        {
+          "timestamp": "2026-01-15T06:00:00Z",
+          "data_path": "demo-weather/demo-colombia-001/pressure-isobars/06Z.geojson"
+        },
+        {
+          "timestamp": "2026-01-15T09:00:00Z",
+          "data_path": "demo-weather/demo-colombia-001/pressure-isobars/09Z.geojson"
+        },
+        {
+          "timestamp": "2026-01-15T12:00:00Z",
+          "data_path": "demo-weather/demo-colombia-001/pressure-isobars/12Z.geojson"
+        },
+        {
+          "timestamp": "2026-01-15T15:00:00Z",
+          "data_path": "demo-weather/demo-colombia-001/pressure-isobars/15Z.geojson"
+        }
+      ]
+    }
+  ]
 }

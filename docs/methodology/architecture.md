@@ -204,3 +204,35 @@ flowchart LR
 - Las Olas M1 y M2 entregan módulos aislados. Fase 23 conserva ownership
   exclusivo de API, store, controller, orquestador, scene codec y E2E.
 - Una capa principal está visible; pressure-isobars continúa como overlay.
+
+## Capas atmosféricas aisladas — Fase 13
+
+```mermaid
+flowchart LR
+    Author[Autoría determinística] --> WebP[6 WebP RGBA de precipitación]
+    Author --> GeoJSON[6 FeatureCollection de isobaras]
+    WebP --> Frames[GET frames existente]
+    GeoJSON --> Catalog[GET catalog existente]
+    Frames --> PrecipService[precipitation service]
+    Catalog --> IsobarService[isobar service]
+    PrecipService --> PrecipAdapter[PrecipitationLayerAdapter]
+    IsobarService --> IsobarAdapter[IsobarLayerAdapter]
+    F14[Fase 14] --> PrecipAdapter
+    F14 --> IsobarAdapter
+```
+
+Los contornos se calculan únicamente en `generation.py` y se versionan como
+GeoJSON; ni los requests ni el navegador ejecutan marching squares. El catálogo
+valida cada overlay antes de publicar su URL same-origin, mientras el endpoint
+de frames reutiliza el contrato vigente para precipitación.
+
+Los adapters poseen sus propios requests, sources y layers. Precipitación
+mantiene el último frame confirmado si falla un reemplazo; isobaras empiezan
+ocultas, abortan al ocultarse y degradan a overlay ausente sin propagar el fallo
+a la capa principal. Ambos invalidan respuestas tardías por versión y eliminan
+todos sus recursos en `destroy()`.
+
+La única compatibilidad central autorizada en esta fase está en
+`weatherService.ts`: valida que el catálogo enriquecido tenga las tres capas,
+pero conserva el DTO visible de temperatura/viento hasta que Fase 14 amplíe
+`viewerTypes`, store, selector y controller.

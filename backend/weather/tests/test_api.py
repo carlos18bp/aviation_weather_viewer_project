@@ -67,8 +67,10 @@ def test_catalog_returns_frozen_contract(api_client):
         "is_simulated": True,
         "operational_use": False,
     }
-    assert len(response.json()["layers"]) == 2
+    assert len(response.json()["layers"]) == 3
     assert response.json()["timestamps"] == list(TIMESTAMPS)
+    assert response.json()["overlays"][0]["id"] == "pressure-isobars"
+    assert len(response.json()["overlays"][0]["frames"]) == 6
 
 
 @pytest.mark.parametrize(
@@ -81,6 +83,7 @@ def test_catalog_returns_frozen_contract(api_client):
             "/media/demo-weather/demo-colombia-001/temperature-values/06Z.json",
         ),
         ("wind", "kt", ".json", None),
+        ("precipitation", "mm/h", ".webp", None),
     ],
 )
 def test_frame_returns_same_origin_descriptor(
