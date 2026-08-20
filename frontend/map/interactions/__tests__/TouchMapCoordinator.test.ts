@@ -149,9 +149,12 @@ describe('TouchMapCoordinator', () => {
     const harness = createHarness();
 
     emitTap(harness, { duration: 501 });
+    emitTap(harness, { duration: 500 });
 
-    expect(harness.onIntent).not.toHaveBeenCalled();
-    expect(harness.map.queryAirportAt).not.toHaveBeenCalled();
+    expect(harness.onIntent.mock.calls.map(([intent]) => intent)).toEqual([
+      { kind: 'coordinate', coordinate: [-74, 4] },
+    ]);
+    expect(harness.map.queryAirportAt).toHaveBeenCalledTimes(1);
   });
 
   it('accepts exactly 8 CSS px of movement', () => {
@@ -167,9 +170,12 @@ describe('TouchMapCoordinator', () => {
     const harness = createHarness();
 
     emitTap(harness, { start: [0, 0], end: [8.1, 0], move: true });
+    emitTap(harness, { start: [0, 0], end: [8, 0], move: true });
 
-    expect(harness.onIntent).not.toHaveBeenCalled();
-    expect(harness.map.queryAirportAt).not.toHaveBeenCalled();
+    expect(harness.onIntent.mock.calls.map(([intent]) => intent)).toEqual([
+      { kind: 'coordinate', coordinate: [-74, 4] },
+    ]);
+    expect(harness.map.queryAirportAt).toHaveBeenCalledTimes(1);
   });
 
   it('invalidates a gesture forever after a second finger appears', () => {
@@ -181,8 +187,11 @@ describe('TouchMapCoordinator', () => {
     harness.map.emit('touchstart', touchEvent([first, second]));
     harness.map.emit('touchend', touchEvent([first], [second]));
     harness.map.emit('touchend', touchEvent([], [first]));
+    emitTap(harness);
 
-    expect(harness.onIntent).not.toHaveBeenCalled();
+    expect(harness.onIntent.mock.calls.map(([intent]) => intent)).toEqual([
+      { kind: 'coordinate', coordinate: [-74, 4] },
+    ]);
   });
 
   it('invalidates a cancelled gesture', () => {
@@ -191,8 +200,11 @@ describe('TouchMapCoordinator', () => {
     harness.map.emit('touchstart', touchEvent([point(10, 10)]));
     harness.map.emit('touchcancel', touchEvent());
     harness.map.emit('touchend', touchEvent([], [point(10, 10)]));
+    emitTap(harness);
 
-    expect(harness.onIntent).not.toHaveBeenCalled();
+    expect(harness.onIntent.mock.calls.map(([intent]) => intent)).toEqual([
+      { kind: 'coordinate', coordinate: [-74, 4] },
+    ]);
   });
 
   it('gives an airport priority without unprojecting the background', () => {
@@ -321,6 +333,10 @@ describe('TouchMapCoordinator', () => {
     for (const event of [start, move, end, cancel]) {
       expect(event.preventDefault).not.toHaveBeenCalled();
     }
+    expect(harness.onIntent).toHaveBeenCalledWith({
+      kind: 'coordinate',
+      coordinate: [-74, 4],
+    });
   });
 
   it('invalidates an active gesture when destroyed', () => {
