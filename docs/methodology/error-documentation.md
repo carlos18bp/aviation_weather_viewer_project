@@ -201,3 +201,21 @@ Se repitió la instalación reproducible con
 `npm ci --no-audit --prefer-offline --progress=false`. Instaló 706 paquetes en
 el worktree sin tocar dependencias de otras sesiones y habilitó los tests
 dirigidos. No se cambió `package.json` ni `package-lock.json`.
+
+## 2026-08-20 — Desvío formal de ownership en Fase 09 — Gate E1
+
+### Hallazgo
+
+El PR #16 modificó `frontend/features/airports/types.ts`, archivo que no aparece
+en la lista literal de ownership de Fase 09. El cambio refina
+`AirportFeatureCollection` para que `features` preserve el `id` tipado de cada
+feature; no añade wiring, dependencia ni efecto runtime fuera del dominio de
+aeropuertos.
+
+### Estado del gate
+
+El finding fue devuelto al owner en
+`https://github.com/carlos18bp/aviation_weather_viewer_project/pull/16#issuecomment-5356575778`.
+Todos los checks dirigidos están verdes y no se aplicó un fix desde la sesión
+del Gate. Hasta recibir confirmación o un fix verde de Fase 09, el veredicto
+para abrir la Ola E2 permanece **NO-GO**.

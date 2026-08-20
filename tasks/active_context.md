@@ -1,17 +1,33 @@
-# Contexto activo — Ola E1 de enriquecimiento
+# Contexto activo — Gate de la Ola E1
 
 Actualizado: 2026-08-20.
 
 ## Estado
 
-Las Fases 10 y 11 quedaron integradas en `master` mediante PR #18 (`e6d2f28`) y
-PR #17 (`5f6f624`). La Fase 09 está completa en su PR #16 y absorbe ambas bases
-sin conectar todavía composición, store, controller, orquestador o flows E2E;
-ese wiring permanece reservado para Fase 14.
+Las Fases 09, 10 y 11 están integradas en `master` mediante PR #16 (`6795540`),
+PR #18 (`e6d2f28`) y PR #17 (`5f6f624`). Ninguna conectó composición, store,
+controller, orquestador o flows E2E; ese wiring permanece reservado para Fase
+14. El Gate técnico está verde, pero E2 permanece en **NO-GO** hasta que el
+owner de Fase 09 confirme o corrija su desvío formal de ownership.
+
+## Validación del Gate E1
+
+- [x] Búsqueda y tendencia funcionan en harness aislado con los seis timestamps.
+- [x] El picker distingue coordenada válida, fuera de cobertura sin clamp y
+  dato no disponible.
+- [x] El manifiesto usa schema 2 y los seis grids numéricos son determinísticos.
+- [x] El codec acepta sólo el escenario congelado y serializa una URL canónica.
+- [x] Precarga y transición conservan máximo tres frames y realizan un único
+  commit sin timestamps mezclados.
+- [x] Requests, timers, layers, sources y listeners tienen cleanup probado.
+- [x] No existen datos reales, servicios externos ni dependencias nuevas.
+- [x] Los PR #16, #18 y #17 están integrados con CI propio verde.
+- [ ] Ownership formal: falta confirmación de Fase 09 por
+  `frontend/features/airports/types.ts`; el resto de los diffs respeta scope.
 
 ## Entrega de Fase 09
 
-- Rama `feat/20082026-phase-09-airport-intelligence`, PR #16 contra `master`.
+- Integrada en `master` mediante PR #16 (`6795540`).
 - Host: `vps-projectapp-staging` (`host_status=on-work-host`).
 - Búsqueda pura y `AirportSearch`: completos; 18 tests verdes.
 - Serie, validación, abort y cache: completos; 16 tests verdes.
@@ -57,6 +73,9 @@ manifiesto resultante tiene SHA-256
 - Integrada en `master` mediante PR #17 (`5f6f624`).
 
 ## Handoff
+
+- No iniciar Fase 12 ni Fase 13 hasta cerrar el finding documentado en el PR
+  #16 sobre `frontend/features/airports/types.ts`.
 
 - Fase 12 reutiliza `searchAirports` y el ranking aeroportuario público.
 - Fase 12 importa `isCoordinateInsideCoverage`, `sampleScalarGrid` y
