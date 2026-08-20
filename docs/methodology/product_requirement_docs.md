@@ -55,3 +55,15 @@ ni cambio de tema.
 
 Los contratos normativos viven en `docs/MVP_roadmap/phase_scopes/`; este PRD
 resume el producto y no reemplaza esos documentos.
+
+## Roadmap posterior al demo base
+
+Después de integrar y validar la fase 08 existe una iteración opcional de seis
+fases para enriquecer la presentación. Incluye búsqueda y evolución por
+aeropuerto, picker por coordenada, escenas en URL, ruta con viento relativo,
+precipitación e isobaras simuladas.
+
+Este roadmap no está implementado y no bloquea la entrega original. Conserva
+el mismo escenario, seis timestamps, cobertura, stack, warning y política de
+datos locales. Sus contratos y orden de ejecución viven en
+`docs/MVP_roadmap/demo_enrichment/README.md`.
