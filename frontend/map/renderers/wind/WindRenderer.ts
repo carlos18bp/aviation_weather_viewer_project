@@ -1,5 +1,15 @@
 import type { Map as MapLibreMap, MapContextEvent } from 'maplibre-gl';
 
+import {
+  createAdaptiveRenderingController,
+  createMatchMediaWindRenderProfileSelector,
+  MAXIMUM_MEASURED_FRAME_GAP_MS,
+  WIND_RENDER_PROFILES,
+  type AdaptiveRenderingController,
+  type VisibilityDocument,
+  type WindRenderProfile,
+  type WindRenderProfileSelector,
+} from '@/features/performance';
 import type { WindFallbackEvent, WindField } from '@/features/weather/wind';
 
 import { CustomWindParticleLayer, WIND_PARTICLE_LAYER_ID } from './CustomWindParticleLayer';
@@ -14,19 +24,57 @@ export interface WindRenderer {
   destroy(): void;
 }
 
+export interface AdaptiveWindRendererOptions {
+  selectProfile?: WindRenderProfileSelector;
+  lowFpsThreshold?: number;
+  lowFpsWindowMs?: number;
+  now?: () => number;
+  document?: VisibilityDocument | null;
+  onProfileChange?(profile: Readonly<WindRenderProfile>): void;
+  onDocumentVisibilityChange?(visible: boolean): void;
+}
+
 export interface WindRendererOptions {
   onFallback?: (event: WindFallbackEvent) => void;
+  adaptiveRendering?: AdaptiveWindRendererOptions;
 }
 
 type RendererMode = 'idle' | 'particles' | 'fallback';
+
+function defaultNow(): number {
+  return typeof performance === 'undefined' ? Date.now() : performance.now();
+}
+
+function selectInitialProfile(
+  selector: WindRenderProfileSelector,
+): Readonly<WindRenderProfile> {
+  try {
+    const selected = selector();
+    if (selected.id === 'phone' || selected.id === 'tablet' || selected.id === 'desktop') {
+      return WIND_RENDER_PROFILES[selected.id];
+    }
+  } catch {
+    // Capability detection failure intentionally uses the conservative profile.
+  }
+  return WIND_RENDER_PROFILES.phone;
+}
 
 export class MapLibreWindRenderer implements WindRenderer {
   private readonly map: MapLibreMap;
   private readonly fallback: WindArrowFallback;
   private readonly onFallback?: (event: WindFallbackEvent) => void;
+  private readonly onProfileChange?: AdaptiveWindRendererOptions['onProfileChange'];
+  private readonly onDocumentVisibilityChange?: (
+    visible: boolean,
+  ) => void;
+  private readonly now: () => number;
+  private readonly adaptiveController: AdaptiveRenderingController;
   private particleLayer: CustomWindParticleLayer | null = null;
   private field: WindField | null = null;
+  private profile: Readonly<WindRenderProfile>;
   private visible = true;
+  private documentVisible = true;
+  private hiddenAtMs: number | null = null;
   private mode: RendererMode = 'idle';
   private initialized = false;
   private destroyed = false;
@@ -38,6 +86,22 @@ export class MapLibreWindRenderer implements WindRenderer {
     this.map = map;
     this.fallback = new WindArrowFallback(map);
     this.onFallback = options.onFallback;
+    const adaptiveOptions = options.adaptiveRendering ?? {};
+    this.onProfileChange = adaptiveOptions.onProfileChange;
+    this.onDocumentVisibilityChange = adaptiveOptions.onDocumentVisibilityChange;
+    this.now = adaptiveOptions.now ?? defaultNow;
+    this.profile = selectInitialProfile(
+      adaptiveOptions.selectProfile ?? createMatchMediaWindRenderProfileSelector(),
+    );
+    this.adaptiveController = createAdaptiveRenderingController({
+      initialProfile: this.profile.id as 'phone' | 'tablet' | 'desktop',
+      lowFpsThreshold: adaptiveOptions.lowFpsThreshold,
+      lowFpsWindowMs: adaptiveOptions.lowFpsWindowMs,
+      now: this.now,
+      document: adaptiveOptions.document,
+      onProfileChange: (profile) => this.applyAdaptiveProfile(profile),
+      onDocumentVisibilityChange: (visible) => this.handleDocumentVisibility(visible),
+    });
   }
 
   initialize(): Promise<void> {
@@ -101,6 +165,8 @@ export class MapLibreWindRenderer implements WindRenderer {
 
     this.destroyed = true;
     this.visible = false;
+    this.adaptiveController.setRenderingActive(false);
+    this.adaptiveController.destroy();
     this.stopAnimation();
     this.detachListeners();
     this.particleLayer?.setActive(false);
@@ -132,6 +198,8 @@ export class MapLibreWindRenderer implements WindRenderer {
 
     if (!webgl2) {
       this.initialized = true;
+      this.adaptiveController.start();
+      this.publishProfile(this.profile);
       this.activateFallback(
         'webgl2-unavailable',
         'WebGL2 no está disponible; se muestran flechas de viento estáticas.',
@@ -145,6 +213,10 @@ export class MapLibreWindRenderer implements WindRenderer {
         'El renderer WebGL falló durante la animación.',
         error,
       );
+    }, {
+      particleCount: this.profile.particleCount,
+      now: this.now,
+      onFrameRendered: (timestampMs) => this.adaptiveController.recordFrame(timestampMs),
     });
     this.particleLayer = particleLayer;
 
@@ -168,12 +240,10 @@ export class MapLibreWindRenderer implements WindRenderer {
     }
 
     this.initialized = true;
+    this.adaptiveController.start();
+    this.publishProfile(this.profile);
     this.updateActivity();
   }
-
-  private readonly handleVisibilityChange = (): void => {
-    this.updateActivity();
-  };
 
   private readonly handleContextLost = (event: MapContextEvent): void => {
     event.originalEvent?.preventDefault();
@@ -202,7 +272,6 @@ export class MapLibreWindRenderer implements WindRenderer {
       return;
     }
 
-    document.addEventListener('visibilitychange', this.handleVisibilityChange);
     this.map.on('webglcontextlost', this.handleContextLost);
     this.map.on('webglcontextrestored', this.handleContextRestored);
     this.map.on('idle', this.handleIdle);
@@ -214,11 +283,63 @@ export class MapLibreWindRenderer implements WindRenderer {
       return;
     }
 
-    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
     this.map.off('webglcontextlost', this.handleContextLost);
     this.map.off('webglcontextrestored', this.handleContextRestored);
     this.map.off('idle', this.handleIdle);
     this.listenersAttached = false;
+  }
+
+  private handleDocumentVisibility(visible: boolean): void {
+    const timestampMs = this.now();
+    this.documentVisible = visible;
+    if (!visible) {
+      this.hiddenAtMs = timestampMs;
+    } else {
+      const hiddenDurationMs = this.hiddenAtMs === null
+        ? 0
+        : timestampMs - this.hiddenAtMs;
+      this.hiddenAtMs = null;
+      if (
+        hiddenDurationMs > MAXIMUM_MEASURED_FRAME_GAP_MS
+        && this.mode === 'particles'
+        && this.particleLayer
+      ) {
+        try {
+          this.particleLayer.resetParticleBuffers();
+        } catch (error) {
+          this.activateFallback(
+            'renderer-runtime-failed',
+            'El renderer WebGL no pudo reanudar sus partículas; se muestran flechas estáticas.',
+            error,
+          );
+        }
+      }
+    }
+
+    this.updateActivity();
+    this.onDocumentVisibilityChange?.(visible);
+  }
+
+  private applyAdaptiveProfile(profile: Readonly<WindRenderProfile>): void {
+    if (this.destroyed) {
+      return;
+    }
+
+    try {
+      this.particleLayer?.setParticleCount(profile.particleCount);
+    } catch (error) {
+      this.activateFallback(
+        'renderer-runtime-failed',
+        'El renderer WebGL no pudo reducir sus partículas; se muestran flechas estáticas.',
+        error,
+      );
+    }
+    this.profile = profile;
+    this.publishProfile(profile);
+  }
+
+  private publishProfile(profile: Readonly<WindRenderProfile>): void {
+    this.onProfileChange?.(profile);
   }
 
   private activateFallback(
@@ -231,6 +352,7 @@ export class MapLibreWindRenderer implements WindRenderer {
     }
 
     this.mode = 'fallback';
+    this.adaptiveController.setRenderingActive(false);
     this.particleLayer?.setActive(false);
     this.stopAnimation();
 
@@ -248,16 +370,18 @@ export class MapLibreWindRenderer implements WindRenderer {
     }
 
     if (this.mode === 'fallback') {
+      this.adaptiveController.setRenderingActive(false);
       this.stopAnimation();
       this.fallback.setVisible(this.visible && Boolean(this.field));
       return;
     }
 
     const particlesActive =
-      this.mode === 'particles' &&
-      this.visible &&
-      Boolean(this.field) &&
-      !document.hidden;
+      this.mode === 'particles'
+      && this.visible
+      && Boolean(this.field)
+      && this.documentVisible;
+    this.adaptiveController.setRenderingActive(particlesActive);
     this.particleLayer?.setActive(particlesActive);
     this.fallback.setVisible(false);
 
@@ -277,11 +401,11 @@ export class MapLibreWindRenderer implements WindRenderer {
       this.animationFrame = null;
 
       if (
-        !this.destroyed &&
-        this.mode === 'particles' &&
-        this.visible &&
-        Boolean(this.field) &&
-        !document.hidden
+        !this.destroyed
+        && this.mode === 'particles'
+        && this.visible
+        && Boolean(this.field)
+        && this.documentVisible
       ) {
         this.map.triggerRepaint();
         this.startAnimation();

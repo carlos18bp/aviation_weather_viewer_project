@@ -1,44 +1,29 @@
-# Contexto activo — Fase 18 / datos aeronáuticos staged
+# Contexto activo — Fase 15 / fundación responsive y shell táctil
 
 Actualizado: 2026-08-20.
 
-## Estado
+## Estado de la Ola M1
 
-Las Fases 09–14 están integradas en `master`. La Ola M1 parte del SHA común
-`54c61891dca39661e2e593f4715d1ef58ab37a11`. Fase 18 está implementada y
-validada en una rama/worktree propios y publicada mediante PR #27; esta sesión
-no lo mergea.
-Los 48 assets y sus contratos frontend permanecen staged, mientras manifest,
-catálogo y API continúan publicando schema `2`.
+La Fase 15 parte del SHA común de Ola M1
+`54c61891dca39661e2e593f4715d1ef58ab37a11`. Ese commit integra la Fase 14
+mediante PR #24, tiene CI y quality gate verdes y está desplegado en staging con
+backend/frontend activos y health HTTP 200. Las ramas paralelas de las Fases
+16–18 parten del mismo SHA y conservan ownership disjunto.
 
-## Entrega funcional de Fase 18
+La sesión trabaja en `feat/20082026-phase-15-responsive-foundation` y limita su
+implementación al shell, composición responsive, panel host, controles
+existentes y smoke E2E responsive. Panel, snap, orientación y clasificación de
+viewport serán estado React local/efímero; no entrarán en Zustand, URL,
+controller, adapters ni backend.
 
-- Cuatro productos locales: `cloud-cover`, `cloud-base`, `visibility` y
-  `wind-gusts`; seis timestamps y dos formatos por producto.
-- WebP lossless RGBA `1024×1216` y value grids JSON `128×160` row-major, con
-  bbox, fecha, flags, unidades y rangos congelados.
-- Fórmulas determinísticas sobre precipitación, U/V, humedad y valle; bias RBF
-  suave para coherencia aeroportuaria y redondeos normativos persistidos.
-- Validación exacta de 48 archivos, bytes raster/grid, null policy, fixtures,
-  paths seguros, no finitos, frames incompletos y WebP inválidos.
-- Command con default, `--output` y `--check`; generación temporal y rollback
-  seguro sin mover contenido ajeno a los ocho directorios de ownership.
-- Contratos TypeScript staged con parser, sampler bilineal, fixtures y 24 frame
-  descriptors para Fases 19–23; sin fetch ni wiring central.
-- Inventario definitivo: 48 assets, `3.360.836` bytes y dos generaciones
-  temporales con los mismos 48 hashes.
+## Estado heredado de Fase 14
 
-## Evidencia dirigida de Fase 18
-
-- Backend Fase 18: 18/18 tests; manifest schema 2: 3/3; API schema 2: 4/4.
-- Frontend staged: 13/13; parser central schema 2: 2/2.
-- Ruff check/format, TypeScript, ESLint y build Next dirigidos: verdes.
-- Quality gate `100/100`; los cuatro checks del PR #27 están verdes.
-- `manifest.json` conserva SHA-256
-  `7d43abfa7a482267bd51f086902dd7e6d6b053330244d9e1809113f7161e0ef8`.
-- El host local no posee GDAL/GEOS del sistema; un wheel efímero dentro del venv
-  permitió confirmar `manage.py check`, el command real y la API. CI confirmó
-  nuevamente el system check con sus librerías GIS/PostGIS completas.
+Las Fases 09–13 están integradas en `master`; no existen PR funcionales
+pendientes de esa ola y sus handoffs están disponibles. La Fase 14 conectó sus
+módulos al vertical slice original de Fase 08 desde una rama/worktree propios.
+La funcionalidad, el mapa real de flows, la validación visual/estabilidad y el
+QA/quality gate están completos. El PR #24 está integrado en `master` y su SHA
+de merge es la base congelada de la Ola M1.
 
 ## Entrega funcional de Fase 14
 
@@ -247,3 +232,24 @@ hasta que la Fase 14 esté integrada, desplegada y verde.
 Objetivos congelados: iOS/Android en phone/tablet, portrait/landscape; capas
 cloud-cover, cloud-base, visibility y wind-gusts; una sola instancia MapLibre;
 datos simulados/locales; warning permanente.
+
+## Entrega local — Fase 15
+
+- `useViewerViewport` clasifica por media queries y limpia listeners de media,
+  resize y orientación; `844×390` se trata como phone landscape.
+- `ResponsivePanelHost` implementa sheet phone portrait, drawer phone landscape,
+  panel tablet de `320 px` y los dos slots desktop de Fase 14.
+- `WeatherViewer` conserva panel/snap localmente y distribuye Capas, Lugar,
+  Aeropuerto, Ruta y Más sin modificar store, `viewerTypes` u orquestador.
+- Warning, UTC y timeline están fuera del host y siguen disponibles incluso con
+  un panel `full` o en presentación.
+- `ResizeObserver` sólo llama `controller.resize()`. Unit test y Playwright
+  confirman una creación del controller y la misma identidad de root/canvas/
+  contexto WebGL en todos los cambios de tamaño.
+- Evidencia final: unitarios dirigidos, regresión desktop `2/2`, responsive
+  `2/2`, cinco viewports y build Next verdes; cuatro capturas inspeccionadas en
+  `frontend/test-results/phase15-*.png`.
+
+El siguiente wiring central pertenece exclusivamente a Fase 23. Fases 19–22
+deben consumir los slots públicos mediante componentes controlados y permanecer
+desconectadas de MapLibre central hasta esa integración.

@@ -274,26 +274,33 @@ flowchart LR
 - Presentación contrae chrome secundario pero conserva warning, UTC, selector,
   leyenda, timeline, resumen de escena y salida.
 
-## Autoría aislada de capas aeronáuticas — Fase 18
+## Arquitectura responsive integrada — Fase 15
 
 ```mermaid
 flowchart LR
-    Drivers[Precipitación F13 + U/V + fixture aeroportuario] --> Fields[Campos puros m/p/s/v]
-    Fields --> Grid[24 grids JSON 128×160]
-    Fields --> Raster[24 WebP RGBA 1024×1216]
-    Grid --> Validator[Validadores exactos y cross-layer]
-    Raster --> Validator
-    Validator --> Swap[Temporal + swap de 8 directorios]
-    Grid --> Staged[Contratos frontend staged]
-    Staged -. Fase 23 .-> Schema3[Manifest/API schema 3]
+    MQ[matchMedia + orientation] --> V[useViewerViewport]
+    V --> WV[WeatherViewer]
+    WV --> PS[Estado local panel + snap]
+    PS --> H[ResponsivePanelHost]
+    H --> Sheet[Phone portrait sheet]
+    H --> Drawer[Phone landscape drawer]
+    H --> Tablet[Tablet 320 px]
+    H --> Desktop[Slots desktop vigentes]
+    Shell[WeatherViewerShell] --> RO[ResizeObserver]
+    RO --> C[controller.resize]
+    C --> M[La misma instancia MapLibre/WebGL]
 ```
 
-- `weather.demo.mobile_layers` es un bounded package de autoría y validación;
-  reutiliza drivers integrados sin modificar sus módulos centrales.
-- El command valida el árbol completo antes del primer rename y restaura los
-  directorios anteriores si falla cualquier paso del swap. Productos ajenos al
-  ownership nunca se mueven.
-- Los contratos TypeScript staged publican tipos, parser, sampler, fixtures y
-  24 descriptores, pero no hacen fetch ni amplían `WeatherLayerId` central.
-- `manifest.json`, loaders, views, URLs, store, mapa y orquestador continúan en
-  schema `2` hasta el corte atómico de Fase 23.
+- `useViewerViewport` posee las suscripciones `MediaQueryList`, `resize` y
+  `orientationchange`, junto con su cleanup. Su fallback SSR/JSDOM es desktop.
+- `WeatherViewer` conserva panel activo y snap exclusivamente en estado React;
+  una selección de aeropuerto, coordenada o ruta abre el panel pertinente sin
+  serializar presentación en store o URL.
+- `ResponsivePanelHost` recibe contenido por slots controlados. Gestiona
+  apertura, snap, cierre, Escape, foco inicial y restauración al disparador; no
+  conoce MapLibre ni el orquestador.
+- `WeatherViewerShell` monta una sola superficie cartográfica. El host cambia
+  composición alrededor de ella y `ResizeObserver` llama `resize()` sin
+  reconstruir controller, adapters, canvas o contexto WebGL.
+- El viewport usa `viewport-fit=cover`, `100vh` como fallback, `100dvh` y
+  variables CSS basadas en `env(safe-area-inset-*)`.

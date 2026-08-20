@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import {
   formatZuluTimestamp,
   IDLE_TEMPORAL_TRANSITION,
@@ -22,6 +24,7 @@ export interface TimelineProps {
   onPlay(): void;
   onPause(): void;
   transition?: TemporalTransition;
+  compact?: boolean;
 }
 
 type TimelineIconName = 'previous' | 'next' | 'play' | 'pause';
@@ -73,7 +76,9 @@ export function Timeline({
   onPlay,
   onPause,
   transition = IDLE_TEMPORAL_TRANSITION,
+  compact = false,
 }: TimelineProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const formattedTimestamps = timestamps.map(tryFormatTimestamp);
   const hasSixTimestamps = timestamps.length === REQUIRED_TIMESTAMP_COUNT;
   const hasValidTimestamps = formattedTimestamps.every((timestamp) => timestamp !== null);
@@ -100,12 +105,27 @@ export function Timeline({
       data-loading={isLoading ? 'true' : 'false'}
       data-transition-phase={transition.phase}
       data-transition-target={transition.targetTimestamp ?? undefined}
+      data-compact={compact ? 'true' : 'false'}
     >
-      <div className={styles.summary}>
+      <div className={styles.summary} data-compact={compact ? 'true' : 'false'}>
         <div className={styles.activeTime} aria-label="Hora meteorológica seleccionada">
           <span>UTC / ZULU</span>
           <strong>{activeLabel ?? '—'}</strong>
         </div>
+
+        {compact && (
+          <button
+            type="button"
+            className={styles.expandButton}
+            aria-expanded={isExpanded}
+            aria-controls="viewer-timeline-timestamps"
+            aria-label={isExpanded ? 'Ocultar los seis timestamps' : 'Mostrar los seis timestamps'}
+            onClick={() => setIsExpanded((current) => !current)}
+          >
+            <span aria-hidden="true">{isExpanded ? '−' : '6'}</span>
+            Horas
+          </button>
+        )}
 
         <div className={styles.transport} aria-label="Controles de reproducción">
           <button
@@ -158,7 +178,12 @@ export function Timeline({
         />
       </div>
 
-      <div className={styles.timestamps} aria-label="Timestamps disponibles">
+      <div
+        id="viewer-timeline-timestamps"
+        className={styles.timestamps}
+        aria-label="Timestamps disponibles"
+        data-expanded={!compact || isExpanded ? 'true' : 'false'}
+      >
         {timestamps.map((timestamp, index) => {
           const label = formattedTimestamps[index] ?? 'Hora inválida';
           const isActive = timestamp === activeTimestamp;

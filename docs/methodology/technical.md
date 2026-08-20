@@ -342,32 +342,28 @@ Auditor KEEP para los 12 archivos de test modificados. El único rojo intermedio
 fue infraestructura local: Django con `DJANGO_DEBUG=false` no registró `/media`;
 al reiniciar el dev server con `true`, el mismo E2E pasó sin cambios productivos.
 
-## Contrato técnico — Fase 18
+## Contrato técnico — Fase 15
 
-- Base común Ola M1: `54c61891dca39661e2e593f4715d1ef58ab37a11`, que integra
-  Fase 14 y la precipitación de Fase 13.
-- Producto: cuatro capas × seis timestamps × WebP/grid = 48 assets y
-  `3.360.836` bytes bajo ocho directorios staged.
-- Raster: WebP lossless RGBA `1024×1216`; grid: JSON `128×160`, row-major
-  norte-sur/oeste-este, bbox `[-82,-5,-66,14]`.
-- Rango/unidad: cover `0–100 %`, base `300–15000 ft AGL/null`, visibility
-  `1–20 km` y gust `0–80 kt`; todos declaran `is_simulated=true` y
-  `operational_use=false`.
-- Persistencia: cover entero con redondeo que preserva el umbral crudo de 20 %,
-  base a 100 ft y visibility/gust a una decimal. Base es `null` si y sólo si
-  cover crudo es menor que 20; el cover persistido queda entonces como máximo
-  en 19 para mantener también la invariancia cross-layer observable.
-- Fórmulas puras: `cover=100(0.55m+0.45p)`,
-  `base=12000-95cover-4500p+900(1-v)`,
-  `vis=20-12p-7cover/100-2v` y
-  `gust=max(s,s(1.15+0.35m)+4p)`, siempre con clamp normativo.
-- Un bias RBF suave de radio `1.25°` reconcilia visibility y velocidad con los
-  seis aeropuertos sin hardcodear celdas; gust conserva el piso de magnitud U/V.
-- Command: `generate_mobile_layer_assets`, con default, `--output` y `--check`.
-  La escritura usa temporales hermanos, validación total, swap controlado y
-  rollback de renames parciales.
-- Frontend staged: `AVIATION_LAYER_DEFINITIONS`,
-  `AVIATION_LAYER_FRAME_DESCRIPTORS`, `AVIATION_MANIFEST_FRAME_FRAGMENT`, parser
-  exacto, interpolación bilineal con null policy y fixtures pequeños.
-- El manifest vivo conserva schema `2`, 18 frames principales y SHA-256
-  `7d43abfa7a482267bd51f086902dd7e6d6b053330244d9e1809113f7161e0ef8`.
+- Media queries: phone `(max-width: 767px)` o landscape corto
+  `(max-width: 1199px) and (max-height: 500px)`; tablet
+  `(min-width: 768px) and (max-width: 1199px)` fuera del caso corto; desktop es
+  el fallback desde `1200 px`. Orientación se resuelve por media query, sin UA.
+- Layouts: `phone-sheet`, `phone-drawer`, `tablet-overlay`,
+  `tablet-sidebar` y `desktop`. El drawer phone no supera `42vw`; ambos layouts
+  tablet miden exactamente `320 px`.
+- Snap del sheet: `peek` hasta `156 px`, `half` al `52 %` del stage y `full` al
+  `100 %`. Contraer, expandir y cerrar siempre tienen botones de `44×44 px`; no
+  existe una operación disponible únicamente mediante drag.
+- Chrome persistente: warning, UTC y timeline quedan fuera del panel responsive.
+  En phone el timeline conserva transporte y revela sus seis horas mediante el
+  botón `Horas`.
+- Identidad estable: una regresión unitaria verifica una sola creación de
+  controller ante cambios de host; Playwright compara por igualdad estricta el
+  root `.maplibregl-map`, el canvas y el contexto WebGL tras cada resize.
+
+Validación dirigida: 46 pruebas unitarias de viewport/host/shell/timeline/
+acciones/aeropuerto; dos E2E desktop de Fase 14; dos E2E responsive; TypeScript
+y build Next verdes. Viewports cubiertos: `390×844`, `844×390`, `768×1024`,
+`1024×768` y `1920×1080`. Capturas reproducibles:
+`frontend/test-results/phase15-390x844.png`, `phase15-844x390.png`,
+`phase15-768x1024.png` y `phase15-1024x768.png`.

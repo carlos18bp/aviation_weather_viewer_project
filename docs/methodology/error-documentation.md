@@ -332,32 +332,27 @@ SwiftShader y no representan el equipo de demo. Se midió el camino estático de
 fallback a 60,1 FPS y se validaron escena, interacciones y cleanup. Continúa el
 404 no bloqueante de `/favicon.ico` ya registrado en Fase 08.
 
-## 2026-08-20 — Hallazgos de validación durante Fase 18
+## 2026-08-20 — Contingencias de validación en Fase 15
 
-### WebP opaco reabierto como RGB
+### Chromium sin bibliotecas del sistema
 
-La primera generación construía imágenes en memoria como RGBA, pero libwebp
-omitía el canal alfa cuando todos sus píxeles eran opacos y Pillow las reabría
-como RGB. El validador exacto lo detectó. Las paletas staged incorporan ahora
-alfa gradual en sus stops, preservan la lectura del mapa base y los 24 rasters
-decodifican como RGBA sin relajar el contrato.
+Playwright descargó Chromium, pero el binario no inició porque el host carecía
+de `libatk`, AT-SPI, GBM, ALSA y varias bibliotecas X11. `install-deps` no era
+viable sin contraseña sudo. Se descargaron paquetes Ubuntu al directorio
+temporal `/tmp/phase15-browser-deps`, se extrajeron sin privilegios y se usó un
+`LD_LIBRARY_PATH` local. No se modificó el sistema ni el repositorio.
 
-### Rollback de un rename intermedio
+### Backend local ausente
 
-La revisión del swap mostró que un fallo después de mover parte del conjunto
-anterior necesitaba la misma restauración que un fallo al instalar el conjunto
-nuevo. El command preflighta los ocho targets, envuelve ambas etapas de rename
-y conserva raíces de recuperación si el rollback del filesystem no pudiera
-completarse. Un fallo inyectado en el primer rename de instalación restaura los
-48 hashes previos y el contenido ajeno.
+El worktree no tenía venv ni secretos. Para probar el frontend exacto de la
+rama, Next local proxyeó API/media al staging Fase 14 ya verificado; un health
+stub efímero evitó que Playwright intentara iniciar Django. Los requests del
+navegador siguieron siendo same-origin y no se copiaron credenciales.
 
-### Límite local de GDAL/GEOS
+### Hitbox de atribución y cierre del sheet
 
-El host de trabajo no tiene las librerías nativas GDAL/GEOS y no permite
-instalarlas sin credenciales administrativas. Los 18 tests de Fase 18 y tres
-contratos puros de schema 2 se ejecutaron primero con el plugin Django
-desactivado y settings congelados. Después, un wheel efímero dentro del venv del
-worktree aportó únicamente las librerías compartidas para confirmar
-`manage.py check`, el command real `--check` y los cuatro tests HTTP schema 2.
-No se versionó ni instaló una dependencia del sistema. El runner CI confirmó
-además `backend-health` con su stack GIS/PostGIS completo.
+La primera pasada real midió el botón compacto de atribución MapLibre en
+`24×24 px`; un selector CSS específico lo elevó a `44×44 px` y la regresión
+quedó verde. El test también intentó accionar el rail detrás de un sheet `full`;
+se corrigió el recorrido para usar el cierre explícito antes de cambiar de
+panel, validando el camino táctil visible en lugar de forzar el click.

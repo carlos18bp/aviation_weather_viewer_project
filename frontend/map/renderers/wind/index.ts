@@ -1,4 +1,8 @@
-export { WIND_PARTICLE_LAYER_ID } from './CustomWindParticleLayer';
+export {
+  DEFAULT_WIND_PARTICLE_COUNT,
+  WIND_PARTICLE_LAYER_ID,
+  type CustomWindParticleLayerOptions,
+} from './CustomWindParticleLayer';
 export {
   buildWindArrowCollection,
   WIND_FALLBACK_LAYER_ID,
@@ -11,6 +15,7 @@ export { interleaveWindComponents, sampleWindField, type WindVector } from './Wi
 export {
   createWindRenderer,
   MapLibreWindRenderer,
+  type AdaptiveWindRendererOptions,
   type WindRenderer,
   type WindRendererOptions,
 } from './WindRenderer';

@@ -1,12 +1,22 @@
-import type { GeoJSONSource, Map as MapLibreMap } from 'maplibre-gl';
+import type {
+  CustomRenderMethodInput,
+  GeoJSONSource,
+  Map as MapLibreMap,
+} from 'maplibre-gl';
 
+import { WIND_RENDER_PROFILES } from '@/features/performance';
 import { WIND_FIELD_FIXTURE } from '@/features/weather/wind';
 import {
   WIND_FALLBACK_LAYER_ID,
   WIND_FALLBACK_SOURCE_ID,
 } from '@/map/renderers/wind/WindArrowFallback';
-import { WIND_PARTICLE_LAYER_ID } from '@/map/renderers/wind/CustomWindParticleLayer';
+import {
+  CustomWindParticleLayer,
+  WIND_PARTICLE_LAYER_ID,
+} from '@/map/renderers/wind/CustomWindParticleLayer';
 import { MapLibreWindRenderer } from '@/map/renderers/wind/WindRenderer';
+
+import { createFakeWindWebGl, type FakeWindWebGlHarness } from './webglHarness';
 
 interface FakeSource extends Partial<GeoJSONSource> {
   setData: jest.Mock;
@@ -21,7 +31,12 @@ interface FakeMapHarness {
   emit: (eventName: string, event?: any) => void;
 }
 
-function createFakeMap(options: { webgl2?: boolean; failParticles?: boolean } = {}): FakeMapHarness {
+function createFakeMap(options: {
+  webgl2?: boolean;
+  failParticles?: boolean;
+  webglHarness?: FakeWindWebGlHarness;
+  invokeCustomLayerLifecycle?: boolean;
+} = {}): FakeMapHarness {
   const layers = new Map<string, Record<string, unknown>>();
   const sources = new Map<string, FakeSource>();
   const layouts = new Map<string, Map<string, unknown>>();
@@ -31,8 +46,9 @@ function createFakeMap(options: { webgl2?: boolean; failParticles?: boolean } = 
     isStyleLoaded: jest.fn(() => true),
     once: jest.fn(() => Promise.resolve()),
     getCanvas: jest.fn(() => ({
-      getContext: jest.fn(() => (webgl2 ? {} : null)),
+      getContext: jest.fn(() => (webgl2 ? options.webglHarness?.gl ?? {} : null)),
     })),
+    getZoom: jest.fn(() => 4.7),
     addSource: jest.fn((id: string) => {
       sources.set(id, { setData: jest.fn() });
     }),
@@ -49,9 +65,19 @@ function createFakeMap(options: { webgl2?: boolean; failParticles?: boolean } = 
         layer.id as string,
         new Map(Object.entries((layer.layout as Record<string, unknown> | undefined) ?? {})),
       );
+      if (options.invokeCustomLayerLifecycle && layer.type === 'custom') {
+        (layer as unknown as CustomWindParticleLayer).onAdd(
+          map as unknown as MapLibreMap,
+          options.webglHarness?.gl as WebGL2RenderingContext,
+        );
+      }
     }),
     getLayer: jest.fn((id: string) => layers.get(id)),
     removeLayer: jest.fn((id: string) => {
+      const layer = layers.get(id);
+      if (options.invokeCustomLayerLifecycle && layer?.type === 'custom') {
+        (layer as unknown as CustomWindParticleLayer).onRemove();
+      }
       layers.delete(id);
       layouts.delete(id);
     }),
@@ -80,6 +106,22 @@ function createFakeMap(options: { webgl2?: boolean; failParticles?: boolean } = 
       handlers.get(eventName)?.forEach((handler) => handler(event));
     },
   };
+}
+
+const RENDER_OPTIONS = {
+  modelViewProjectionMatrix: new Float32Array(16),
+} as unknown as CustomRenderMethodInput;
+
+function renderSustainedLowFps(
+  layer: CustomWindParticleLayer,
+  gl: WebGL2RenderingContext,
+  clock: { now: number },
+): void {
+  const intervalMs = 1_000 / 23.9;
+  for (let index = 0; index < 76; index += 1) {
+    clock.now += intervalMs;
+    layer.render(gl, RENDER_OPTIONS);
+  }
 }
 
 describe('MapLibre wind renderer', () => {
@@ -128,6 +170,29 @@ describe('MapLibre wind renderer', () => {
     expect(harness.sources.has(WIND_FALLBACK_SOURCE_ID)).toBe(true);
     expect(harness.layers.has(WIND_FALLBACK_LAYER_ID)).toBe(true);
     expect(harness.layers.has(WIND_PARTICLE_LAYER_ID)).toBe(true);
+  });
+
+  it.each([
+    ['phone', 900],
+    ['tablet', 1_600],
+    ['desktop', 2_500],
+  ] as const)('initializes the %s profile with %i particles', async (profileId, count) => {
+    const harness = createFakeMap();
+    const onProfileChange = jest.fn();
+    const renderer = trackRenderer(new MapLibreWindRenderer(harness.map, {
+      adaptiveRendering: {
+        selectProfile: () => WIND_RENDER_PROFILES[profileId],
+        onProfileChange,
+      },
+    }));
+
+    await renderer.initialize();
+
+    const layer = harness.layers.get(WIND_PARTICLE_LAYER_ID) as unknown as CustomWindParticleLayer;
+    expect(layer.getParticleCount()).toBe(count);
+    expect(onProfileChange).toHaveBeenCalledWith(
+      expect.objectContaining({ id: profileId, particleCount: count }),
+    );
   });
 
   it('publishes interpretable fallback arrows', async () => {
@@ -181,6 +246,31 @@ describe('MapLibre wind renderer', () => {
 
     expect(window.requestAnimationFrame).toHaveBeenCalledTimes(2);
     expect(animationCallbacks.size).toBe(1);
+  });
+
+  it('resumes after a long hidden gap without advancing stale particle time', async () => {
+    const webglHarness = createFakeWindWebGl();
+    const harness = createFakeMap({
+      webglHarness,
+      invokeCustomLayerLifecycle: true,
+    });
+    const clock = { now: 100 };
+    const renderer = trackRenderer(new MapLibreWindRenderer(harness.map, {
+      adaptiveRendering: { now: () => clock.now },
+    }));
+    await renderer.initialize();
+    renderer.setField(WIND_FIELD_FIXTURE);
+    const particleUploadsBeforePause = webglHarness.bufferData.mock.calls.length;
+
+    Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+    clock.now += 251;
+    Object.defineProperty(document, 'hidden', { configurable: true, value: false });
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    expect(webglHarness.bufferData).toHaveBeenCalledTimes(particleUploadsBeforePause + 4);
+    expect(webglHarness.texImage2D).toHaveBeenCalledTimes(1);
+    expect(window.requestAnimationFrame).toHaveBeenCalledTimes(2);
   });
 
   it('stops animation when layer is hidden', async () => {
@@ -253,6 +343,89 @@ describe('MapLibre wind renderer', () => {
       'visibility',
       'visible',
     );
+  });
+
+  it('publishes degradation only after old particle buffers are released', async () => {
+    const webglHarness = createFakeWindWebGl();
+    const harness = createFakeMap({
+      webglHarness,
+      invokeCustomLayerLifecycle: true,
+    });
+    const clock = { now: 0 };
+    const onProfileChange = jest.fn();
+    const renderer = trackRenderer(new MapLibreWindRenderer(harness.map, {
+      adaptiveRendering: {
+        selectProfile: () => WIND_RENDER_PROFILES.desktop,
+        now: () => clock.now,
+        onProfileChange,
+      },
+    }));
+    await renderer.initialize();
+    renderer.setField(WIND_FIELD_FIXTURE);
+    const layer = harness.layers.get(WIND_PARTICLE_LAYER_ID) as unknown as CustomWindParticleLayer;
+
+    renderSustainedLowFps(layer, webglHarness.gl, clock);
+
+    expect(layer.getParticleCount()).toBe(1_500);
+    expect(webglHarness.texImage2D).toHaveBeenCalledTimes(1);
+    expect(webglHarness.deleteBuffer).toHaveBeenCalledTimes(4);
+    expect(onProfileChange).toHaveBeenCalledTimes(2);
+    expect(webglHarness.deleteBuffer.mock.invocationCallOrder.at(-1)).toBeLessThan(
+      onProfileChange.mock.invocationCallOrder[1],
+    );
+  });
+
+  it('activates static arrows when degraded buffer allocation fails', async () => {
+    const webglHarness = createFakeWindWebGl();
+    const harness = createFakeMap({
+      webglHarness,
+      invokeCustomLayerLifecycle: true,
+    });
+    const clock = { now: 0 };
+    const onFallback = jest.fn();
+    const onProfileChange = jest.fn();
+    const renderer = trackRenderer(new MapLibreWindRenderer(harness.map, {
+      onFallback,
+      adaptiveRendering: {
+        selectProfile: () => WIND_RENDER_PROFILES.desktop,
+        now: () => clock.now,
+        onProfileChange,
+      },
+    }));
+    await renderer.initialize();
+    renderer.setField(WIND_FIELD_FIXTURE);
+    const layer = harness.layers.get(WIND_PARTICLE_LAYER_ID) as unknown as CustomWindParticleLayer;
+    webglHarness.failBufferAllocationAfter(1);
+
+    renderSustainedLowFps(layer, webglHarness.gl, clock);
+
+    expect(onFallback).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'renderer-runtime-failed' }),
+    );
+    expect(onProfileChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: 'degraded', particleCount: 1_500 }),
+    );
+    expect(harness.layers.has(WIND_PARTICLE_LAYER_ID)).toBe(false);
+    expect(harness.map.setLayoutProperty).toHaveBeenLastCalledWith(
+      WIND_FALLBACK_LAYER_ID,
+      'visibility',
+      'visible',
+    );
+  });
+
+  it('owns one visibility listener and removes it idempotently', async () => {
+    const addEventListener = jest.spyOn(document, 'addEventListener');
+    const removeEventListener = jest.spyOn(document, 'removeEventListener');
+    const harness = createFakeMap();
+    const renderer = trackRenderer(new MapLibreWindRenderer(harness.map));
+
+    await renderer.initialize();
+    await renderer.initialize();
+    renderer.destroy();
+    renderer.destroy();
+
+    expect(addEventListener.mock.calls.filter(([type]) => type === 'visibilitychange')).toHaveLength(1);
+    expect(removeEventListener.mock.calls.filter(([type]) => type === 'visibilitychange')).toHaveLength(1);
   });
 
   it('cleans resources after repeated destroy', async () => {

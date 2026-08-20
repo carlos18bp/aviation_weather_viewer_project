@@ -62,8 +62,8 @@ Estado: **integrada en `master` mediante PR #10**.
 
 ## Roadmap de enriquecimiento posterior
 
-Estado: **Fases 09–14 integradas en `master`; Fase 14 aterrizó mediante PR #24
-en `54c61891`**.
+Estado: **Fases 09–13 integradas; Fase 14 implementada y validada, con PR #24
+pendiente de integración en `master`**.
 
 - [x] Evaluar candidatos visuales y aeronáuticos inspirados en Windy.
 - [x] Seleccionar seis fases en dos olas de implementación.
@@ -86,7 +86,7 @@ en `54c61891`**.
 - [x] Actualizar el mapa real de flows y crear exactamente dos E2E enriquecidos.
 - [x] Validar Chrome/Edge a 1920×1080 y completar 614,5 s de estabilidad.
 - [x] Ejecutar QA, quality gate, build y E2E finales de Fase 14.
-- [x] Integrar el PR de Fase 14 en `master`.
+- [ ] Integrar el PR de Fase 14 en `master`.
 
 Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 
@@ -134,8 +134,8 @@ Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 
 ## Roadmap móvil y capas aeronáuticas
 
-Estado: **Fase 14 integrada y verde; Ola M1 abierta. Fase 18 implementada y
-validada en PR #27, pendiente de integrar**.
+Estado: **documentación definida; implementación bloqueada hasta Fase 14
+integrada y verde**.
 
 - [x] Auditar limitaciones responsive del visor actual.
 - [x] Seleccionar UX móvil propia para iOS/Android y tabletas.
@@ -144,22 +144,10 @@ validada en PR #27, pendiente de integrar**.
 - [x] Congelar contratos de viewport, touch, rendimiento, schema 3 y datos.
 - [x] Definir ownership sin solapamientos para cuatro sesiones por ola.
 - [x] Definir gates, fallbacks, matriz de dispositivos y QA final.
-- [x] Integrar Fases 12–14 del roadmap anterior.
-- [x] Abrir Ola M1: Fases 15–18 desde SHA común `54c61891`.
+- [ ] Integrar Fases 12–14 del roadmap anterior.
+- [ ] Abrir Ola M1: Fases 15–18.
 - [ ] Abrir Ola M2: Fases 19–22.
 - [ ] Ejecutar Fase 23 de integración, QA y release móvil.
-
-### Fase 18 — Datos simulados para capas aeronáuticas
-
-- [x] Verificar Fase 14/Fase 13 integradas y cortar desde el SHA común M1.
-- [x] Generar 24 WebP RGBA y 24 grids JSON determinísticos.
-- [x] Validar shape, rango, unidades, bbox, flags, fórmulas y cross-layer.
-- [x] Comparar los 48 hashes en dos generaciones temporales.
-- [x] Implementar command default, `--output`, `--check` y rollback seguro.
-- [x] Entregar contratos, parser, sampler, fixtures y descriptores staged.
-- [x] Mantener manifest, catálogo, API y parser central vivos en schema `2`.
-- [x] Pasar tests backend/frontend dirigidos y checks estáticos locales.
-- [ ] Integrar la rama de Fase 18 mediante su PR de sesión.
 
 Fuente normativa:
 `docs/MVP_roadmap/mobile_layer_enrichment/README.md`.
@@ -184,3 +172,33 @@ el toolkit**.
 - [x] Publicar dominio, Postgres, servicios y límites en `projects.yml`.
 - [ ] Restablecer billing/spending de GitHub Actions y reejecutar verde el CI
   del toolkit para su SHA `b0f2a244`.
+
+## Fase 15 — Fundación responsive y shell táctil
+
+- [x] Congelar base M1 en `54c61891dca39661e2e593f4715d1ef58ab37a11`
+  después de verificar Fases 09–14, deploy staging y QA verde.
+- [x] Clasificar phone/tablet/desktop y portrait/landscape con `matchMedia` y
+  cleanup, sin user-agent.
+- [x] Aplicar `viewport-fit=cover`, `100dvh`, safe areas y controles/hitboxes
+  mínimos de `44×44 px`.
+- [x] Implementar `ResponsivePanelHost` con estado local, sheet, drawer, panel
+  tablet de `320 px`, slots desktop, snap por botones, Escape y foco restaurado.
+- [x] Mantener warning, UTC, timeline y todas las funciones enriquecidas
+  alcanzables en phone/tablet sin modificar store, tipos, controller o adapters.
+- [x] Verificar que resize/orientation conserva root MapLibre, canvas, WebGL y
+  una sola creación del controller.
+- [x] Validar los cinco viewports, inspeccionar cuatro capturas, ejecutar E2E
+  dirigido y build de producción en ciclo separado.
+
+### Handoff Fases 19–23
+
+1. Fases 19 y 20 entregan adapters/servicios aislados de nubosidad, base de
+   nubes, visibilidad y ráfagas; no deben montar mapas ni entrar al host central.
+2. Fase 21 entrega point forecast controlado. Fase 23 puede montarlo en el slot
+   `location` conservando panel/snap como estado efímero de `WeatherViewer`.
+3. Fase 22 entrega el explorador controlado y sus descriptores. Fase 23 sustituye
+   el contenido del slot `layers`; no duplica el host ni el action rail.
+4. Fase 23 registra renderer, touch coordinator y adapters exactamente una vez,
+   publica schema 3 de forma atómica y conserva el `ResizeObserver` del shell.
+5. La integración final debe repetir los cinco viewports, targets de `44 px`,
+   foco/Escape, warning/UTC/timeline y la prueba de identidad MapLibre/WebGL.

@@ -4,6 +4,7 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   width: 100vw;
+  height: 100vh;
   height: 100dvh;
   overflow: hidden;
   background: var(--viewer-bg);
@@ -19,6 +20,10 @@
 .mapViewport {
   z-index: -2;
   background: var(--viewer-bg);
+}
+
+:global([data-weather-viewer][data-viewport-mode="tablet"][data-orientation="landscape"][data-active-panel]:not([data-active-panel="none"])) .mapViewport {
+  right: calc(320px + var(--viewer-safe-right));
 }
 
 .mapCanvas {
@@ -47,9 +52,17 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 20px 28px;
+  padding:
+    calc(20px + var(--viewer-safe-top))
+    calc(28px + var(--viewer-safe-right))
+    20px
+    calc(28px + var(--viewer-safe-left));
   border-bottom: 1px solid var(--viewer-border);
   background: linear-gradient(180deg, var(--viewer-surface), rgb(7 19 31 / 16%));
+}
+
+.compactTitle {
+  display: none;
 }
 
 .header h1 {
@@ -213,6 +226,8 @@
 }
 
 .errorSurface button {
+  min-width: 44px;
+  min-height: 44px;
   margin-top: 18px;
   padding: 9px 14px;
   border: 1px solid rgb(34 211 238 / 42%);
@@ -231,17 +246,17 @@
 .footer {
   display: grid;
   gap: 13px;
-  padding: 12px 28px 20px;
+  padding:
+    12px
+    calc(28px + var(--viewer-safe-right))
+    calc(20px + var(--viewer-safe-bottom))
+    calc(28px + var(--viewer-safe-left));
   border-top: 1px solid var(--viewer-border);
   background: linear-gradient(0deg, var(--viewer-surface), rgb(7 19 31 / 14%));
 }
 
 .warning {
-  margin: 0;
-  color: var(--viewer-warning);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.07em;
+  min-width: 0;
 }
 
 .timelineSlot {
@@ -277,8 +292,20 @@
 }
 
 .shell :global(.maplibregl-ctrl-bottom-right) {
-  right: 16px;
+  right: calc(16px + var(--viewer-safe-right));
   bottom: 92px;
+}
+
+.shell :global(.maplibregl-ctrl button) {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.shell :global(.maplibregl-ctrl-attrib-button) {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
 }
 
 .shell :global(.maplibregl-ctrl-attrib) {
@@ -297,15 +324,19 @@
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1199px) {
   .header,
   .footer {
-    padding-inline: 18px;
+    padding-right: calc(16px + var(--viewer-safe-right));
+    padding-left: calc(16px + var(--viewer-safe-left));
   }
 
-  .mapStatus,
   .time > span {
     display: none;
+  }
+
+  .headerMeta {
+    margin-right: 92px;
   }
 
   .stage {
@@ -314,8 +345,82 @@
     pointer-events: none;
   }
 
-  .panelSlot {
+  .shell :global(.maplibregl-ctrl-bottom-right) {
+    bottom: calc(138px + var(--viewer-safe-bottom));
+  }
+}
+
+@media (max-width: 767px), (max-width: 1199px) and (max-height: 500px) {
+  .header {
+    min-height: 58px;
+    padding-top: calc(10px + var(--viewer-safe-top));
+    padding-bottom: 10px;
+  }
+
+  .header h1 {
+    font-size: 17px;
+  }
+
+  .fullTitle,
+  .eyebrow {
     display: none;
+  }
+
+  .compactTitle {
+    display: inline;
+  }
+
+  .headerMeta {
+    gap: 8px;
+  }
+
+  .mapStatus {
+    max-width: 104px;
+    padding: 6px 8px;
+    overflow: hidden;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .headerMeta {
+    display: none;
+  }
+
+  .footer {
+    gap: 7px;
+    padding-top: 7px;
+    padding-bottom: calc(8px + var(--viewer-safe-bottom));
+  }
+
+  .timelineSlot {
+    padding: 5px 7px;
+  }
+
+  .shell :global(.maplibregl-ctrl-bottom-right) {
+    bottom: calc(122px + var(--viewer-safe-bottom));
+  }
+}
+
+@media (max-width: 1199px) and (max-height: 500px) {
+  .header {
+    min-height: 50px;
+    padding-top: calc(6px + var(--viewer-safe-top));
+    padding-bottom: 6px;
+  }
+
+  .mapStatus {
+    display: none;
+  }
+
+  .footer {
+    gap: 4px;
+    padding-top: 4px;
+    padding-bottom: calc(4px + var(--viewer-safe-bottom));
+  }
+
+  .shell :global(.maplibregl-ctrl-bottom-right) {
+    bottom: calc(98px + var(--viewer-safe-bottom));
   }
 }
 

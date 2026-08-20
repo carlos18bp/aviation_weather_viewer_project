@@ -207,19 +207,22 @@
   pero debe agrupar claves prohibidas y documentar por qué la negación es el
   resultado esperado.
 
-## Fase 18 — datos aeronáuticos staged
+## Fase 15 — responsive sin duplicar el mapa
 
-- Una imagen creada como RGBA no garantiza que WebP conserve ese modo si todo
-  el alfa vale 255; el contrato debe decodificar el archivo final y verificar
-  modo, dimensiones y bytes contra el grid, no sólo la imagen en memoria.
-- La reproducibilidad útil compara dos árboles temporales completos y cada uno
-  debe pasar validación semántica antes de contrastar hashes.
-- Un swap de varios directorios necesita rollback alrededor de la extracción
-  del conjunto anterior y de la instalación del nuevo; validar antes del primer
-  rename no cubre fallos intermedios del filesystem.
-- Las invariantes cross-layer deben comprobar valores persistidos: null policy,
-  visibilidad frente a fixture/precipitación y gust frente a U/V, además de los
-  rangos aislados de cada producto.
-- Staged significa también aislamiento de tipos: assets, parser y descriptores
-  pueden aterrizar juntos, mientras manifest, API, store y mapa conservan el
-  schema vivo hasta el commit atómico dueño de la integración.
+- El ancho solo no clasifica un teléfono rotado: combinar media queries de
+  ancho y altura permite que `844×390` use drawer sin recurrir al user-agent.
+- Responsive debe cambiar composición, no lifecycle. Mantener estable el
+  factory del controller y observar el contenedor permite redimensionar el mapa
+  sin reconstruir adapters, workers o WebGL.
+- La identidad del DOM aporta evidencia directa: comparar root MapLibre,
+  canvas y contexto antes/después del resize detecta recreaciones que un simple
+  conteo final podría ocultar.
+- Los controles internos de una librería también forman parte del contrato
+  táctil. Medir `getBoundingClientRect()` en navegador encontró la atribución de
+  `24 px` que una revisión de componentes propios no habría visto.
+- Un sheet `full` debe operarse por sus controles visibles. Los E2E no deben
+  forzar clicks sobre un rail cubierto; cierre, Escape y restauración de foco
+  son parte funcional del recorrido.
+- Proxyear un backend staging verde desde Next local permite validar el frontend
+  no desplegado sin copiar secretos, siempre que se registre la contingencia y
+  se conserve same-origin desde la perspectiva del navegador.

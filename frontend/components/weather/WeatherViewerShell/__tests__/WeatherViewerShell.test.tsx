@@ -155,6 +155,33 @@ describe('WeatherViewerShell', () => {
     expect(controller.resize).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps one controller while the responsive host changes layout', async () => {
+    const controller = createController();
+    const { factory } = createFactory([controller]);
+    const { rerender } = render(
+      <WeatherViewerShell
+        controllerFactory={factory}
+        responsivePanelHost={<span>Phone portrait host</span>}
+      />,
+    );
+    await waitFor(() => expect(controller.initialize).toHaveBeenCalledTimes(1));
+
+    rerender(
+      <WeatherViewerShell
+        controllerFactory={factory}
+        responsivePanelHost={<span>Tablet landscape host</span>}
+      />,
+    );
+    act(() => {
+      const observer = MockResizeObserver.instances[0];
+      observer.callback([], observer as unknown as ResizeObserver);
+    });
+
+    expect(factory).toHaveBeenCalledTimes(1);
+    expect(controller.destroy).not.toHaveBeenCalled();
+    expect(controller.resize).toHaveBeenCalledTimes(1);
+  });
+
   it('cleans controller resources on unmount', async () => {
     const controller = createController();
     const { factory } = createFactory([controller]);

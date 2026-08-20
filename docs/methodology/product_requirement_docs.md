@@ -174,20 +174,26 @@ anterior durante la carga y publica capa, aeropuerto, picker, ruta, isobaras,
 UTC y leyenda mediante un único commit. El reset enriquecido vuelve a
 `wind/06Z`, cámara inicial y URL canónica sin selecciones ni recursos pendientes.
 
-La funcionalidad y los dos recorridos E2E de enriquecimiento están
-implementados. El estado de integración definitivo se publicará sólo después
-de completar el QA y quality gate de la fase.
+La funcionalidad y los dos recorridos E2E de enriquecimiento están integrados,
+desplegados y con QA verde en el SHA
+`54c61891dca39661e2e593f4715d1ef58ab37a11`.
 
-## Datos aeronáuticos staged — Fase 18
+## Fundación responsive — Fase 15
 
-La Fase 18 materializa cuatro productos locales y determinísticos —nubosidad,
-base de nubes, visibilidad y ráfagas— para la misma fecha, bbox y seis
-timestamps del escenario congelado. Cada producto aporta seis WebP RGBA y seis
-value grids: 48 assets en total, todos marcados como simulados y no aptos para
-uso operacional.
+La misma aplicación de Fase 14 funciona ahora en phone, tablet y desktop sin
+crear una variante móvil ni una segunda instancia de MapLibre. La clasificación
+usa media queries, nunca user-agent; phone cubre `360–767 px` y también el
+landscape corto hasta `1199×500`, tablet cubre `768–1199 px` fuera de ese caso
+y desktop comienza en `1200 px`.
 
-Los datos permanecen deliberadamente staged. El catálogo y la API vivos siguen
-publicando schema `2`, tres capas principales y el overlay de isobaras; no hay
-una función visible nueva ni wiring central. La Fase 23 será la única dueña de
-incorporar los descriptores staged al manifest schema `3` junto con el parser y
-la integración frontend.
+Phone portrait presenta un bottom sheet con estados `peek`, `half` y `full`;
+phone landscape usa drawer derecho; tablet usa un panel fijo de `320 px`; y
+desktop conserva la composición enriquecida vigente. Capas, lugar/aeropuerto,
+ruta y acciones se alcanzan por botones explícitos. Warning no operacional,
+UTC y timeline permanecen visibles; todos los controles táctiles tienen como
+mínimo `44×44 CSS px`.
+
+El estado de panel, snap y orientación es React local y efímero. No cambia la
+escena canónica, Zustand, `viewerTypes`, controller, adapters, renderer, backend
+ni media. Resize y orientación sólo disparan `resize()` sobre la superficie
+existente; el canvas, root MapLibre y contexto WebGL conservan identidad.
