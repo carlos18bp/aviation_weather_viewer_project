@@ -43,8 +43,8 @@ Estado: **integrada en `master` mediante PR #5**.
 | 04 | Aeropuertos | Integrada mediante PR #8 |
 | 05 | Temperatura | Integrada mediante PR #9 |
 | 06 | Controles y timeline | Integrada mediante PR #7 |
-| 07 | Integración y acabado | En ejecución en sesión independiente |
-| 08 | Entrega de la demo | Pendiente de Fase 07 |
+| 07 | Integración y acabado | Integrada mediante PR #12 (`fcd8a8ae`) |
+| 08 | Entrega de la demo | Release candidate validado; PR QA pendiente de integración |
 
 Los scopes normativos y dependencias entre olas están en
 `docs/MVP_roadmap/phase_scopes/README.md`.
@@ -75,3 +75,20 @@ Estado: **documentado; ejecución bloqueada hasta integrar y validar Fase 08**.
 - [ ] Ejecutar fase 14 de integración, QA y ensayo.
 
 Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
+
+## Fase 08 — Validación, despliegue y ensayo
+
+Estado: **release candidate validado; cierre formal pendiente de integrar el PR
+QA y verificar el SHA resultante en HTTPS**.
+
+- [x] Confirmar Fase 07 integrada y árbol limpio.
+- [x] Desplegar Django + Next detrás de Nginx con HTTPS.
+- [x] Ejecutar QA `--apply` en backend, frontend-unit y E2E.
+- [x] Cerrar el único flow P1: 1 covered, 5 exempt, 0 missing/junk-only.
+- [x] Pasar backend 20/20, frontend-unit 14/14 y E2E live 1/1.
+- [x] Pasar quality gate strict con 0 errores y 0 warnings.
+- [x] Validar Chrome, Edge y copia local a `1920×1080`.
+- [x] Completar 615 s de estabilidad, fallback y reset sin errores críticos.
+- [x] Registrar heap, FPS, red, captura, guion y contingencia.
+- [ ] Integrar el PR QA con `merge-when-green`.
+- [ ] Desplegar/verificar el SHA de merge en la URL final.

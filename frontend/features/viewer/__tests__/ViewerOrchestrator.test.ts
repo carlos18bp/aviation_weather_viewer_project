@@ -437,6 +437,7 @@ describe('ViewerOrchestrator', () => {
     ));
   });
 
+  // quality: allow-too-many-assertions (reset atomically restores viewer defaults, stops playback, resets the camera, and reuses the existing MapLibre controller)
   it('resets playback, airport, layer, timestamp, and camera without recreating MapLibre', async () => {
     const harness = createHarness();
     await harness.orchestrator.initialize();

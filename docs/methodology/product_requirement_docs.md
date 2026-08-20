@@ -25,7 +25,7 @@ debe presentarse como fuente de información para vuelo.
 5. Exponer una API pública, same-origin, sin auth de producto.
 6. Mantener el warning operacional visible durante toda la experiencia.
 
-## Alcance actual — Fase 01
+## Alcance histórico — Fase 01
 
 La Fase 00 ya está integrada. La Fase 01 sustituye el placeholder visual por la
 base GIS navegable y conserva el backend sin cambios. Incluye únicamente:
@@ -67,3 +67,16 @@ Este roadmap no está implementado y no bloquea la entrega original. Conserva
 el mismo escenario, seis timestamps, cobertura, stack, warning y política de
 datos locales. Sus contratos y orden de ejecución viven en
 `docs/MVP_roadmap/demo_enrichment/README.md`.
+
+## Estado de release — Fase 08
+
+Las Fases 00–07 están integradas y el vertical slice completo está desplegado
+en `https://aviation-weather-platform.projectapp.co`. La Fase 08 añade
+exclusivamente validación, evidencia y operación de la demo: un E2E desktop,
+ensayo Chrome/Edge, estabilidad de diez minutos, copia local, HTTPS, guion y
+contingencia.
+
+El producto visible no se amplía: conserva mapa Colombia, viento, temperatura,
+seis timestamps, seis aeropuertos, datos simulados locales y warning permanente.
+El release candidate queda formalmente cerrado solo después de integrar el PR
+QA y verificar su SHA en la URL final.

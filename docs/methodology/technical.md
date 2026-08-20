@@ -135,3 +135,28 @@ PostGIS, ejecuta `manage.py check` y corre únicamente
   shell a `ResizeObserver`, ambos convergen en `map.resize()`.
 - El store conserva estado serializable; nunca guarda mapa, cámara ni viewport.
 - El tema usa únicamente los siete tokens `--viewer-*` del contrato.
+
+## Runtime y validación de Fase 08
+
+- URL: `https://aviation-weather-platform.projectapp.co`.
+- Backend: `aero-meteo-mvp.socket/service` sobre Gunicorn.
+- Frontend: `aviation-weather-viewer-frontend.service`, puerto interno `3002`.
+- TLS: certificado Let's Encrypt con CN exacto del dominio.
+- Base staging: `aviation_weather`; template PostGIS aislado para pytest:
+  `aviation_weather_template`.
+- Browsers validados a `1920×1080`: Chrome 147 y Edge 151.
+- Host de medición: 1 vCPU, ANGLE/Vulkan SwiftShader; no representa una GPU
+  física del equipo de reunión.
+
+Comandos de release dirigidos:
+
+```bash
+cd backend && source venv/bin/activate && python manage.py check
+cd backend && source venv/bin/activate && pytest weather/tests/test_api.py -v
+cd frontend && npm test -- features/viewer/__tests__/ViewerOrchestrator.test.ts --runInBand
+cd frontend && npm run build
+cd frontend && PLAYWRIGHT_BASE_URL=https://aviation-weather-platform.projectapp.co npx playwright test e2e/weather-viewer-demo.spec.ts --project="Desktop Chrome"
+```
+
+La evidencia manual y los comandos de contingencia viven en
+`docs/release/phase08-demo-handoff.md`.

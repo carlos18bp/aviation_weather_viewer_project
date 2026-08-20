@@ -1,10 +1,10 @@
 # Mapa de flujos de usuario
 
-Versión: 3.0.0
+Versión: 3.0.1
 
 Actualizado: 2026-08-20
 
-Alcance inspeccionado: Fase 07, ruta pública `/`, vertical slice desktop a
+Alcance inspeccionado: Fase 08, ruta pública `/`, vertical slice desktop a
 `1920×1080`.
 
 ## Roles
@@ -25,9 +25,11 @@ ni superficies administrativas.
   visibilidad; `failure` cubre fallos de red, assets o runtime.
 - `error` no aplica: el visor no recibe texto del usuario, no valida formularios
   y no tiene permisos que puedan denegarse.
-- La Fase 08 autoriza un solo spec E2E desktop para el recorrido principal. Los
-  fallos y fallback tienen exención E2E deliberada (`expectedSpecs: 0`) porque
-  su contrato exige tests dirigidos y ensayo manual, no más specs Playwright.
+- La Fase 08 autoriza un único spec E2E desktop para el recorrido principal,
+  [`weather-viewer-demo.spec.ts`](../frontend/e2e/weather-viewer-demo.spec.ts).
+  Los fallos y fallback conservan una exención E2E deliberada
+  (`expectedSpecs: 0`): se verifican con pruebas dirigidas y con el ensayo
+  manual, sin multiplicar el corpus Playwright.
 - Un cambio de hora sólo termina cuando frame, panel aeroportuario, leyenda y UTC
   corresponden al mismo timestamp. Una carga intermedia conserva el estado
   visible anterior.
@@ -44,16 +46,17 @@ ni superficies administrativas.
 
 ### Matriz por interacción y outcome
 
-| Vista / módulo | Interacción | Clase | Inicio → pasos → estado final | Flow ID | Cobertura E2E |
+| Vista / módulo | Interacción | Clase | Inicio → pasos → estado final | Flow ID | Cobertura |
 |---|---|---|---|---|---|
-| `/` · bootstrap | Abrir el visor | display | Entrar a `/` → ver shell y warning de inmediato → terminar en mapa Colombia, viento, leyenda `kt`, seis horas y UTC `06Z`. | `viewer-demo-journey` | Falta; pertenece a Fase 08. |
-| `/` · aeropuerto | Seleccionar y cerrar SKBO | success | Clic en punto `SKBO` → foco de cámara y panel con datos simulados `06Z` → cerrar panel sin alterar capa/hora. | `viewer-demo-journey` | Falta; mismo spec único. |
-| `/` · capas | Cambiar viento ↔ temperatura | success | Clic en capa → conservar vista durante loading → publicar raster/partículas, leyenda y unidad coherentes sin recrear MapLibre. | `viewer-demo-journey` | Falta; mismo spec único. |
-| `/` · timeline | Usar anterior, siguiente y selección directa | success | Elegir control u hora → abortar request obsoleta → publicar frame, panel y UTC juntos. | `viewer-demo-journey` | Falta; mismo spec único. |
-| `/` · playback | Reproducir y pausar | success | Play → un intervalo de `1500 ms` recorre horas sin ticks durante loading → pausa detiene el único timer. | `viewer-demo-journey` | Falta; mismo spec único. |
-| `/` · reset | Restaurar defaults | success | Cambiar capa/hora/cámara y aeropuerto → Reiniciar → `wind/06Z`, cámara inicial, pausa y sin selección. | `viewer-demo-journey` | Falta; mismo spec único. |
-| `/` · mapa | Navegar el mapa | success | Arrastrar o hacer zoom dentro de límites regionales → inspeccionar Colombia → reset restaura la cámara inicial. | `viewer-demo-journey` | Falta; mismo spec único. |
-| `/` · datos | Recorrer los seis timestamps | display | Seleccionar `00/03/06/09/12/15Z` → observar WebP o U/V y, con aeropuerto, condición de la misma hora. | `viewer-demo-journey` | Falta; mismo spec único. |
+| `/` · bootstrap | Abrir el visor | display | Entrar a `/` → ver shell y warning de inmediato → terminar en mapa Colombia, viento, leyenda `kt`, seis horas y UTC `06Z`. | `viewer-demo-journey` | E2E cubierta. |
+| `/` · aeropuerto | Seleccionar SKBO | success | Clic en punto `SKBO` → foco de cámara y panel con datos simulados `06Z` → panel y timestamp sincronizados. | `viewer-demo-journey` | E2E cubierta. |
+| `/` · aeropuerto | Cerrar aeropuerto | success | Cerrar el panel sin alterar capa u hora → conservar el visor listo sin selección. | `viewer-demo-journey` | Ensayo manual de estabilidad; no exige un segundo spec. |
+| `/` · capas | Cambiar viento ↔ temperatura | success | Clic en capa → conservar vista durante loading → publicar raster/partículas, leyenda y unidad coherentes sin recrear MapLibre. | `viewer-demo-journey` | E2E cubierta. |
+| `/` · timeline | Usar anterior, siguiente y selección directa | success | Elegir control u hora → abortar request obsoleta → publicar frame, panel y UTC juntos. | `viewer-demo-journey` | E2E cubierta. |
+| `/` · playback | Reproducir y pausar | success | Play → un intervalo de `1500 ms` recorre horas sin ticks durante loading → pausa detiene el único timer. | `viewer-demo-journey` | E2E cubierta con dos ticks. |
+| `/` · reset | Restaurar defaults | success | Cambiar capa/hora/cámara y aeropuerto → Reiniciar → `wind/06Z`, cámara inicial, pausa y sin selección. | `viewer-demo-journey` | E2E cubierta. |
+| `/` · mapa | Navegar el mapa | success | Arrastrar o hacer zoom dentro de límites regionales → inspeccionar Colombia → reset restaura la cámara inicial. | `viewer-demo-journey` | Ensayo manual de estabilidad; el único spec no duplica esta interacción. |
+| `/` · datos | Recorrer los seis timestamps | display | Seleccionar `00/03/06/09/12/15Z` → observar datos de frame y, con aeropuerto, condición de la misma hora. | `viewer-demo-journey` | E2E cubierta. |
 | `/` · catálogo | Reintentar catálogo fallido | failure | Abrir con catálogo inválido/503 → shell y mapa permanecen, controles deshabilitados → Reintentar espera MapLibre y carga catálogo + `wind/06Z`. | `viewer-catalog-recovery` | Exenta por contrato de Fase 08; test dirigido + ensayo manual. |
 | `/` · aeropuertos | Reintentar GeoJSON fallido | failure | Fallar `/api/v1/airports` → meteorología continúa → Reintentar aeropuertos restaura seis puntos ICAO. | `viewer-airports-recovery` | Exenta por contrato de Fase 08; test dirigido + ensayo manual. |
 | `/` · frame/panel | Reintentar transición fallida | failure | Fallar metadata, WebP, U/V o condición seleccionada → conservar vista completa y pausar → retry vuelve a ejecutar la intención. | `viewer-frame-recovery` | Exenta por contrato de Fase 08; test dirigido + ensayo manual. |
@@ -77,26 +80,32 @@ ni superficies administrativas.
 
 | Flow ID | Prioridad | Outcomes / contrato | Estado | Evidencia actual |
 |---|---:|---|---|---|
-| `viewer-demo-journey` | P1 | success, display | Falta | Unit/integration dirigidos verdes; el spec desktop se crea en Fase 08. |
-| `viewer-catalog-recovery` | P1 | `expectedSpecs: 0` | Exento | `ViewerOrchestrator.test.ts`: failure y retry. |
-| `viewer-airports-recovery` | P2 | `expectedSpecs: 0` | Exento | `ViewerOrchestrator.test.ts`: carga independiente y retry. |
-| `viewer-frame-recovery` | P1 | `expectedSpecs: 0` | Exento | `ViewerOrchestrator.test.ts`: preservación, race, abort y retry. |
-| `viewer-wind-fallback` | P2 | `expectedSpecs: 0` | Exento | Tests dirigidos de orchestrator/renderer y ensayo manual `1920×1080` completado. |
-| `viewer-map-recovery` | P1 | `expectedSpecs: 0` | Exento | Tests dirigidos de shell/controller y validación manual `1920×1080` completada. |
+| `viewer-demo-journey` | P1 | success, display | Cubierto | `weather-viewer-demo.spec.ts`, tags `@flow:viewer-demo-journey`, `@outcome:success`, `@outcome:display`; recorrido live Desktop Chrome. |
+| `viewer-catalog-recovery` | P1 | `expectedSpecs: 0` | Exento | `ViewerOrchestrator.test.ts`: failure y retry; ensayo manual de contingencia. |
+| `viewer-airports-recovery` | P2 | `expectedSpecs: 0` | Exento | `ViewerOrchestrator.test.ts`: carga independiente y retry; ensayo manual. |
+| `viewer-frame-recovery` | P1 | `expectedSpecs: 0` | Exento | `ViewerOrchestrator.test.ts`: preservación, race, abort y retry; ensayo manual. |
+| `viewer-wind-fallback` | P2 | `expectedSpecs: 0` | Exento | Tests dirigidos de orchestrator/renderer y ensayo manual `1920×1080`. |
+| `viewer-map-recovery` | P1 | `expectedSpecs: 0` | Exento | Tests dirigidos de shell/controller y validación manual Chrome/Edge `1920×1080`. |
 
-Resumen del registro: 6 flows; 0 cubiertos por E2E, 0 `junk-only`, 1 faltante
-P1 y 5 exentos deliberados. No existen specs Playwright en Fase 07 y ninguna
-prueba `goto + visible` recibe crédito.
+Resumen del registro: 6 flows; 1 cubierto por E2E, 0 `junk-only`, 0 faltantes
+y 5 exentos deliberados. El único spec no es un smoke `goto + visible`: conduce
+SKBO, capas, seis timestamps, anterior/siguiente/directo, dos ticks de playback,
+pausa, reset, recarga y assets same-origin.
 
-## Brecha que desbloquea Fase 08
+## Nota sobre outcomes negativos
 
-Crear `frontend/e2e/weather-viewer-demo.spec.ts` con tags
-`@flow:viewer-demo-journey`, `@outcome:success` y `@outcome:display`. Debe conducir
-el flujo único congelado por la Fase 08: bootstrap `wind/06Z`, SKBO, temperatura,
-anterior/siguiente/directo, seis timestamps, dos ticks de playback, pausa, vuelta
-a viento, reset y recarga reproducible.
+La advertencia `negative_case_gaps=1` del auditor es esperada y no revela una
+omisión semántica del mapa. Los cinco flows de `failure` están declarados
+explícitamente arriba, pero `expectedSpecs: 0` los excluye de los
+`required_outcomes` del auditor para respetar su exención E2E. `error` es
+genuinamente n/a para esta UI.
+
+No se debe convertir esas exenciones a `outcomes: ["failure"]`, ni añadir
+`failure` al único spec: produciría faltantes artificiales y violaría la
+autorización de un solo recorrido E2E. Los negativos conservan su validación
+dirigida y el ensayo manual exigidos por Fase 08.
 
 ## Preguntas abiertas
 
-Ninguna para Fase 07. Los errores/fallback quedan conscientemente en la matriz
-manual y dirigida definida por la Fase 08; no autorizan nuevos specs ni features.
+Ninguna. El alcance permanece limitado al vertical slice determinístico de la
+demo.

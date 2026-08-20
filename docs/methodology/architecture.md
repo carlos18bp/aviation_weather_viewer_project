@@ -1,6 +1,6 @@
 # Arquitectura — Aviation Weather Viewer
 
-## Estado de Fase 01
+## Estado histórico de Fase 01
 
 El sistema conserva los dos procesos de Fase 00. Next.js entrega ahora el shell
 GIS y una única instancia MapLibre; Django/DRF continúa exponiendo únicamente
@@ -73,3 +73,26 @@ sequenceDiagram
 Las fases posteriores conectarán adapters de viento, temperatura y aeropuertos,
 y luego controles/orquestación. Ninguna debe crear una segunda instancia
 MapLibre ni importar internals del controller fuera de su interfaz pública.
+
+## Arquitectura desplegada — Fase 08
+
+```mermaid
+flowchart LR
+    Browser[Navegador Chrome o Edge] -->|HTTPS /| Nginx[Nginx + Let's Encrypt]
+    Nginx -->|/ y assets| Next[Next.js 16 · :3002]
+    Nginx -->|/api/v1 y /media| Gunicorn[Gunicorn · socket Unix]
+    Gunicorn --> Django[Django 6 + DRF · weather]
+    Django --> PostGIS[(PostgreSQL 16 + PostGIS)]
+    Next -->|/map/*| LocalMap[MapLibre + basemap versionado]
+    Gunicorn -->|/media/demo-weather/*| Fixtures[Fixtures meteorológicos versionados]
+```
+
+- El browser sólo solicita el dominio de la demo; no existen requests
+  meteorológicos ni cartográficos externos.
+- Next y Django se ejecutan como servicios systemd separados con límites de
+  memoria/CPU y Nginx conserva el contrato same-origin.
+- El renderer de partículas mantiene densidad fija de 2500. Ante fallo runtime,
+  el mismo adapter publica fallback de flechas estáticas sin recrear MapLibre ni
+  inutilizar controles/timeline.
+- La copia local usa la misma composición y fixtures. Django debe arrancarse en
+  `development` para que `runserver` sirva `/media/*`; staging usa Nginx.
