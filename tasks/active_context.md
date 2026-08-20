@@ -7,8 +7,9 @@ Actualizado: 2026-08-20.
 Las Fases 09–13 están integradas en `master`; no existen PR funcionales
 pendientes de esa ola y sus handoffs están disponibles. La Fase 14 conectó sus
 módulos al vertical slice original de Fase 08 desde una rama/worktree propios.
-La funcionalidad, el mapa real de flows y la validación visual/estabilidad están
-completos; falta el QA/quality gate de cierre antes de declarar el release.
+La funcionalidad, el mapa real de flows, la validación visual/estabilidad y el
+QA/quality gate están completos. El PR #24 queda pendiente de integración en
+`master`; esta sesión no lo mergea.
 
 ## Entrega funcional de Fase 14
 
@@ -30,7 +31,7 @@ completos; falta el QA/quality gate de cierre antes de declarar el release.
 - Reset termina playback/transición, aborta trabajo, limpia escena y errores,
   restaura cámara y publica `wind/06Z` con URL vacía.
 
-## Evidencia previa a QA
+## Evidencia de cierre
 
 - Flow map real: 21 flows; 8 cubiertos y 13 negativos exentos con pruebas
   unitarias/integration, sin missing/partial/junk-only.
@@ -46,6 +47,11 @@ completos; falta el QA/quality gate de cierre antes de declarar el release.
 - Fallback estático: 60,1 FPS en Chrome real sobre SwiftShader.
 - Estabilidad: 614,5 s, cero fallos funcionales, cero errores console/page,
   cuatro aborts esperados y cero requests pendientes después del reset.
+- `$qa --apply`: Arquitecto con dos briefs mínimos, store 15/15, route-scene
+  live 1/1, `QA VERIFY: 🟢 OK`, Auditor KEEP 12/12 y cero junk.
+- Quality gate final: 8 covered, 13 exempt, 0 missing/partial/junk-only/
+  unvalidated y 0 errores/warnings; los negativos exentos conservan cobertura
+  unit/integration dirigida.
 
 ## Validación del Gate E1
 

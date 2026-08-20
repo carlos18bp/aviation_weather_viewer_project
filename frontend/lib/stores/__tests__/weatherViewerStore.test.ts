@@ -141,17 +141,34 @@ describe('weatherViewerStore', () => {
     expect(viewerState()).toEqual(INITIAL_WEATHER_VIEWER_STATE);
   });
 
-  it('exposes only the enriched serializable scene capabilities', () => {
+  // Falla si faltan defaults de escena enriquecida al crear el store real.
+  it('installs the enriched scene defaults in the real store', () => {
     const state = useWeatherViewerStore.getState() as unknown as Record<string, unknown>;
-    expect(state.selectedCoordinate).toBeNull();
-    expect(state.selectedRoute).toBeNull();
-    expect(state.isobarsVisible).toBe(false);
-    expect(state.presentationMode).toBe(false);
-    expect(state.mapViewport).toEqual({ longitude: -73.5, latitude: 4.5, zoom: 4.7 });
-    expect(state.opacity).toBeUndefined();
-    expect(state.quality).toBeUndefined();
-    expect(state.playbackSpeed).toBeUndefined();
-    expect(state.grids).toBeUndefined();
-    expect(state.abortControllers).toBeUndefined();
+    expect({
+      selectedCoordinate: state.selectedCoordinate,
+      selectedRoute: state.selectedRoute,
+      isobarsVisible: state.isobarsVisible,
+      presentationMode: state.presentationMode,
+      mapViewport: state.mapViewport,
+    }).toEqual({
+      selectedCoordinate: null,
+      selectedRoute: null,
+      isobarsVisible: false,
+      presentationMode: false,
+      mapViewport: { longitude: -73.5, latitude: 4.5, zoom: 4.7 },
+    });
+  });
+
+  // Falla si una referencia de runtime prohibida entra al estado serializable de Zustand.
+  it('excludes runtime caches from the serializable scene state', () => {
+    const state = useWeatherViewerStore.getState();
+    // quality: allow-negation-only (el contrato exige que estas claves estén ausentes del estado serializable)
+    expect(Object.keys(state)).not.toEqual(expect.arrayContaining([
+      'opacity',
+      'quality',
+      'playbackSpeed',
+      'grids',
+      'abortControllers',
+    ]));
   });
 });

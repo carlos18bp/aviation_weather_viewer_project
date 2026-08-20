@@ -49,6 +49,9 @@ test(
     test.slow();
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     const viewer = await openReadyViewer(page);
+    // Catches a ready-map race that let route controls run before the base wind scene committed.
+    await expect(viewer).toHaveAttribute('data-active-layer', 'wind');
+    await expect(viewer).toHaveAttribute('data-active-timestamp', '2026-01-15T06:00:00Z');
     await page.getByTestId('enriched-layer-panel').locator('summary').click();
     const planner = page.getByRole('region', { name: 'Historia aeronáutica' });
     await selectRouteEndpoint(planner, 'Origen', 'SKBO');

@@ -197,3 +197,12 @@
 - El reset enriquecido se valida mejor como barrera final: estado, URL y
   requests pendientes deben converger juntos, incluso después de aborts
   esperados por navegación y precarga.
+- Un dev server Django puede responder metadata con 200 y fallar todos los
+  assets `/media` si `DEBUG` está desactivado; el smoke E2E local debe comprobar
+  un asset concreto antes de atribuir el fallback a lógica de producto.
+- Los gates estáticos necesitan al menos una aserción Playwright directa dentro
+  del test; conservar helpers ricos y añadir una expectativa observable de
+  bootstrap evita falsos `no_assertions` sin duplicar el recorrido.
+- Un contrato de ausencia en Zustand es una aserción de comportamiento válida,
+  pero debe agrupar claves prohibidas y documentar por qué la negación es el
+  resultado esperado.

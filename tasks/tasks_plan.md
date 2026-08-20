@@ -62,8 +62,8 @@ Estado: **integrada en `master` mediante PR #10**.
 
 ## Roadmap de enriquecimiento posterior
 
-Estado: **Fases 09–13 integradas; implementación funcional de Fase 14 completa,
-con QA y quality gate de cierre pendientes**.
+Estado: **Fases 09–13 integradas; Fase 14 implementada y validada, con PR #24
+pendiente de integración en `master`**.
 
 - [x] Evaluar candidatos visuales y aeronáuticos inspirados en Windy.
 - [x] Seleccionar seis fases en dos olas de implementación.
@@ -85,7 +85,7 @@ con QA y quality gate de cierre pendientes**.
   presentación en el vertical slice central.
 - [x] Actualizar el mapa real de flows y crear exactamente dos E2E enriquecidos.
 - [x] Validar Chrome/Edge a 1920×1080 y completar 614,5 s de estabilidad.
-- [ ] Ejecutar QA, quality gate, build y E2E finales de Fase 14.
+- [x] Ejecutar QA, quality gate, build y E2E finales de Fase 14.
 - [ ] Integrar el PR de Fase 14 en `master`.
 
 Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.

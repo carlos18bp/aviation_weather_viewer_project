@@ -336,3 +336,8 @@ cero errores de consola/page y cero requests pendientes.
 Evidencia dirigida previa a QA: TypeScript, ESLint del diff y build Next verdes;
 recorrido Fase 08 `1/1` y los dos E2E enriquecidos `2/2`. La auditoría estática
 registra 21 flujos: 8 cubiertos, 13 exentos, 0 missing, 0 partial y 0 junk-only.
+
+QA final: gate `🟢` con 0 errores/warnings, store 15/15, route-scene live 1/1 y
+Auditor KEEP para los 12 archivos de test modificados. El único rojo intermedio
+fue infraestructura local: Django con `DJANGO_DEBUG=false` no registró `/media`;
+al reiniciar el dev server con `true`, el mismo E2E pasó sin cambios productivos.
