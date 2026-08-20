@@ -1,5 +1,7 @@
-import { createFramePreloader } from '../framePreloader';
-
+import {
+  createFramePreloader,
+  getAdaptiveFrameRetentionPlan,
+} from '../framePreloader';
 
 function abortableLoader(key: string, aborted: string[]) {
   return (signal: AbortSignal): Promise<string> => new Promise((_, reject) => {
@@ -137,5 +139,79 @@ describe('FramePreloader', () => {
 
     expect(aborted).toEqual(['12Z', '15Z']);
     expect(preloader.size).toBe(0);
+  });
+
+  it('plans exact circular retention for phone, tablet, desktop, and degraded', () => {
+    const window = { previous: '03Z', active: '06Z', next: '09Z' };
+
+    expect(getAdaptiveFrameRetentionPlan('phone', window)).toEqual({
+      retainedKeys: ['06Z', '09Z'],
+      preloadKeys: ['09Z'],
+    });
+    expect(getAdaptiveFrameRetentionPlan('tablet', window)).toEqual({
+      retainedKeys: ['06Z', '03Z', '09Z'],
+      preloadKeys: ['03Z', '09Z'],
+    });
+    expect(getAdaptiveFrameRetentionPlan('desktop', window)).toEqual({
+      retainedKeys: ['06Z', '03Z', '09Z'],
+      preloadKeys: ['03Z', '09Z'],
+    });
+    expect(getAdaptiveFrameRetentionPlan('degraded', window)).toEqual({
+      retainedKeys: ['06Z'],
+      preloadKeys: [],
+    });
+  });
+
+  it('applies the phone limit and aborts both excess requests', async () => {
+    const preloader = createFramePreloader<string, string>();
+    const aborted: string[] = [];
+    const first = preloader.preload('00Z', abortableLoader('00Z', aborted));
+    const second = preloader.preload('03Z', abortableLoader('03Z', aborted));
+    void preloader.preload('06Z', abortableLoader('06Z', aborted));
+
+    preloader.retain(['06Z', '09Z'], 2);
+    await Promise.all([first, second]);
+
+    expect(aborted).toEqual(['00Z', '03Z']);
+    expect(preloader.size).toBe(1);
+    preloader.clear();
+  });
+
+  it('applies degraded retention and aborts adjacent requests', async () => {
+    const preloader = createFramePreloader<string, string>();
+    const aborted: string[] = [];
+    void preloader.preload('06Z', abortableLoader('06Z', aborted));
+    const previous = preloader.preload('03Z', abortableLoader('03Z', aborted));
+    const next = preloader.preload('09Z', abortableLoader('09Z', aborted));
+
+    preloader.retain(['06Z'], 1);
+    await Promise.all([previous, next]);
+
+    expect(aborted).toEqual(['03Z', '09Z']);
+    expect(preloader.size).toBe(1);
+    preloader.clear();
+  });
+
+  it('does not start a background request outside the retained profile window', async () => {
+    const preloader = createFramePreloader<string, string>();
+    const loader = jest.fn(async () => 'stale');
+    preloader.retain(['06Z'], 1);
+
+    await preloader.preload('09Z', loader);
+
+    expect(loader).not.toHaveBeenCalled();
+    expect(preloader.size).toBe(0);
+  });
+
+  it('never evicts a visible requested frame for an extra preload', async () => {
+    const preloader = createFramePreloader<string, string>();
+    const preloadLoader = jest.fn(async () => 'adjacent');
+    preloader.retain(['06Z'], 1);
+    await preloader.get('06Z', async () => 'visible');
+
+    await preloader.preload('09Z', preloadLoader);
+
+    expect(preloadLoader).not.toHaveBeenCalled();
+    await expect(preloader.get('06Z', async () => 'replacement')).resolves.toBe('visible');
   });
 });

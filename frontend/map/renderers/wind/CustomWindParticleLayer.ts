@@ -23,8 +23,8 @@ import {
 } from './gl/shaders';
 
 export const WIND_PARTICLE_LAYER_ID = 'wind-particle-webgl2-layer';
+export const DEFAULT_WIND_PARTICLE_COUNT = 2_500;
 
-const PARTICLE_COUNT = 2_500;
 const PARTICLE_MAX_AGE = 100;
 const VISUAL_SPEED_FACTOR = 12_000;
 const MAPLIBRE_TILE_SIZE = 512;
@@ -49,16 +49,42 @@ interface DrawUniforms {
   bbox: WebGLUniformLocation;
 }
 
+interface ParticleResources {
+  positionBuffers: WebGLBuffer[];
+  ageBuffers: WebGLBuffer[];
+  updateVertexArrays: WebGLVertexArrayObject[];
+  transformFeedbacks: WebGLTransformFeedback[];
+}
+
+export interface CustomWindParticleLayerOptions {
+  particleCount?: number;
+  now?: () => number;
+  onFrameRendered?(timestampMs: number): void;
+}
+
+function defaultNow(): number {
+  return typeof performance === 'undefined' ? Date.now() : performance.now();
+}
+
+function requireParticleCount(particleCount: number): number {
+  if (!Number.isSafeInteger(particleCount) || particleCount <= 0) {
+    throw new RangeError('Wind particle count must be a positive safe integer.');
+  }
+  return particleCount;
+}
+
 function deterministicValue(index: number, salt: number): number {
   const value = Math.sin((index + 1) * (12.9898 + salt * 17.719)) * 43_758.5453;
   return value - Math.floor(value);
 }
 
-function initialParticleState(): { positions: Float32Array; ages: Float32Array } {
-  const positions = new Float32Array(PARTICLE_COUNT * 2);
-  const ages = new Float32Array(PARTICLE_COUNT);
+function initialParticleState(
+  particleCount: number,
+): { positions: Float32Array; ages: Float32Array } {
+  const positions = new Float32Array(particleCount * 2);
+  const ages = new Float32Array(particleCount);
 
-  for (let index = 0; index < PARTICLE_COUNT; index += 1) {
+  for (let index = 0; index < particleCount; index += 1) {
     positions[index * 2] = deterministicValue(index, 0.37);
     positions[index * 2 + 1] = deterministicValue(index, 0.83);
     ages[index] = (index * 37) % PARTICLE_MAX_AGE;
@@ -67,15 +93,27 @@ function initialParticleState(): { positions: Float32Array; ages: Float32Array }
   return { positions, ages };
 }
 
+function emptyParticleResources(): ParticleResources {
+  return {
+    positionBuffers: [],
+    ageBuffers: [],
+    updateVertexArrays: [],
+    transformFeedbacks: [],
+  };
+}
+
 export class CustomWindParticleLayer implements CustomLayerInterface {
   readonly id = WIND_PARTICLE_LAYER_ID;
   readonly type = 'custom' as const;
   readonly renderingMode = '2d' as const;
 
   private readonly onRuntimeError: (error: unknown) => void;
+  private readonly now: () => number;
+  private readonly onFrameRendered?: (timestampMs: number) => void;
   private map: MapLibreMap | null = null;
   private gl: WebGL2RenderingContext | null = null;
   private field: WindField | null = null;
+  private particleCount: number;
   private active = false;
   private failureReported = false;
   private lastFrameTime: number | null = null;
@@ -85,16 +123,21 @@ export class CustomWindParticleLayer implements CustomLayerInterface {
   private drawProgram: WebGLProgram | null = null;
   private windTexture: WebGLTexture | null = null;
   private endpointBuffer: WebGLBuffer | null = null;
-  private positionBuffers: WebGLBuffer[] = [];
-  private ageBuffers: WebGLBuffer[] = [];
-  private updateVertexArrays: WebGLVertexArrayObject[] = [];
+  private particleResources: ParticleResources = emptyParticleResources();
   private drawVertexArray: WebGLVertexArrayObject | null = null;
-  private transformFeedbacks: WebGLTransformFeedback[] = [];
   private updateUniforms: UpdateUniforms | null = null;
   private drawUniforms: DrawUniforms | null = null;
 
-  constructor(onRuntimeError: (error: unknown) => void) {
+  constructor(
+    onRuntimeError: (error: unknown) => void,
+    options: CustomWindParticleLayerOptions = {},
+  ) {
     this.onRuntimeError = onRuntimeError;
+    this.particleCount = requireParticleCount(
+      options.particleCount ?? DEFAULT_WIND_PARTICLE_COUNT,
+    );
+    this.now = options.now ?? defaultNow;
+    this.onFrameRendered = options.onFrameRendered;
   }
 
   onAdd(map: MapLibreMap, gl: WebGL2RenderingContext): void {
@@ -127,7 +170,7 @@ export class CustomWindParticleLayer implements CustomLayerInterface {
     }
 
     try {
-      const now = typeof performance === 'undefined' ? Date.now() : performance.now();
+      const now = this.now();
       const deltaSeconds = this.lastFrameTime === null
         ? DEFAULT_FRAME_SECONDS
         : Math.min(MAX_FRAME_SECONDS, Math.max(0, (now - this.lastFrameTime) / 1_000));
@@ -139,6 +182,7 @@ export class CustomWindParticleLayer implements CustomLayerInterface {
       this.currentBufferIndex = currentIndex;
       this.drawParticles(gl, previousIndex, currentIndex, options);
       this.frameSeed += 1;
+      this.onFrameRendered?.(now);
     } catch (error) {
       this.active = false;
       this.reportRuntimeError(error);
@@ -156,6 +200,38 @@ export class CustomWindParticleLayer implements CustomLayerInterface {
   setActive(active: boolean): void {
     this.active = active;
     this.lastFrameTime = null;
+  }
+
+  setParticleCount(particleCount: number): void {
+    const nextParticleCount = requireParticleCount(particleCount);
+    if (nextParticleCount === this.particleCount) {
+      return;
+    }
+
+    const gl = this.gl;
+    if (!gl) {
+      this.particleCount = nextParticleCount;
+      return;
+    }
+
+    const nextResources = this.allocateParticleResources(gl, nextParticleCount);
+    const previousResources = this.particleResources;
+    this.disposeParticleResources(gl, previousResources);
+    this.particleResources = nextResources;
+    this.particleCount = nextParticleCount;
+    this.currentBufferIndex = 0;
+    this.frameSeed = 0;
+    this.lastFrameTime = null;
+  }
+
+  resetParticleBuffers(): void {
+    if (this.gl) {
+      this.resetParticles(this.gl);
+    }
+  }
+
+  getParticleCount(): number {
+    return this.particleCount;
   }
 
   resize(): void {
@@ -197,36 +273,7 @@ export class CustomWindParticleLayer implements CustomLayerInterface {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.bindTexture(gl.TEXTURE_2D, null);
 
-    const { positions, ages } = initialParticleState();
-
-    for (let index = 0; index < 2; index += 1) {
-      const positionBuffer = requireBuffer(gl);
-      const ageBuffer = requireBuffer(gl);
-      const updateVertexArray = requireVertexArray(gl);
-      const transformFeedback = requireTransformFeedback(gl);
-
-      this.positionBuffers.push(positionBuffer);
-      this.ageBuffers.push(ageBuffer);
-      this.updateVertexArrays.push(updateVertexArray);
-      this.transformFeedbacks.push(transformFeedback);
-
-      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, positions, gl.DYNAMIC_COPY);
-      gl.bindBuffer(gl.ARRAY_BUFFER, ageBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, ages, gl.DYNAMIC_COPY);
-
-      gl.bindVertexArray(updateVertexArray);
-      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-      gl.enableVertexAttribArray(0);
-      gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-      gl.bindBuffer(gl.ARRAY_BUFFER, ageBuffer);
-      gl.enableVertexAttribArray(1);
-      gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 0, 0);
-
-      gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transformFeedback);
-      gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, positionBuffer);
-      gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, ageBuffer);
-    }
+    this.particleResources = this.allocateParticleResources(gl, this.particleCount);
 
     gl.bindVertexArray(this.drawVertexArray);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.endpointBuffer);
@@ -235,9 +282,54 @@ export class CustomWindParticleLayer implements CustomLayerInterface {
     gl.vertexAttribPointer(0, 1, gl.FLOAT, false, 0, 0);
     gl.vertexAttribDivisor(0, 0);
 
-    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  }
+
+  private allocateParticleResources(
+    gl: WebGL2RenderingContext,
+    particleCount: number,
+  ): ParticleResources {
+    const resources = emptyParticleResources();
+    const { positions, ages } = initialParticleState(particleCount);
+
+    try {
+      for (let index = 0; index < 2; index += 1) {
+        const positionBuffer = requireBuffer(gl);
+        resources.positionBuffers.push(positionBuffer);
+        const ageBuffer = requireBuffer(gl);
+        resources.ageBuffers.push(ageBuffer);
+        const updateVertexArray = requireVertexArray(gl);
+        resources.updateVertexArrays.push(updateVertexArray);
+        const transformFeedback = requireTransformFeedback(gl);
+        resources.transformFeedbacks.push(transformFeedback);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, positions, gl.DYNAMIC_COPY);
+        gl.bindBuffer(gl.ARRAY_BUFFER, ageBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, ages, gl.DYNAMIC_COPY);
+
+        gl.bindVertexArray(updateVertexArray);
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, ageBuffer);
+        gl.enableVertexAttribArray(1);
+        gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 0, 0);
+
+        gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transformFeedback);
+        gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, positionBuffer);
+        gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, ageBuffer);
+      }
+      return resources;
+    } catch (error) {
+      this.disposeParticleResources(gl, resources);
+      throw error;
+    } finally {
+      gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+      gl.bindVertexArray(null);
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    }
   }
 
   private uploadField(field: WindField): void {
@@ -264,12 +356,12 @@ export class CustomWindParticleLayer implements CustomLayerInterface {
   }
 
   private resetParticles(gl: WebGL2RenderingContext): void {
-    const { positions, ages } = initialParticleState();
+    const { positions, ages } = initialParticleState(this.particleCount);
 
-    for (let index = 0; index < this.positionBuffers.length; index += 1) {
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffers[index]);
+    for (let index = 0; index < this.particleResources.positionBuffers.length; index += 1) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.particleResources.positionBuffers[index]);
       gl.bufferData(gl.ARRAY_BUFFER, positions, gl.DYNAMIC_COPY);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.ageBuffers[index]);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.particleResources.ageBuffers[index]);
       gl.bufferData(gl.ARRAY_BUFFER, ages, gl.DYNAMIC_COPY);
     }
 
@@ -302,15 +394,18 @@ export class CustomWindParticleLayer implements CustomLayerInterface {
     gl.uniform1f(uniforms.frameSeed, this.frameSeed);
     gl.uniform1f(uniforms.maxAge, PARTICLE_MAX_AGE);
     gl.uniform1f(uniforms.speedFactor, VISUAL_SPEED_FACTOR);
-    gl.bindVertexArray(this.updateVertexArrays[inputIndex]);
-    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.transformFeedbacks[outputIndex]);
+    gl.bindVertexArray(this.particleResources.updateVertexArrays[inputIndex]);
+    gl.bindTransformFeedback(
+      gl.TRANSFORM_FEEDBACK,
+      this.particleResources.transformFeedbacks[outputIndex],
+    );
     let transformFeedbackStarted = false;
 
     try {
       gl.enable(gl.RASTERIZER_DISCARD);
       gl.beginTransformFeedback(gl.POINTS);
       transformFeedbackStarted = true;
-      gl.drawArrays(gl.POINTS, 0, PARTICLE_COUNT);
+      gl.drawArrays(gl.POINTS, 0, this.particleCount);
     } finally {
       if (transformFeedbackStarted) {
         gl.endTransformFeedback();
@@ -351,20 +446,20 @@ export class CustomWindParticleLayer implements CustomLayerInterface {
     gl.uniform1i(uniforms.wind, 0);
     gl.bindVertexArray(this.drawVertexArray);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffers[previousIndex]);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.particleResources.positionBuffers[previousIndex]);
     gl.enableVertexAttribArray(1);
     gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
     gl.vertexAttribDivisor(1, 1);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffers[currentIndex]);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.particleResources.positionBuffers[currentIndex]);
     gl.enableVertexAttribArray(2);
     gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 0, 0);
     gl.vertexAttribDivisor(2, 1);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.ageBuffers[currentIndex]);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.particleResources.ageBuffers[currentIndex]);
     gl.enableVertexAttribArray(3);
     gl.vertexAttribPointer(3, 1, gl.FLOAT, false, 0, 0);
     gl.vertexAttribDivisor(3, 1);
 
-    gl.drawArraysInstanced(gl.LINES, 0, 2, PARTICLE_COUNT);
+    gl.drawArraysInstanced(gl.LINES, 0, 2, this.particleCount);
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     gl.bindTexture(gl.TEXTURE_2D, null);
@@ -380,6 +475,16 @@ export class CustomWindParticleLayer implements CustomLayerInterface {
     queueMicrotask(() => this.onRuntimeError(error));
   }
 
+  private disposeParticleResources(
+    gl: WebGL2RenderingContext,
+    resources: ParticleResources,
+  ): void {
+    resources.transformFeedbacks.forEach((resource) => gl.deleteTransformFeedback(resource));
+    resources.updateVertexArrays.forEach((resource) => gl.deleteVertexArray(resource));
+    resources.positionBuffers.forEach((resource) => gl.deleteBuffer(resource));
+    resources.ageBuffers.forEach((resource) => gl.deleteBuffer(resource));
+  }
+
   private disposeResources(): void {
     const gl = this.gl;
 
@@ -387,10 +492,7 @@ export class CustomWindParticleLayer implements CustomLayerInterface {
       return;
     }
 
-    this.transformFeedbacks.forEach((resource) => gl.deleteTransformFeedback(resource));
-    this.updateVertexArrays.forEach((resource) => gl.deleteVertexArray(resource));
-    this.positionBuffers.forEach((resource) => gl.deleteBuffer(resource));
-    this.ageBuffers.forEach((resource) => gl.deleteBuffer(resource));
+    this.disposeParticleResources(gl, this.particleResources);
 
     if (this.drawVertexArray) {
       gl.deleteVertexArray(this.drawVertexArray);
@@ -408,10 +510,7 @@ export class CustomWindParticleLayer implements CustomLayerInterface {
       gl.deleteProgram(this.drawProgram);
     }
 
-    this.transformFeedbacks = [];
-    this.updateVertexArrays = [];
-    this.positionBuffers = [];
-    this.ageBuffers = [];
+    this.particleResources = emptyParticleResources();
     this.drawVertexArray = null;
     this.endpointBuffer = null;
     this.windTexture = null;
