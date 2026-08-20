@@ -102,6 +102,10 @@ describe('cloud layer frame services', () => {
     const frame = await service.load(descriptor, new AbortController().signal);
     expect(frame.valueGrid?.values[0]).toBeNull();
     expect(frame.valueError).toBeNull();
+    expect(frame).toMatchObject({
+      descriptor: { layer: 'cloud-base', timestamp: descriptor.timestamp },
+      objectUrl: 'blob:cloud-base-06Z',
+    });
   });
 
   it('rejects a raster HTTP error and keeps it out of cache', async () => {
@@ -185,15 +189,27 @@ describe('cloud layer frame services', () => {
     });
     const descriptor = CLOUD_COVER_FRAME_DESCRIPTORS[2];
 
-    await expect(service.load(
+    const externalError = await service.load(
       { ...descriptor, imageUrl: 'https://weather.example/06Z.webp' },
       new AbortController().signal,
-    )).rejects.toBeInstanceOf(CloudLayerValidationError);
-    await expect(service.load(
+    ).catch((error: unknown) => error);
+    const traversalError = await service.load(
       { ...descriptor, valueDataUrl: '/media/../private.json' },
       new AbortController().signal,
-    )).rejects.toBeInstanceOf(CloudLayerValidationError);
+    ).catch((error: unknown) => error);
+
+    expect([externalError, traversalError]).toEqual([
+      expect.objectContaining({
+        name: CloudLayerValidationError.name,
+        message: 'El descriptor de nubes no coincide con el contrato staged de Fase 18.',
+      }),
+      expect.objectContaining({
+        name: CloudLayerValidationError.name,
+        message: 'El descriptor de nubes no coincide con el contrato staged de Fase 18.',
+      }),
+    ]);
     expect(fetcher).not.toHaveBeenCalled();
+    expect(service.size).toBe(0);
   });
 
   it('returns a cache hit without repeating either request', async () => {

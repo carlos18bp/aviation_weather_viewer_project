@@ -68,6 +68,7 @@ describe('cloud-base contracts', () => {
     });
     const parsed = parseCloudBaseScalarGrid(grid, descriptor.timestamp);
     expect(sampleCloudBaseAtCoordinate(parsed, [-82, 14])).toBeNull();
+    expect(parsed.values).toHaveLength(128 * 160);
   });
 
   it('samples bilinearly and rounds base to one hundred feet', () => {
