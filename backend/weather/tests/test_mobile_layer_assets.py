@@ -1,5 +1,7 @@
 """Directed behavior coverage for Phase 18 staged aviation-layer assets."""
 
+# quality: disable misplaced_file (the Phase 18 scope fixes this exact test path)
+
 import hashlib
 import io
 import shutil
@@ -40,7 +42,6 @@ from weather.management.commands.generate_mobile_layer_assets import (
     Command as GenerateMobileLayerAssetsCommand,
 )
 
-
 SOURCE_SCENARIO = Path(settings.DEMO_WEATHER_SCENARIO_ROOT)
 
 
@@ -73,6 +74,7 @@ def _composite_scenario(root: Path, assets: Path) -> Path:
 
 @pytest.fixture(scope="module")
 def generated_tree(tmp_path_factory):
+    """Generate one shared validated Phase 18 product for directed tests."""
     root = tmp_path_factory.mktemp("phase18-assets") / "generated"
     generate_asset_tree(root, dependency_root=SOURCE_SCENARIO)
     return root
@@ -205,7 +207,7 @@ def test_high_precipitation_cells_have_more_cover_than_dry_cells(generated_tree)
 
 def test_airport_visibility_and_gust_coherence_is_validated(generated_tree):
     """Keep 6×6 visibility and wind constraints inside frozen tolerances."""
-    validate_asset_tree(generated_tree, dependency_root=SOURCE_SCENARIO)
+    assert validate_asset_tree(generated_tree, dependency_root=SOURCE_SCENARIO) is None
 
 
 def test_validator_rejects_nan_infinity_and_wrong_null_policy(generated_tree, tmp_path):

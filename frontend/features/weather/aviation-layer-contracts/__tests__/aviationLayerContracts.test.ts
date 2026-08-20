@@ -174,7 +174,7 @@ describe('staged aviation-layer contracts', () => {
       .toThrow(TypeError);
   });
 
-  it('rejects coordinates outside coverage or with non-finite components', () => {
+  it('rejects coordinates outside the frozen bbox or with non-finite components', () => {
     const fixture = createAviationScalarGridFixture('cloud-cover');
     for (const coordinate of [[-83, 4], [-74, 15], [Number.NaN, 4]] as const) {
       expect(() => sampleAviationScalarGrid(fixture, coordinate)).toThrow(RangeError);
