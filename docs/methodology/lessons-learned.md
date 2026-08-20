@@ -152,3 +152,22 @@
   y duplica riesgo.
 - Playwright WebKit ayuda con layout/interacción, pero no sustituye un smoke en
   Safari físico para una reunión que puede ocurrir desde teléfono.
+
+## Fase 13 — precipitación e isobaras
+
+- La reproducibilidad de assets se demuestra generando el escenario completo en
+  dos raíces temporales y comparando todos los bytes, no sólo inspeccionando una
+  fórmula o reutilizando el directorio versionado.
+- Los contornos deben quedar fuera del request path: autoría determinística,
+  GeoJSON versionado y validación estricta permiten que runtime sólo publique y
+  consuma archivos ya materializados.
+- Abort y request-version resuelven carreras distintas; para overlays también
+  hay que invalidar la versión al ocultar, o una respuesta tardía puede revertir
+  una decisión visible del usuario.
+- Un fallback de overlay debe devolver estado controlado y ocultarse sin romper
+  la capa principal; un raster principal, en cambio, conserva su último frame
+  confirmado cuando falla el reemplazo.
+- Cuando el backend amplía un catálogo antes del wiring, una capa de
+  compatibilidad puede validar el contrato nuevo y conservar temporalmente el
+  DTO viejo; debe quedar explícitamente marcada para retiro en la fase dueña de
+  los tipos centrales.

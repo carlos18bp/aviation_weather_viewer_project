@@ -8,6 +8,10 @@ import {
   TEMPERATURE_LEGEND,
 } from '@/features/weather/temperature';
 import {
+  PRECIPITATION_LAYER_ID,
+  PRECIPITATION_LEGEND,
+} from '@/features/weather/precipitation';
+import {
   WIND_FIELD_BBOX,
   WIND_LEGEND,
 } from '@/features/weather/wind';
@@ -186,10 +190,28 @@ export function parseWeatherCatalog(value: unknown): WeatherCatalog {
     return parsed;
   });
 
-  if (!Array.isArray(catalog.layers) || catalog.layers.length !== 2) {
-    fail('El catálogo debe contener temperatura y viento.');
+  if (!Array.isArray(catalog.layers) || catalog.layers.length !== 3) {
+    fail('El catálogo debe contener temperatura, viento y precipitación.');
   }
-  const layers = catalog.layers.map(parseCatalogLayer);
+  const precipitationLayer = asRecord(
+    catalog.layers[2],
+    'La capa de precipitación del catálogo',
+  );
+  if (
+    precipitationLayer.id !== PRECIPITATION_LAYER_ID
+    || precipitationLayer.kind !== 'scalar'
+    || precipitationLayer.unit !== PRECIPITATION_LEGEND.unit
+    || precipitationLayer.minimum !== PRECIPITATION_LEGEND.minimum
+    || precipitationLayer.maximum !== PRECIPITATION_LEGEND.maximum
+    || typeof precipitationLayer.name !== 'string'
+    || precipitationLayer.name.trim() === ''
+  ) {
+    fail('El catálogo contiene una capa de precipitación inválida.');
+  }
+
+  // Phase 13 publishes the frozen atmospheric contract without wiring it into
+  // the current viewer. Phase 14 will widen WeatherLayerId and expose this item.
+  const layers = catalog.layers.slice(0, 2).map(parseCatalogLayer);
   if (new Set(layers.map((layer) => layer.id)).size !== 2) {
     fail('El catálogo debe contener una sola definición por capa.');
   }

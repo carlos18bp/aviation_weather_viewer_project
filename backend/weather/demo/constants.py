@@ -40,8 +40,25 @@ LAYER_DEFINITIONS: Final = (
         "minimum": 0,
         "maximum": 60,
     },
+    {
+        "id": "precipitation",
+        "name": "Precipitación simulada",
+        "kind": "scalar",
+        "unit": "mm/h",
+        "minimum": 0,
+        "maximum": 40,
+    },
 )
 LAYER_IDS: Final = frozenset(layer["id"] for layer in LAYER_DEFINITIONS)
+
+OVERLAY_DEFINITIONS: Final = (
+    {
+        "id": "pressure-isobars",
+        "name": "Isobaras",
+        "unit": "hPa",
+    },
+)
+OVERLAY_IDS: Final = frozenset(overlay["id"] for overlay in OVERLAY_DEFINITIONS)
 
 TEMPERATURE_SIZE: Final = (1024, 1216)
 TEMPERATURE_AUTHORING_SIZE: Final = (256, 304)
@@ -59,6 +76,22 @@ TEMPERATURE_COLOR_STOPS: Final = (
     (33, "#f46d43"),
     (38, "#a50026"),
 )
+
+PRECIPITATION_SIZE: Final = (1024, 1216)
+PRECIPITATION_AUTHORING_SIZE: Final = (256, 304)
+PRECIPITATION_COLOR_STOPS: Final = (
+    (0, "#00000000"),
+    (0.5, "#69d2e7"),
+    (2, "#2b8cbe"),
+    (8, "#41ab5d"),
+    (15, "#f0e442"),
+    (25, "#f28e2b"),
+    (40, "#d73027"),
+)
+
+PRESSURE_ISOBAR_LEVELS: Final = tuple(range(996, 1025, 4))
+PRESSURE_AUTHORING_WIDTH: Final = 129
+PRESSURE_AUTHORING_HEIGHT: Final = 153
 
 WIND_WIDTH: Final = 128
 WIND_HEIGHT: Final = 160

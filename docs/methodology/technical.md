@@ -271,3 +271,29 @@ estas funciones permanecen aisladas hasta Fase 14.
 
 La especificación exacta vive en
 docs/MVP_roadmap/mobile_layer_enrichment/00_shared_contracts.md.
+
+## Contrato técnico — Fase 13
+
+- Manifiesto: schema `2`, 18 frames principales y un overlay con seis frames.
+- Precipitación: seis WebP RGBA `1024×1216`, bbox `[-82,-5,-66,14]`, rango
+  global `0–40 mm/h` y opacidad fija MapLibre `0.68`.
+- Paleta: `0 #00000000`, `0.5 #69d2e7`, `2 #2b8cbe`, `8 #41ab5d`,
+  `15 #f0e442`, `25 #f28e2b`, `40 #d73027`.
+- Isobaras: seis `FeatureCollection<LineString>` con niveles `996`, `1000`,
+  `1004`, `1008`, `1012`, `1016`, `1020` y `1024 hPa`; todas las features
+  conservan timestamp y flags de simulación/no operación.
+- API: no hay endpoints nuevos. El catálogo publica la tercera capa y el
+  overlay; `/frames` publica precipitación y mantiene `value_data_url`
+  exclusivamente para temperatura.
+- IDs MapLibre: `weather-precipitation-source`,
+  `weather-precipitation-layer`, `weather-pressure-isobars-source`,
+  `weather-pressure-isobars-lines` y `weather-pressure-isobars-labels`.
+- Exports para Fase 14: `PRECIPITATION_LEGEND`,
+  `fetchPrecipitationFrame`, `PrecipitationLayerAdapter`,
+  `fetchIsobarCatalog`, `selectIsobarFrame` e `IsobarLayerAdapter`, además de
+  sus factories, IDs y callbacks `onError(error, frame)`.
+
+La generación doble y el test de reproducibilidad confirmaron igualdad byte a
+byte. Los tests dirigidos de Fase 13 cubren assets/validadores, catálogo/frames,
+schemas/servicios, respuestas obsoletas, hide-during-fetch, fallbacks y cleanup;
+ESLint, Ruff, `python manage.py check` y el build Next quedaron verdes.

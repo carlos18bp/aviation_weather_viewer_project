@@ -41,7 +41,15 @@ def test_manifest_declares_frozen_catalog():
     assert manifest["layers"] == [dict(layer) for layer in LAYER_DEFINITIONS]
     assert manifest["schema_version"] == 2
     assert manifest["timestamps"] == list(TIMESTAMPS)
-    assert manifest["overlays"] == []
+    assert len(manifest["overlays"]) == 1
+    assert manifest["overlays"][0]["id"] == "pressure-isobars"
+    assert len(manifest["overlays"][0]["frames"]) == 6
+
+
+def test_manifest_declares_non_operational_scenario_flags():
+    """Keep the scenario explicitly simulated and unavailable for operations."""
+    manifest = validate_manifest(load_json_document(SCENARIO_ROOT / "manifest.json"))
+
     assert manifest["scenario"]["is_simulated"] is True
     assert manifest["scenario"]["operational_use"] is False
 
@@ -54,14 +62,18 @@ def test_manifest_declares_complete_frame_product():
         map(lambda frame: (frame["layer"], frame["timestamp"]), manifest["frames"])
     )
 
-    assert len(manifest["frames"]) == 12
-    assert pairs == set(product(("temperature", "wind"), TIMESTAMPS))
+    assert len(manifest["frames"]) == 18
+    assert pairs == set(product(("temperature", "wind", "precipitation"), TIMESTAMPS))
     temperature_frames = [
         frame for frame in manifest["frames"] if frame["layer"] == "temperature"
     ]
     wind_frames = [frame for frame in manifest["frames"] if frame["layer"] == "wind"]
+    precipitation_frames = [
+        frame for frame in manifest["frames"] if frame["layer"] == "precipitation"
+    ]
     assert all("value_data_path" in frame for frame in temperature_frames)
     assert all("value_data_path" not in frame for frame in wind_frames)
+    assert all("value_data_path" not in frame for frame in precipitation_frames)
 
 
 def test_manifest_rejects_schema_one_after_migration():

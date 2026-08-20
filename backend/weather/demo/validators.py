@@ -19,6 +19,10 @@ from weather.demo.constants import (
     MANIFEST_SCHEMA_VERSION,
     MANIFEST_FILENAME,
     MEDIA_SCENARIO_PREFIX,
+    OVERLAY_DEFINITIONS,
+    OVERLAY_IDS,
+    PRECIPITATION_SIZE,
+    PRESSURE_ISOBAR_LEVELS,
     SCENARIO_CODE,
     SCENARIO_DATE,
     SIMULATION_FLAGS,
@@ -76,13 +80,18 @@ def _validate_relative_path(raw_path: object) -> str:
 
 def expected_frame_data_path(layer: str, timestamp: str) -> str:
     label = TIMESTAMP_LABELS[timestamp]
-    suffix = "webp" if layer == "temperature" else "json"
+    suffix = "webp" if layer in {"temperature", "precipitation"} else "json"
     return f"{MEDIA_SCENARIO_PREFIX}/{layer}/{label}.{suffix}"
 
 
 def expected_temperature_value_data_path(timestamp: str) -> str:
     label = TIMESTAMP_LABELS[timestamp]
     return f"{MEDIA_SCENARIO_PREFIX}/temperature-values/{label}.json"
+
+
+def expected_overlay_data_path(overlay_id: str, timestamp: str) -> str:
+    label = TIMESTAMP_LABELS[timestamp]
+    return f"{MEDIA_SCENARIO_PREFIX}/{overlay_id}/{label}.geojson"
 
 
 def validate_manifest(
@@ -130,8 +139,6 @@ def validate_manifest(
     expected_layers = [dict(layer) for layer in LAYER_DEFINITIONS]
     _require(payload.get("layers") == expected_layers, "Invalid layer definitions.")
     _require(payload.get("timestamps") == list(TIMESTAMPS), "Invalid timestamps.")
-    _require(payload.get("overlays") == [], "Manifest overlays are invalid.")
-
     frames = payload.get("frames")
     _require(isinstance(frames, list), "Manifest frames are invalid.")
     frame_pairs: set[tuple[str, str]] = set()
@@ -177,7 +184,53 @@ def validate_manifest(
             (layer, timestamp) for layer in LAYER_IDS for timestamp in TIMESTAMPS
         }
         _require(frame_pairs == expected_pairs, "Manifest frame product is incomplete.")
-        _require(len(frames) == 12, "Manifest must contain twelve frames.")
+        _require(len(frames) == 18, "Manifest must contain eighteen frames.")
+
+    overlays = payload.get("overlays")
+    _require(isinstance(overlays, list), "Manifest overlays are invalid.")
+    _require(
+        len(overlays) == len(OVERLAY_DEFINITIONS), "Manifest overlays are invalid."
+    )
+    overlay_ids: set[str] = set()
+    expected_overlay_lookup = {
+        definition["id"]: definition for definition in OVERLAY_DEFINITIONS
+    }
+    for overlay in overlays:
+        _require(isinstance(overlay, dict), "Overlay descriptor is invalid.")
+        _require(
+            set(overlay) == {"id", "name", "unit", "frames"},
+            "Overlay descriptor fields are invalid.",
+        )
+        overlay_id = overlay.get("id")
+        _require(overlay_id in OVERLAY_IDS, "Overlay identifier is invalid.")
+        _require(overlay_id not in overlay_ids, "Overlay descriptor is duplicated.")
+        overlay_ids.add(overlay_id)
+        definition = expected_overlay_lookup[overlay_id]
+        _require(overlay.get("name") == definition["name"], "Overlay name is invalid.")
+        _require(overlay.get("unit") == definition["unit"], "Overlay unit is invalid.")
+
+        overlay_frames = overlay.get("frames")
+        _require(isinstance(overlay_frames, list), "Overlay frames are invalid.")
+        actual_timestamps: list[str] = []
+        for overlay_frame in overlay_frames:
+            _require(isinstance(overlay_frame, dict), "Overlay frame is invalid.")
+            _require(
+                set(overlay_frame) == {"timestamp", "data_path"},
+                "Overlay frame fields are invalid.",
+            )
+            timestamp = overlay_frame.get("timestamp")
+            _require(timestamp in TIMESTAMPS, "Overlay timestamp is invalid.")
+            _require(timestamp not in actual_timestamps, "Overlay frame is duplicated.")
+            actual_timestamps.append(timestamp)
+            data_path = _validate_relative_path(overlay_frame.get("data_path"))
+            _require(
+                data_path == expected_overlay_data_path(overlay_id, timestamp),
+                "Overlay data path is invalid.",
+            )
+        _require(
+            actual_timestamps == list(TIMESTAMPS),
+            "Overlay frame product is incomplete.",
+        )
 
     return payload
 
@@ -299,6 +352,103 @@ def validate_temperature_image(path: Path) -> None:
         raise DemoAssetError("Temperature frame cannot be decoded.") from exc
 
 
+def validate_precipitation_image(path: Path) -> None:
+    """Validate one RGBA WebP precipitation frame."""
+    try:
+        with Image.open(path) as image:
+            image.load()
+            _require(image.format == "WEBP", "Precipitation frame format is invalid.")
+            _require(image.mode == "RGBA", "Precipitation frame must be RGBA.")
+            _require(
+                image.size == PRECIPITATION_SIZE,
+                "Precipitation frame size is invalid.",
+            )
+    except (OSError, UnidentifiedImageError) as exc:
+        raise DemoAssetError("Precipitation frame cannot be decoded.") from exc
+
+
+def validate_pressure_isobars(
+    payload: dict[str, Any], *, expected_timestamp: str
+) -> dict[str, Any]:
+    """Validate one frozen pressure-isobar FeatureCollection."""
+    _require(
+        set(payload) == {"type", "features"},
+        "Pressure-isobar collection fields are invalid.",
+    )
+    _require(payload.get("type") == "FeatureCollection", "Invalid GeoJSON type.")
+    features = payload.get("features")
+    _require(isinstance(features, list) and features, "Isobar features are invalid.")
+    west, south, east, north = BBOX
+    observed_levels: set[int] = set()
+
+    for feature in features:
+        _require(isinstance(feature, dict), "Isobar feature is invalid.")
+        _require(
+            set(feature) == {"type", "properties", "geometry"},
+            "Isobar feature fields are invalid.",
+        )
+        _require(feature.get("type") == "Feature", "Invalid isobar feature type.")
+        properties = feature.get("properties")
+        _require(isinstance(properties, dict), "Isobar properties are invalid.")
+        _require(
+            set(properties)
+            == {"pressure_hpa", "timestamp", "is_simulated", "operational_use"},
+            "Isobar property fields are invalid.",
+        )
+        pressure = properties.get("pressure_hpa")
+        _require(
+            isinstance(pressure, int)
+            and not isinstance(pressure, bool)
+            and pressure in PRESSURE_ISOBAR_LEVELS,
+            "Isobar pressure is invalid.",
+        )
+        observed_levels.add(pressure)
+        _require(
+            properties.get("timestamp") == expected_timestamp,
+            "Isobar timestamp is invalid.",
+        )
+        _validate_scenario_flags(properties)
+
+        geometry = feature.get("geometry")
+        _require(isinstance(geometry, dict), "Isobar geometry is invalid.")
+        _require(
+            set(geometry) == {"type", "coordinates"},
+            "Isobar geometry fields are invalid.",
+        )
+        _require(geometry.get("type") == "LineString", "Isobar must be a LineString.")
+        coordinates = geometry.get("coordinates")
+        _require(
+            isinstance(coordinates, list) and len(coordinates) >= 2,
+            "Isobar coordinates are invalid.",
+        )
+        normalized_coordinates: list[tuple[float, float]] = []
+        for coordinate in coordinates:
+            _require(
+                isinstance(coordinate, list) and len(coordinate) == 2,
+                "Isobar coordinate shape is invalid.",
+            )
+            longitude, latitude = coordinate
+            _require(
+                _is_finite_number(longitude) and _is_finite_number(latitude),
+                "Isobar coordinates must be finite.",
+            )
+            _require(
+                west <= longitude <= east and south <= latitude <= north,
+                "Isobar coordinate leaves the frozen coverage.",
+            )
+            normalized_coordinates.append((longitude, latitude))
+        _require(
+            len(set(normalized_coordinates)) >= 2,
+            "Isobar LineString must contain distinct coordinates.",
+        )
+
+    _require(
+        observed_levels == set(PRESSURE_ISOBAR_LEVELS),
+        "Isobar pressure levels are incomplete.",
+    )
+    return payload
+
+
 def validate_temperature_value_grid(
     payload: dict[str, Any], *, expected_timestamp: str
 ) -> dict[str, Any]:
@@ -384,8 +534,26 @@ def validate_frame_asset(scenario_root: Path, frame: dict[str, Any]) -> None:
         )
         return
 
+    if frame["layer"] == "precipitation":
+        validate_precipitation_image(path)
+        return
+
     wind_payload = load_json_document(path)
     validate_wind_field(wind_payload, expected_timestamp=frame["timestamp"])
+
+
+def validate_overlay_asset(
+    scenario_root: Path,
+    overlay_id: str,
+    frame: dict[str, Any],
+) -> None:
+    """Validate one artifact referenced by an overlay descriptor."""
+    _require(overlay_id in OVERLAY_IDS, "Overlay identifier is invalid.")
+    path = frame_path_for_scenario(scenario_root, frame["data_path"])
+    validate_pressure_isobars(
+        load_json_document(path),
+        expected_timestamp=frame["timestamp"],
+    )
 
 
 def validate_scenario(scenario_root: Path) -> dict[str, Any]:
@@ -397,4 +565,7 @@ def validate_scenario(scenario_root: Path) -> dict[str, Any]:
     validate_airport_weather(load_json_document(fixture_path))
     for frame in manifest["frames"]:
         validate_frame_asset(scenario_root, frame)
+    for overlay in manifest["overlays"]:
+        for frame in overlay["frames"]:
+            validate_overlay_asset(scenario_root, overlay["id"], frame)
     return manifest

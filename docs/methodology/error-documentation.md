@@ -250,3 +250,18 @@ La Fase 18 genera y valida 48 assets staged sin modificar manifest, loaders,
 views o catálogo. La Fase 23 cambia manifest a schema 3, API, parser, store y
 controller en el mismo vertical slice. El Gate M1 exige una prueba de regresión
 que confirme que el catálogo vivo conserva schema 2 hasta entonces.
+
+## 2026-08-20 — Tipos MapLibre/GeoJSON durante Fase 13
+
+### Síntoma
+
+El primer build dirigido rechazó una colección vacía congelada como `readonly`
+al pasarla a `GeoJSONSource#setData` y detectó que un caso negativo de presión
+asignaba `998` a la unión literal de niveles válidos.
+
+### Resolución y verificación
+
+La colección vacía se tipó como `FeatureCollection` mutable sin exponer una
+operación de mutación, y el fixture negativo hace un cast explícito para simular
+input externo inválido. Los tests dirigidos de isobaras, ESLint y el build Next
+pasaron después del ajuste; el contrato runtime continúa rechazando `998`.

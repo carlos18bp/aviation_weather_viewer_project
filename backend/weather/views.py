@@ -17,6 +17,7 @@ from weather.demo.constants import (
 from weather.demo.exceptions import DemoAssetError
 from weather.demo.loaders import (
     ensure_frame_available,
+    ensure_overlay_available,
     load_airport_weather,
     load_manifest,
 )
@@ -60,6 +61,29 @@ def weather_catalog(_request):
         return _error_response("asset_unavailable", status.HTTP_503_SERVICE_UNAVAILABLE)
 
     scenario = manifest["scenario"]
+    try:
+        for overlay in manifest["overlays"]:
+            for frame in overlay["frames"]:
+                ensure_overlay_available(overlay["id"], frame)
+    except DemoAssetError:
+        return _error_response("asset_unavailable", status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    media_prefix = settings.MEDIA_URL.rstrip("/")
+    overlays = [
+        {
+            "id": overlay["id"],
+            "name": overlay["name"],
+            "unit": overlay["unit"],
+            "frames": [
+                {
+                    "timestamp": frame["timestamp"],
+                    "data_url": f"{media_prefix}/{frame['data_path']}",
+                }
+                for frame in overlay["frames"]
+            ],
+        }
+        for overlay in manifest["overlays"]
+    ]
     return Response(
         {
             "scenario": {
@@ -71,6 +95,7 @@ def weather_catalog(_request):
             },
             "layers": manifest["layers"],
             "timestamps": manifest["timestamps"],
+            "overlays": overlays,
         }
     )
 
