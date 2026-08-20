@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 from django.conf import settings
 from PIL import Image, ImageChops
-
 from weather.demo.constants import (
     LAYER_DEFINITIONS,
     OVERLAY_DEFINITIONS,
@@ -27,6 +26,7 @@ SCENARIO_ROOT = Path(settings.DEMO_WEATHER_SCENARIO_ROOT)
 
 
 def test_phase13_manifest_keeps_schema_two_and_declares_exact_products():
+    """Keep schema two while declaring all primary and overlay products."""
     manifest = validate_manifest(load_json_document(SCENARIO_ROOT / "manifest.json"))
 
     assert manifest["schema_version"] == 2
@@ -41,6 +41,7 @@ def test_phase13_manifest_keeps_schema_two_and_declares_exact_products():
 
 @pytest.mark.parametrize(("timestamp", "label"), TIMESTAMP_LABELS.items())
 def test_precipitation_frame_matches_rgba_webp_contract(timestamp, label):  # noqa: ARG001
+    """Validate every precipitation asset as an RGBA WebP at the frozen size."""
     path = SCENARIO_ROOT / "precipitation" / f"{label}.webp"
 
     validate_precipitation_image(path)
@@ -53,6 +54,7 @@ def test_precipitation_frame_matches_rgba_webp_contract(timestamp, label):  # no
 
 
 def test_precipitation_frames_are_all_visually_different():
+    """Require visible evolution between every adjacent precipitation frame."""
     images = []
     for label in TIMESTAMP_LABELS.values():
         with Image.open(SCENARIO_ROOT / "precipitation" / f"{label}.webp") as image:
@@ -66,6 +68,7 @@ def test_precipitation_frames_are_all_visually_different():
 
 @pytest.mark.parametrize(("timestamp", "label"), TIMESTAMP_LABELS.items())
 def test_pressure_isobars_match_geojson_contract(timestamp, label):
+    """Validate every isobar collection, pressure level, and stitched contour."""
     path = SCENARIO_ROOT / "pressure-isobars" / f"{label}.geojson"
     payload = load_json_document(path)
 
@@ -87,6 +90,7 @@ def test_pressure_isobars_match_geojson_contract(timestamp, label):
     ],
 )
 def test_pressure_isobars_reject_invalid_geometry_and_properties(mutation):
+    """Reject invalid pressures, coordinates, and geometry types."""
     payload = load_json_document(SCENARIO_ROOT / "pressure-isobars" / "06Z.geojson")
     field, value = mutation
     if field == "pressure":
@@ -104,6 +108,7 @@ def test_pressure_isobars_reject_invalid_geometry_and_properties(mutation):
 
 
 def test_manifest_rejects_overlay_path_traversal():
+    """Reject an overlay path that escapes the frozen scenario."""
     manifest = deepcopy(load_manifest())
     manifest["overlays"][0]["frames"][0]["data_path"] = "../private.geojson"
 
@@ -112,6 +117,7 @@ def test_manifest_rejects_overlay_path_traversal():
 
 
 def test_precipitation_validator_rejects_corrupt_webp(tmp_path):
+    """Reject a precipitation file that cannot be decoded as WebP."""
     corrupt_path = tmp_path / "06Z.webp"
     corrupt_path.write_bytes(b"not-a-webp")
 

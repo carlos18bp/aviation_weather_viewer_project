@@ -44,6 +44,12 @@ def test_manifest_declares_frozen_catalog():
     assert len(manifest["overlays"]) == 1
     assert manifest["overlays"][0]["id"] == "pressure-isobars"
     assert len(manifest["overlays"][0]["frames"]) == 6
+
+
+def test_manifest_declares_non_operational_scenario_flags():
+    """Keep the scenario explicitly simulated and unavailable for operations."""
+    manifest = validate_manifest(load_json_document(SCENARIO_ROOT / "manifest.json"))
+
     assert manifest["scenario"]["is_simulated"] is True
     assert manifest["scenario"]["operational_use"] is False
 

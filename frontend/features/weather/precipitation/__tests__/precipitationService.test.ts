@@ -79,9 +79,13 @@ describe('precipitation service', () => {
 
   it('rejects invalid timestamp before requesting metadata', async () => {
     const fetcher = jest.fn();
-    await expect(fetchPrecipitationFrame('2026-01-15T01:00:00Z', {
+    const error = await fetchPrecipitationFrame('2026-01-15T01:00:00Z', {
       fetcher,
-    })).rejects.toBeInstanceOf(PrecipitationFrameValidationError);
+    }).catch((reason: unknown) => reason);
+
+    expect(error).toMatchObject({
+      name: PrecipitationFrameValidationError.name,
+    });
     expect(fetcher).not.toHaveBeenCalled();
   });
 
@@ -152,12 +156,16 @@ describe('precipitation service', () => {
 
   it('rejects a non-WebP response before image allocation', async () => {
     const imageFactory = jest.fn();
-    await expect(preloadPrecipitationImage(PRECIPITATION_IMAGE_URLS[TIMESTAMP], {
+    const error = await preloadPrecipitationImage(PRECIPITATION_IMAGE_URLS[TIMESTAMP], {
       fetcher: (async () => responseDouble({
         blob: jest.fn(async () => new Blob(['png'], { type: 'image/png' })),
       })) as typeof fetch,
       imageFactory,
-    })).rejects.toBeInstanceOf(PrecipitationImageLoadError);
+    }).catch((reason: unknown) => reason);
+
+    expect(error).toMatchObject({
+      name: PrecipitationImageLoadError.name,
+    });
     expect(imageFactory).not.toHaveBeenCalled();
   });
 });

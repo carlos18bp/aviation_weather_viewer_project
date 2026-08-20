@@ -145,9 +145,10 @@ describe('isobar schema and service', () => {
       dataUrl: 'https://example.invalid/isobars.geojson',
     } as unknown as IsobarFrame;
 
-    await expect(fetchIsobarFeatureCollection(frame, { fetcher })).rejects.toBeInstanceOf(
-      IsobarValidationError,
-    );
+    const error = await fetchIsobarFeatureCollection(frame, { fetcher })
+      .catch((reason: unknown) => reason);
+
+    expect(error).toMatchObject({ name: IsobarValidationError.name });
     expect(fetcher).not.toHaveBeenCalled();
   });
 

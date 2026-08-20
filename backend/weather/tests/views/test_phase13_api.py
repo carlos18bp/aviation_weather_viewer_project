@@ -9,13 +9,13 @@ import pytest
 from django.conf import settings
 from django.test import override_settings
 from rest_framework.test import APIClient
-
 from weather.demo.constants import TIMESTAMPS
 from weather.demo.loaders import clear_demo_asset_caches, load_manifest
 
 
 @pytest.fixture
 def api_client():
+    """Provide an unauthenticated client for the public demo endpoints."""
     return APIClient()
 
 
@@ -28,6 +28,7 @@ def _write_manifest(root: Path) -> None:
 
 
 def test_catalog_publishes_safe_precipitation_and_isobar_descriptors(api_client):
+    """Publish the atmospheric catalog with same-origin overlay descriptors."""
     response = api_client.get("/api/v1/demo/weather/catalog")
 
     payload = response.json()
@@ -51,6 +52,7 @@ def test_catalog_publishes_safe_precipitation_and_isobar_descriptors(api_client)
 
 
 def test_precipitation_frame_uses_existing_endpoint_without_value_url(api_client):
+    """Publish precipitation through the existing frame endpoint without picker data."""
     response = api_client.get(
         "/api/v1/demo/weather/frames",
         {"layer": "precipitation", "timestamp": TIMESTAMPS[2]},
@@ -72,6 +74,7 @@ def test_precipitation_frame_uses_existing_endpoint_without_value_url(api_client
 
 
 def test_catalog_returns_503_for_corrupt_isobars(api_client, tmp_path):
+    """Degrade the catalog safely when a referenced isobar asset is corrupt."""
     scenario_root = tmp_path / "scenario"
     _write_manifest(scenario_root)
     source = Path(settings.DEMO_WEATHER_SCENARIO_ROOT) / "pressure-isobars"
@@ -90,6 +93,7 @@ def test_catalog_returns_503_for_corrupt_isobars(api_client, tmp_path):
 
 
 def test_precipitation_frame_returns_503_when_asset_is_missing(api_client, tmp_path):
+    """Degrade a precipitation request safely when its WebP is unavailable."""
     scenario_root = tmp_path / "scenario"
     _write_manifest(scenario_root)
 
