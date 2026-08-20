@@ -1,0 +1,134 @@
+.legend {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+  width: 100%;
+  padding: 9px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 11px;
+  color: var(--viewer-text);
+  background: rgb(7 19 31 / 62%);
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.icon {
+  display: grid;
+  flex: 0 0 32px;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: var(--viewer-accent);
+  background: rgb(50 211 220 / 10%);
+}
+
+.icon svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.65;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.identity {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.identity strong,
+.identity small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identity strong {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.identity small {
+  margin-top: 2px;
+  color: var(--viewer-muted);
+  font-size: 9px;
+}
+
+.heading button {
+  display: grid;
+  flex: 0 0 44px;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--viewer-border);
+  border-radius: 9px;
+  color: var(--viewer-text);
+  background: rgb(4 15 25 / 72%);
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.heading button:focus-visible {
+  border-color: var(--viewer-accent);
+  outline: 2px solid var(--viewer-accent);
+  outline-offset: 2px;
+}
+
+.detail {
+  display: grid;
+  gap: 7px;
+  padding-top: 8px;
+  border-top: 1px solid var(--viewer-border);
+}
+
+.gradient {
+  width: 100%;
+  height: 10px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 999px;
+  background-color: var(--viewer-border);
+  box-shadow: 0 0 18px rgb(0 0 0 / 20%);
+}
+
+.range {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--viewer-muted);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.invalidScale,
+.simulatedNotice {
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.invalidScale {
+  color: var(--viewer-muted);
+}
+
+.simulatedNotice {
+  color: var(--viewer-warning);
+  font-weight: 650;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .legend,
+  .heading button,
+  .detail {
+    transition: none;
+  }
+}
