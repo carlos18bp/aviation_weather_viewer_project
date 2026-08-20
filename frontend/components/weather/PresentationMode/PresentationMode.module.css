@@ -1,0 +1,59 @@
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--viewer-text);
+}
+
+.controls button {
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 8px;
+  color: inherit;
+  background: rgb(7 19 31 / 78%);
+  font: inherit;
+  cursor: pointer;
+}
+
+.controls button:hover,
+.controls button:focus-visible {
+  border-color: var(--viewer-accent);
+  outline: 2px solid rgb(34 211 238 / 26%);
+  outline-offset: 2px;
+}
+
+.primaryAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.primaryAction[aria-pressed="true"] {
+  color: var(--viewer-bg);
+  border-color: var(--viewer-accent);
+  background: var(--viewer-accent);
+}
+
+.primaryAction span {
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  border: 1px solid currentcolor;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.secondaryAction {
+  color: var(--viewer-muted) !important;
+}
+
+.status {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--viewer-muted);
+  font-size: 10px;
+}

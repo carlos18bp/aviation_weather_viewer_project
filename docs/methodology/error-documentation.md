@@ -166,3 +166,17 @@ integridad 72/72, roster 9/9, doc-claims 15/15, parity, detector harnesses y 94
 units systemd. El commit `b0f2a244` está publicado, pero el gate remoto requiere
 acción de billing del operador y un rerun; no existe corrección de código que
 pueda iniciar el runner.
+
+## 2026-08-20 — `npm ci` quedó esperando la auditoría durante Fase 11
+
+### Síntoma
+
+La instalación aislada del worktree resolvió los paquetes desde cache, pero no
+terminó después de que npm registró un fallo de la solicitud bulk de audit.
+
+### Resolución y verificación
+
+Se repitió la instalación reproducible con
+`npm ci --no-audit --prefer-offline --progress=false`. Instaló 706 paquetes en
+el worktree sin tocar dependencias de otras sesiones y habilitó los tests
+dirigidos. No se cambió `package.json` ni `package-lock.json`.

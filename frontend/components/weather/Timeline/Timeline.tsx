@@ -1,6 +1,10 @@
 'use client';
 
-import { formatZuluTimestamp } from '@/features/timeline';
+import {
+  formatZuluTimestamp,
+  IDLE_TEMPORAL_TRANSITION,
+  type TemporalTransition,
+} from '@/features/timeline';
 
 import styles from './Timeline.module.css';
 
@@ -17,6 +21,7 @@ export interface TimelineProps {
   onNext(): void;
   onPlay(): void;
   onPause(): void;
+  transition?: TemporalTransition;
 }
 
 type TimelineIconName = 'previous' | 'next' | 'play' | 'pause';
@@ -67,6 +72,7 @@ export function Timeline({
   onNext,
   onPlay,
   onPause,
+  transition = IDLE_TEMPORAL_TRANSITION,
 }: TimelineProps) {
   const formattedTimestamps = timestamps.map(tryFormatTimestamp);
   const hasSixTimestamps = timestamps.length === REQUIRED_TIMESTAMP_COUNT;
@@ -92,6 +98,8 @@ export function Timeline({
       aria-label="Línea de tiempo meteorológica"
       aria-busy={isLoading}
       data-loading={isLoading ? 'true' : 'false'}
+      data-transition-phase={transition.phase}
+      data-transition-target={transition.targetTimestamp ?? undefined}
     >
       <div className={styles.summary}>
         <div className={styles.activeTime} aria-label="Hora meteorológica seleccionada">
@@ -139,6 +147,14 @@ export function Timeline({
             Actualizando datos…
           </span>
         )}
+      </div>
+
+      <div className={styles.progressTrack} aria-hidden="true">
+        <i
+          key={activeTimestamp}
+          className={styles.progressFill}
+          data-playing={isPlaying ? 'true' : 'false'}
+        />
       </div>
 
       <div className={styles.timestamps} aria-label="Timestamps disponibles">

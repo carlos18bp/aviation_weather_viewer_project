@@ -2,6 +2,10 @@ import {
   formatZuluTimestamp,
   getNextTimestamp,
   getPreviousTimestamp,
+  getTemporalFramePlan,
+  PLAYBACK_INTERVAL_MS,
+  TEMPORAL_ENTER_DURATION_MS,
+  TEMPORAL_EXIT_DURATION_MS,
 } from '../timelineUtils';
 
 
@@ -42,5 +46,20 @@ describe('timelineUtils', () => {
     // quality: allow-negation-only (null is the explicit invalid-origin return contract)
     expect(getPreviousTimestamp(TIMESTAMPS, '2026-01-15T18:00:00Z')).toBeNull();
     expect(getNextTimestamp([], TIMESTAMPS[0])).toBeNull();
+  });
+
+  it('plans only the previous, active and next circular timestamps', () => {
+    expect(getTemporalFramePlan(TIMESTAMPS, TIMESTAMPS[2])).toEqual({
+      previous: TIMESTAMPS[1],
+      active: TIMESTAMPS[2],
+      next: TIMESTAMPS[3],
+    });
+    expect(getTemporalFramePlan(TIMESTAMPS, '2026-01-15T18:00:00Z')).toBeNull();
+  });
+
+  it('exports the frozen temporal durations', () => {
+    expect(PLAYBACK_INTERVAL_MS).toBe(1500);
+    expect(TEMPORAL_EXIT_DURATION_MS).toBe(120);
+    expect(TEMPORAL_ENTER_DURATION_MS).toBe(180);
   });
 });

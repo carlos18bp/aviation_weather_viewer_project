@@ -1,25 +1,31 @@
-# Contexto activo — Fase 08, release de la demo
+# Contexto activo — Fase 11, narrativa temporal y presentación
 
 Actualizado: 2026-08-20.
 
 ## Objetivo actual
 
-El producto de Fase 08 está integrado y validado. Falta únicamente que el
-operador restablezca billing/spending de GitHub Actions y reejecute el CI remoto
-del toolkit; hasta entonces no declarar cierre global verde. No se autorizan
-features, refactors ni expansión del producto.
+Entregar módulos aislados para precarga, transición atómica, escena en URL y
+modo presentación, sin conectarlos todavía a la vista, store, controller u
+orquestador. Fases 09 y 10 avanzan en worktrees paralelos; esta rama no modifica
+su ownership ni revierte sus cambios.
 
 ## Coordenada Git
 
-- Base resuelta: `master`.
-- SHA de Fase 07: `fcd8a8ae7e610ea335bcdce6154ffb309f12999b`.
-- PR QA integrado: #13.
-- SHA QA desplegado y verificado: `054ebdd27b459ba24cff3d65f580ea7bbae95f0d`.
-- Rama de QA: `qa/20082026-phase-08-demo-release`.
-- Worktree: `~/webapps/.wt/aviation_weather_viewer_project/phase-08-demo-release`.
+- Base resuelta: `master` en `d1b57673c1dad6e959aea5bf029371f41e324dae`.
+- Rama: `feat/20082026-phase-11-temporal-presentation`.
+- Worktree: `~/webapps/.wt/aviation_weather_viewer_project/phase-11-temporal-presentation`.
 - Host: `vps-projectapp-staging` (`host_status=on-work-host`).
 
-## Estado validado
+## Estado de Fase 11
+
+- Cache LRU abortable de máximo tres keys y plan circular adyacente listos.
+- Timeline controlado con progreso de 1500 ms y contrato de transición listo.
+- Codec/sincronizador URL puros y controles PresentationMode/SceneShare listos.
+- Harness aislado y guía de integración preparados para Fase 14.
+- No se editaron archivos centrales ni flows E2E.
+- Verificación dirigida: 73/73 tests, ESLint del ownership y build Next verdes.
+
+## Estado validado de entrada — Fase 08
 
 - URL: `https://aviation-weather-platform.projectapp.co`.
 - Django check y build de producción verdes.
@@ -37,7 +43,7 @@ aproximadamente 0,6–1,4 FPS y no permiten acreditar el objetivo de ~30 FPS par
 una GPU física. La densidad ya está fija en 2500 y el fallback de flechas es
 fluido. Repetir el ensayo en el portátil de la reunión antes de presentar.
 
-## Cierre alcanzado
+## Cierre alcanzado de Fase 08
 
 1. El PR QA #13 pasó los cuatro checks obligatorios y se integró con
    `merge-when-green`.

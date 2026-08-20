@@ -62,8 +62,8 @@ Estado: **integrada en `master` mediante PR #10**.
 
 ## Roadmap de enriquecimiento posterior
 
-Estado: **documentado; enriquecimiento no iniciado mientras el gate externo de
-Fase 08 permanezca bloqueado**.
+Estado: **ola E1 en ejecución paralela; Fase 11 implementada en rama propia y
+pendiente de integración por la Sesión 4**.
 
 - [x] Evaluar candidatos visuales y aeronáuticos inspirados en Windy.
 - [x] Seleccionar seis fases en dos olas de implementación.
@@ -71,11 +71,21 @@ Fase 08 permanezca bloqueado**.
 - [x] Definir ownership sin solapamientos para fases paralelas.
 - [x] Definir gates, pruebas, fallback y criterios de release enriquecido.
 - [x] Integrar y validar Fase 08.
-- [ ] Abrir ola E1: fases 09, 10 y 11.
+- [x] Abrir ola E1: fases 09, 10 y 11.
 - [ ] Abrir ola E2: fases 12 y 13.
 - [ ] Ejecutar fase 14 de integración, QA y ensayo.
 
 Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
+
+## Fase 11 — Narrativa temporal y presentación
+
+- [x] Entregar plan adyacente y cache genérica acotada a tres frames.
+- [x] Entregar progreso de 1500 ms y runner de transición con commit único.
+- [x] Implementar parser, serializer y sincronizador URL canónicos.
+- [x] Implementar modo presentación, atajo `P`, Clipboard y Fullscreen fallback.
+- [x] Mantener intactos store, controller, `page.tsx`, orquestador y flows E2E.
+- [x] Añadir harness aislado, pruebas dirigidas y guía para Fase 14.
+- [ ] Integrar mediante el drenaje coordinado de la ola E1.
 
 ## Fase 08 — Validación, despliegue y ensayo
 
