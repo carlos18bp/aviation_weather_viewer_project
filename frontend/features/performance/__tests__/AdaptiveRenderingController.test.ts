@@ -109,6 +109,10 @@ describe('AdaptiveRenderingController', () => {
     controller.recordFrame(5_100);
 
     expect(onProfileChange).not.toHaveBeenCalled();
+    expect(controller.currentProfile()).toMatchObject({
+      id: 'tablet',
+      particleCount: 1_600,
+    });
   });
 
   it('registers visibility once and removes it once across repeated lifecycle calls', () => {
