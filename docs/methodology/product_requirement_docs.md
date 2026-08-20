@@ -197,3 +197,17 @@ El estado de panel, snap y orientación es React local y efímero. No cambia la
 escena canónica, Zustand, `viewerTypes`, controller, adapters, renderer, backend
 ni media. Resize y orientación sólo disparan `resize()` sobre la superficie
 existente; el canvas, root MapLibre y contexto WebGL conservan identidad.
+
+## Capas aeronáuticas aisladas — Fase 20
+
+La Fase 20 entrega visibilidad y ráfagas simuladas como módulos frontend
+aislados, todavía sin opciones visibles en el selector central. Ambas capas
+consumen los seis descriptores staged de Fase 18, mantienen rangos exactos de
+`1–20 km` y `0–80 kt`, y publican services, samplers, leyendas y adapters para
+la integración exclusiva de Fase 23.
+
+El muestreo es local y bilineal. Una ráfaga sólo se publica si comparte punto y
+timestamp con el campo U/V y, con tolerancia de redondeo de `0.1 kt`, no es
+menor que la velocidad del viento. Una incoherencia o grid inválido produce
+`Valor no disponible`; nunca se corrige silenciosamente ni dispara requests al
+mover el marcador.

@@ -367,3 +367,32 @@ y build Next verdes. Viewports cubiertos: `390×844`, `844×390`, `768×1024`,
 `1024×768` y `1920×1080`. Capturas reproducibles:
 `frontend/test-results/phase15-390x844.png`, `phase15-844x390.png`,
 `phase15-768x1024.png` y `phase15-1024x768.png`.
+
+## Contrato técnico — Fase 20
+
+- Base común Ola M2: `8180ff0bdcdee6fc99b64461d7bc7878de9bc02c`.
+- Visibility: `1–20 km`, un decimal, IDs `weather-visibility-source` y
+  `weather-visibility-layer`, opacidad fija `0.62`.
+- Wind gusts: raster escalar `0–80 kt`, un decimal, IDs
+  `weather-wind-gusts-source` y `weather-wind-gusts-layer`, opacidad fija
+  `0.66`; no crea particles ni altera U/V.
+- Services: descriptor inyectado y estricto, fetch same-origin abortable,
+  cache LRU configurable `1 | 2 | 3`, protección por request-version y object
+  URL revocada en eviction, supersession o destroy.
+- Fallos: grid inválido devuelve raster con `grid=null`; raster nuevo inválido
+  rechaza el cambio; abort no se convierte en error visible.
+- Muestreo: bilinear público de Fase 18; gust compara el `WindField` del mismo
+  timestamp/coordenada con tolerancia `WIND_GUST_ROUNDING_TOLERANCE_KT=0.1`.
+  Toda incoherencia devuelve `Valor no disponible`.
+- Verificación: 49/49 tests dirigidos, TypeScript, ESLint del ownership y build
+  Next de producción verdes. Guardas estáticas confirman cero imports a
+  `WindRenderer`/Fase 19 y cero fetch en samplers.
+
+Muestras staged verificadas en SKBO `[-74.1469, 4.70159]`: a 06Z,
+visibilidad `8.6 km`, ráfaga `14.4 kt` y viento `11.2 kt`; a 09Z,
+visibilidad `8.4 km`, ráfaga `10.2 kt` y viento `8.1 kt`. Ambas muestras son
+coherentes sin aplicar corrección.
+
+Capturas aisladas inspeccionadas: `/tmp/phase20-visibility-06Z.png`,
+`/tmp/phase20-visibility-09Z.png`, `/tmp/phase20-wind-gusts-06Z.png` y
+`/tmp/phase20-wind-gusts-09Z.png`.

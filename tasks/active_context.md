@@ -1,20 +1,18 @@
-# Contexto activo — Fase 15 / fundación responsive y shell táctil
+# Contexto activo — Fase 20 / visibilidad y ráfagas
 
 Actualizado: 2026-08-20.
 
-## Estado de la Ola M1
+## Base común de la Ola M2
 
-La Fase 15 parte del SHA común de Ola M1
-`54c61891dca39661e2e593f4715d1ef58ab37a11`. Ese commit integra la Fase 14
-mediante PR #24, tiene CI y quality gate verdes y está desplegado en staging con
-backend/frontend activos y health HTTP 200. Las ramas paralelas de las Fases
-16–18 parten del mismo SHA y conservan ownership disjunto.
+Las Fases 15–18 están integradas en `master`; sus PR #28, #26, #25 y #27 tienen
+CI, frontend build y test quality gate verdes. El SHA común de Ola M2 es
+`8180ff0bdcdee6fc99b64461d7bc7878de9bc02c`: contiene 48 assets aeronáuticos
+staged y conserva el catálogo vivo en schema `2`.
 
-La sesión trabaja en `feat/20082026-phase-15-responsive-foundation` y limita su
-implementación al shell, composición responsive, panel host, controles
-existentes y smoke E2E responsive. Panel, snap, orientación y clasificación de
-viewport serán estado React local/efímero; no entrarán en Zustand, URL,
-controller, adapters ni backend.
+La sesión trabaja en `feat/20082026-phase-20-visibility-gusts` desde ese SHA y
+limita el código funcional a features/adapters de `visibility` y `wind-gusts`.
+No modifica manifest/API, store, tipos centrales, controller, composición,
+Fase 19, WindRenderer, backend, media ni E2E.
 
 ## Estado heredado de Fase 14
 
@@ -253,3 +251,29 @@ datos simulados/locales; warning permanente.
 El siguiente wiring central pertenece exclusivamente a Fase 23. Fases 19–22
 deben consumir los slots públicos mediante componentes controlados y permanecer
 desconectadas de MapLibre central hasta esa integración.
+
+## Entrega de Fase 20
+
+- Seis descriptores estrictos por producto, leyendas exactas y rangos
+  visibility `1–20 km` / gust `0–80 kt`.
+- Services con abort, request-version, cache LRU `1–3`, object URLs y error de
+  grid separado del raster.
+- Samplers bilineales sin fetch; gust usa U/V público del mismo punto/hora y
+  tolerancia `0.1 kt`. Incoherencia: `Valor no disponible`.
+- Adapters con IDs reservados, opacidades `0.62/0.66`, resources únicos,
+  `updateImage`, visibility y destroy idempotente.
+- 49/49 tests dirigidos, TypeScript, ESLint y build verdes; guardas sin imports
+  a WindRenderer o Fase 19.
+- Muestra SKBO: 06Z `8.6 km`, gust `14.4 kt`, wind `11.2 kt`; 09Z `8.4 km`,
+  gust `10.2 kt`, wind `8.1 kt`.
+- Capturas inspeccionadas bajo `/tmp/phase20-{visibility,wind-gusts}-{06,09}Z.png`.
+
+### Handoff Fase 23
+
+1. Crear un service y adapter por capa; inicializar resources una vez.
+2. Cargar el descriptor staged antes del commit temporal y llamar `setFrame`
+   sólo cuando el raster esté preparado. Un `gridError` no impide ese commit.
+3. Inyectar el grid al point forecast al terminar la interacción; nunca cargar
+   por movimiento del marcador.
+4. Destruir primero adapter y luego service para retirar source/layer antes de
+   revocar sus object URLs.
