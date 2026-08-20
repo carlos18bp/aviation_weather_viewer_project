@@ -273,3 +273,34 @@ flowchart LR
   timestamps.
 - Presentación contrae chrome secundario pero conserva warning, UTC, selector,
   leyenda, timeline, resumen de escena y salida.
+
+## Arquitectura responsive integrada — Fase 15
+
+```mermaid
+flowchart LR
+    MQ[matchMedia + orientation] --> V[useViewerViewport]
+    V --> WV[WeatherViewer]
+    WV --> PS[Estado local panel + snap]
+    PS --> H[ResponsivePanelHost]
+    H --> Sheet[Phone portrait sheet]
+    H --> Drawer[Phone landscape drawer]
+    H --> Tablet[Tablet 320 px]
+    H --> Desktop[Slots desktop vigentes]
+    Shell[WeatherViewerShell] --> RO[ResizeObserver]
+    RO --> C[controller.resize]
+    C --> M[La misma instancia MapLibre/WebGL]
+```
+
+- `useViewerViewport` posee las suscripciones `MediaQueryList`, `resize` y
+  `orientationchange`, junto con su cleanup. Su fallback SSR/JSDOM es desktop.
+- `WeatherViewer` conserva panel activo y snap exclusivamente en estado React;
+  una selección de aeropuerto, coordenada o ruta abre el panel pertinente sin
+  serializar presentación en store o URL.
+- `ResponsivePanelHost` recibe contenido por slots controlados. Gestiona
+  apertura, snap, cierre, Escape, foco inicial y restauración al disparador; no
+  conoce MapLibre ni el orquestador.
+- `WeatherViewerShell` monta una sola superficie cartográfica. El host cambia
+  composición alrededor de ella y `ResizeObserver` llama `resize()` sin
+  reconstruir controller, adapters, canvas o contexto WebGL.
+- El viewport usa `viewport-fit=cover`, `100vh` como fallback, `100dvh` y
+  variables CSS basadas en `env(safe-area-inset-*)`.

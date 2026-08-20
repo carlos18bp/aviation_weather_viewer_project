@@ -206,3 +206,23 @@
 - Un contrato de ausencia en Zustand es una aserción de comportamiento válida,
   pero debe agrupar claves prohibidas y documentar por qué la negación es el
   resultado esperado.
+
+## Fase 15 — responsive sin duplicar el mapa
+
+- El ancho solo no clasifica un teléfono rotado: combinar media queries de
+  ancho y altura permite que `844×390` use drawer sin recurrir al user-agent.
+- Responsive debe cambiar composición, no lifecycle. Mantener estable el
+  factory del controller y observar el contenedor permite redimensionar el mapa
+  sin reconstruir adapters, workers o WebGL.
+- La identidad del DOM aporta evidencia directa: comparar root MapLibre,
+  canvas y contexto antes/después del resize detecta recreaciones que un simple
+  conteo final podría ocultar.
+- Los controles internos de una librería también forman parte del contrato
+  táctil. Medir `getBoundingClientRect()` en navegador encontró la atribución de
+  `24 px` que una revisión de componentes propios no habría visto.
+- Un sheet `full` debe operarse por sus controles visibles. Los E2E no deben
+  forzar clicks sobre un rail cubierto; cierre, Escape y restauración de foco
+  son parte funcional del recorrido.
+- Proxyear un backend staging verde desde Next local permite validar el frontend
+  no desplegado sin copiar secretos, siempre que se registre la contingencia y
+  se conserve same-origin desde la perspectiva del navegador.

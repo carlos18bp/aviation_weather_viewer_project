@@ -172,3 +172,33 @@ el toolkit**.
 - [x] Publicar dominio, Postgres, servicios y límites en `projects.yml`.
 - [ ] Restablecer billing/spending de GitHub Actions y reejecutar verde el CI
   del toolkit para su SHA `b0f2a244`.
+
+## Fase 15 — Fundación responsive y shell táctil
+
+- [x] Congelar base M1 en `54c61891dca39661e2e593f4715d1ef58ab37a11`
+  después de verificar Fases 09–14, deploy staging y QA verde.
+- [x] Clasificar phone/tablet/desktop y portrait/landscape con `matchMedia` y
+  cleanup, sin user-agent.
+- [x] Aplicar `viewport-fit=cover`, `100dvh`, safe areas y controles/hitboxes
+  mínimos de `44×44 px`.
+- [x] Implementar `ResponsivePanelHost` con estado local, sheet, drawer, panel
+  tablet de `320 px`, slots desktop, snap por botones, Escape y foco restaurado.
+- [x] Mantener warning, UTC, timeline y todas las funciones enriquecidas
+  alcanzables en phone/tablet sin modificar store, tipos, controller o adapters.
+- [x] Verificar que resize/orientation conserva root MapLibre, canvas, WebGL y
+  una sola creación del controller.
+- [x] Validar los cinco viewports, inspeccionar cuatro capturas, ejecutar E2E
+  dirigido y build de producción en ciclo separado.
+
+### Handoff Fases 19–23
+
+1. Fases 19 y 20 entregan adapters/servicios aislados de nubosidad, base de
+   nubes, visibilidad y ráfagas; no deben montar mapas ni entrar al host central.
+2. Fase 21 entrega point forecast controlado. Fase 23 puede montarlo en el slot
+   `location` conservando panel/snap como estado efímero de `WeatherViewer`.
+3. Fase 22 entrega el explorador controlado y sus descriptores. Fase 23 sustituye
+   el contenido del slot `layers`; no duplica el host ni el action rail.
+4. Fase 23 registra renderer, touch coordinator y adapters exactamente una vez,
+   publica schema 3 de forma atómica y conserva el `ResizeObserver` del shell.
+5. La integración final debe repetir los cinco viewports, targets de `44 px`,
+   foco/Escape, warning/UTC/timeline y la prueba de identidad MapLibre/WebGL.

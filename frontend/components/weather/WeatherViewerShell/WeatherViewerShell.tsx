@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 
+import { DemoWarning } from '@/components/weather/DemoWarning';
 import { useWeatherViewerStore } from '@/lib/stores/weatherViewerStore';
 import type { WeatherMapController } from '@/lib/weather/viewerTypes';
 import {
@@ -13,8 +14,6 @@ import { supportsWebGL2 } from '@/map/webgl';
 
 import styles from './WeatherViewerShell.module.css';
 
-
-const WARNING = 'DATOS SIMULADOS — PROTOTIPO DEMOSTRATIVO — NO APTO PARA USO OPERACIONAL';
 
 type MapStatus = 'loading' | 'ready' | 'error';
 
@@ -35,6 +34,7 @@ export type WeatherMapControllerFactory = (
 export interface WeatherViewerShellProps {
   airportPanel?: ReactNode;
   layerPanel?: ReactNode;
+  responsivePanelHost?: ReactNode;
   timeline?: ReactNode;
   controllerFactory?: WeatherMapControllerFactory;
 }
@@ -64,6 +64,7 @@ function EmptyTimelineSlot() {
 export function WeatherViewerShell({
   airportPanel,
   layerPanel,
+  responsivePanelHost,
   timeline,
   controllerFactory = defaultControllerFactory,
 }: WeatherViewerShellProps) {
@@ -154,7 +155,10 @@ export function WeatherViewerShell({
       <header className={styles.header}>
         <div>
           <p className={styles.eyebrow}>Demo Colombia · escenario 2026-01-15</p>
-          <h1>Meteorología Aeronáutica · Demo ProjectApp</h1>
+          <h1 aria-label="Meteorología Aeronáutica · Demo ProjectApp">
+            <span className={styles.fullTitle}>Meteorología Aeronáutica · Demo ProjectApp</span>
+            <span className={styles.compactTitle} aria-hidden="true">Meteo aeronáutica</span>
+          </h1>
         </div>
         <div className={styles.headerMeta}>
           <span className={styles.mapStatus} role="status">
@@ -168,12 +172,16 @@ export function WeatherViewerShell({
       </header>
 
       <section className={styles.stage} aria-label="Shell del visor meteorológico">
-        <aside className={`${styles.panelSlot} ${styles.airportSlot}`} aria-label="Slot para panel aeroportuario">
-          {airportPanel ?? <EmptyPanelSlot />}
-        </aside>
-        <aside className={`${styles.panelSlot} ${styles.layerSlot}`} aria-label="Slot para capas y leyenda">
-          {layerPanel ?? <EmptyPanelSlot />}
-        </aside>
+        {responsivePanelHost ?? (
+          <>
+            <aside className={`${styles.panelSlot} ${styles.airportSlot}`} aria-label="Slot para panel aeroportuario">
+              {airportPanel ?? <EmptyPanelSlot />}
+            </aside>
+            <aside className={`${styles.panelSlot} ${styles.layerSlot}`} aria-label="Slot para capas y leyenda">
+              {layerPanel ?? <EmptyPanelSlot />}
+            </aside>
+          </>
+        )}
       </section>
 
       {mapStatus === 'loading' && (
@@ -197,7 +205,9 @@ export function WeatherViewerShell({
       )}
 
       <footer className={styles.footer}>
-        <p className={styles.warning}>{WARNING}</p>
+        <div className={styles.warning}>
+          <DemoWarning />
+        </div>
         <section className={styles.timelineSlot} aria-label="Slot para controles y línea de tiempo">
           {timeline ?? <EmptyTimelineSlot />}
         </section>

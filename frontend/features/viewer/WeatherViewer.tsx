@@ -1,12 +1,19 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AirportPanel } from '@/components/weather/AirportPanel';
 import { AirportSearch } from '@/components/weather/AirportSearch';
 import { AirportTrend } from '@/components/weather/AirportTrend';
 import { LayerSelector } from '@/components/weather/LayerSelector';
 import { PresentationMode } from '@/components/weather/PresentationMode';
+import {
+  ResponsivePanelHost,
+  useViewerViewport,
+  type ResponsivePanelId,
+  type ResponsivePanelState,
+  type SheetSnapPoint,
+} from '@/components/weather/ResponsivePanelHost';
 import { RoutePlanner } from '@/components/weather/RoutePlanner';
 import { RouteProfile } from '@/components/weather/RouteProfile';
 import { SceneShare } from '@/components/weather/SceneShare';
@@ -153,18 +160,78 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
     ...INITIAL_VIEWER_SNAPSHOT,
     mapViewport: { ...INITIAL_VIEWER_SNAPSHOT.mapViewport },
   });
+  const [responsivePanel, setResponsivePanel] = useState<ResponsivePanelState>({
+    activePanel: null,
+    snapPoint: 'closed',
+  });
+  const { viewportMode, orientation } = useViewerViewport();
+  const viewportModeRef = useRef(viewportMode);
   const orchestratorRef = useRef<ViewerOrchestrator | null>(null);
+  const responsiveSelectionRef = useRef({
+    airport: null as string | null,
+    coordinate: null as string | null,
+    route: null as string | null,
+  });
   const airportTrend = useAirportWeatherSeries(snapshot.selectedAirport);
+
+  useEffect(() => {
+    viewportModeRef.current = viewportMode;
+  }, [viewportMode]);
+
+  const openResponsivePanel = useCallback((panel: ResponsivePanelId) => {
+    setResponsivePanel({ activePanel: panel, snapPoint: 'peek' });
+  }, []);
+
+  const closeResponsivePanel = useCallback(() => {
+    setResponsivePanel({ activePanel: null, snapPoint: 'closed' });
+  }, []);
+
+  const snapResponsivePanel = useCallback((snapPoint: SheetSnapPoint) => {
+    if (snapPoint === 'closed') {
+      closeResponsivePanel();
+      return;
+    }
+    setResponsivePanel((current) => ({ ...current, snapPoint }));
+  }, [closeResponsivePanel]);
+
+  const handleSnapshot = useCallback((nextSnapshot: ViewerSnapshot) => {
+    setSnapshot(nextSnapshot);
+
+    const coordinate = nextSnapshot.selectedCoordinate?.join(',') ?? null;
+    const route = nextSnapshot.selectedRoute
+      ? `${nextSnapshot.selectedRoute.originIcao}-${nextSnapshot.selectedRoute.destinationIcao}`
+      : null;
+    const previous = responsiveSelectionRef.current;
+
+    if (viewportModeRef.current !== 'desktop' && !nextSnapshot.presentationMode) {
+      if (route !== null && route !== previous.route) {
+        openResponsivePanel('route');
+      } else if (coordinate !== null && coordinate !== previous.coordinate) {
+        openResponsivePanel('location');
+      } else if (
+        nextSnapshot.selectedAirport !== null
+        && nextSnapshot.selectedAirport !== previous.airport
+      ) {
+        openResponsivePanel('airport');
+      }
+    }
+
+    responsiveSelectionRef.current = {
+      airport: nextSnapshot.selectedAirport,
+      coordinate,
+      route,
+    };
+  }, [openResponsivePanel]);
 
   const controllerFactory = useCallback<WeatherMapControllerFactory>((options) => {
     const orchestrator = new ViewerOrchestrator({
       ...options,
       initialScene: bootstrapScene,
-      onSnapshot: setSnapshot,
+      onSnapshot: handleSnapshot,
     });
     orchestratorRef.current = orchestrator;
     return orchestrator;
-  }, [bootstrapScene]);
+  }, [bootstrapScene, handleSnapshot]);
 
   const orchestrator = () => orchestratorRef.current;
   const selectedAirport = (snapshot.airports?.features as AirportFeature[] | undefined)?.find(
@@ -190,18 +257,35 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
     return `${window.location.origin}${window.location.pathname}${suffix}`;
   }, [snapshot]);
 
-  let airportPanel;
+  const handleSelectAirport = (icaoCode: string) => {
+    orchestrator()?.selectAirport(icaoCode);
+    if (viewportMode !== 'desktop') openResponsivePanel('airport');
+  };
+  const handleReset = () => {
+    closeResponsivePanel();
+    orchestrator()?.reset();
+  };
+  const handlePresentationMode = (active: boolean) => {
+    if (active) closeResponsivePanel();
+    orchestrator()?.setPresentationMode(active);
+  };
+
+  const airportSearch = snapshot.airportsStatus === 'ready' && snapshot.airports ? (
+    <AirportSearch
+      airports={snapshot.airports}
+      selectedAirport={snapshot.selectedAirport}
+      disabled={controlsDisabled}
+      onSelectAirport={handleSelectAirport}
+    />
+  ) : null;
+
+  let desktopAirportPanel;
   if (snapshot.presentationMode) {
-    airportPanel = <PresentationSummary snapshot={snapshot} />;
+    desktopAirportPanel = <PresentationSummary snapshot={snapshot} />;
   } else if (snapshot.airportsStatus === 'ready' && snapshot.airports) {
-    airportPanel = (
+    desktopAirportPanel = (
       <div className={styles.leftPanel} data-testid="enriched-airport-panel">
-        <AirportSearch
-          airports={snapshot.airports}
-          selectedAirport={snapshot.selectedAirport}
-          disabled={controlsDisabled}
-          onSelectAirport={(icaoCode) => orchestrator()?.selectAirport(icaoCode)}
-        />
+        {airportSearch}
         <AirportPanel
           airport={selectedAirport}
           weather={snapshot.airportWeather}
@@ -228,13 +312,76 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
       </div>
     );
   } else {
-    airportPanel = (
+    desktopAirportPanel = (
       <AirportAvailability
         snapshot={snapshot}
         onRetry={() => orchestrator()?.retryAirports()}
       />
     );
   }
+
+  const responsiveAirportPanel = snapshot.airportsStatus === 'ready' && snapshot.airports ? (
+    <div className={styles.responsivePanelContent} data-testid="enriched-airport-panel">
+      {airportSearch}
+      <AirportPanel
+        airport={selectedAirport}
+        weather={snapshot.airportWeather}
+        isLoading={Boolean(
+          snapshot.selectedAirport
+          && snapshot.isFrameLoading
+          && snapshot.airportWeather === null,
+        )}
+        error={snapshot.airportError}
+        onClose={() => {
+          orchestrator()?.closeAirport();
+          openResponsivePanel('location');
+        }}
+        onRetry={() => orchestrator()?.retry()}
+      />
+      {selectedAirport && (
+        <AirportTrend
+          airport={selectedAirport}
+          points={airportTrend.points}
+          activeTimestamp={snapshot.activeTimestamp}
+          loading={airportTrend.loading}
+          error={airportTrend.error}
+          onSelectTimestamp={(timestamp) => orchestrator()?.selectTimestamp(timestamp)}
+          onRetry={airportTrend.retry}
+        />
+      )}
+    </div>
+  ) : (
+    <AirportAvailability
+      snapshot={snapshot}
+      onRetry={() => orchestrator()?.retryAirports()}
+    />
+  );
+
+  const responsiveLocationPanel = (
+    <div className={styles.responsivePanelContent} data-testid="responsive-location-panel">
+      {airportSearch}
+      {(snapshot.pickerLoading || snapshot.pickerResult) ? (
+        <WeatherPicker
+          result={snapshot.pickerResult}
+          loading={snapshot.pickerLoading}
+          onClose={() => {
+            orchestrator()?.closePicker();
+            closeResponsivePanel();
+          }}
+          onRetry={() => orchestrator()?.retryPicker()}
+        />
+      ) : (
+        <section className={styles.panelGuidance} aria-label="Exploración por lugar">
+          <p className={styles.kicker}>Lugar</p>
+          <h2>Busca un aeropuerto o toca el mapa</h2>
+          <p>
+            El mapa permanece disponible mientras este panel está contraído.
+            Otro toque mueve el picker sin necesidad de arrastrarlo.
+          </p>
+        </section>
+      )}
+    </div>
+  );
 
   const layerPanel = (
     <div className={styles.layerPanel} data-testid="enriched-layer-panel">
@@ -259,7 +406,10 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
         <p className={styles.overlayWarning} role="status">{snapshot.isobarError}</p>
       )}
       <WeatherLegend {...legend} />
-      {!snapshot.presentationMode && snapshot.airportsStatus === 'ready' && snapshot.airports && (
+      {viewportMode === 'desktop'
+        && !snapshot.presentationMode
+        && snapshot.airportsStatus === 'ready'
+        && snapshot.airports && (
         <details className={styles.routeDisclosure}>
           <summary>Ruta y viento relativo</summary>
           <RoutePlanner
@@ -277,6 +427,46 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
     </div>
   );
 
+  const responsiveRoutePanel = snapshot.airportsStatus === 'ready' && snapshot.airports ? (
+    <div className={styles.responsivePanelContent} data-testid="responsive-route-panel">
+      <RoutePlanner
+        airports={snapshot.airports}
+        route={snapshot.selectedRoute}
+        analysis={snapshot.routeAnalysis}
+        loading={snapshot.routeLoading}
+        error={snapshot.routeError}
+        onChange={(route) => orchestrator()?.selectRoute(route)}
+        onRetry={() => orchestrator()?.retryRoute()}
+      />
+      {snapshot.routeAnalysis && (
+        <RouteProfile
+          analysis={snapshot.routeAnalysis}
+          timestamp={snapshot.activeTimestamp}
+        />
+      )}
+    </div>
+  ) : (
+    <AirportAvailability
+      snapshot={snapshot}
+      onRetry={() => orchestrator()?.retryAirports()}
+    />
+  );
+
+  const responsiveMorePanel = (
+    <div className={`${styles.responsivePanelContent} ${styles.morePanel}`}>
+      <PresentationMode
+        active={snapshot.presentationMode}
+        onChange={handlePresentationMode}
+      />
+      <SceneShare url={sceneUrl} />
+      <ViewerActions
+        onReset={handleReset}
+        onRetry={hasPrimaryError ? () => orchestrator()?.retry() : undefined}
+        isLoading={snapshot.catalogStatus === 'loading' || snapshot.isFrameLoading}
+      />
+    </div>
+  );
+
   const timeline = (
     <Timeline
       timestamps={timelineTimestamps}
@@ -289,8 +479,17 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
       onNext={() => orchestrator()?.next()}
       onPlay={() => orchestrator()?.play()}
       onPause={() => orchestrator()?.pause()}
+      compact={viewportMode === 'phone'}
     />
   );
+
+  const responsivePanels = {
+    layers: layerPanel,
+    location: responsiveLocationPanel,
+    airport: viewportMode === 'desktop' ? desktopAirportPanel : responsiveAirportPanel,
+    route: responsiveRoutePanel,
+    more: responsiveMorePanel,
+  };
 
   return (
     <div
@@ -304,15 +503,31 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
       data-transition-phase={snapshot.transition.phase}
       data-picker-active={snapshot.selectedCoordinate ? 'true' : 'false'}
       data-route-active={snapshot.selectedRoute ? 'true' : 'false'}
+      data-viewport-mode={viewportMode}
+      data-orientation={orientation}
+      data-active-panel={responsivePanel.activePanel ?? 'none'}
+      data-snap-point={responsivePanel.snapPoint}
     >
       <WeatherViewerShell
-        airportPanel={airportPanel}
-        layerPanel={layerPanel}
+        responsivePanelHost={(
+          <ResponsivePanelHost
+            viewportMode={viewportMode}
+            orientation={orientation}
+            activePanel={responsivePanel.activePanel}
+            snapPoint={responsivePanel.snapPoint}
+            panels={responsivePanels}
+            onOpen={openResponsivePanel}
+            onSnap={snapResponsivePanel}
+            onClose={closeResponsivePanel}
+          />
+        )}
         timeline={timeline}
         controllerFactory={controllerFactory}
       />
 
-      {!snapshot.presentationMode && (snapshot.pickerLoading || snapshot.pickerResult) && (
+      {viewportMode === 'desktop'
+        && !snapshot.presentationMode
+        && (snapshot.pickerLoading || snapshot.pickerResult) && (
         <div className={styles.pickerOverlay} data-testid="weather-picker-overlay">
           <WeatherPicker
             result={snapshot.pickerResult}
@@ -323,7 +538,7 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
         </div>
       )}
 
-      {!snapshot.presentationMode && snapshot.routeAnalysis && (
+      {viewportMode === 'desktop' && !snapshot.presentationMode && snapshot.routeAnalysis && (
         <div className={styles.routeProfileOverlay} data-testid="route-profile-overlay">
           <RouteProfile
             analysis={snapshot.routeAnalysis}
@@ -337,22 +552,26 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
           <span>UTC / ZULU</span>
           <strong>{zuluHour(snapshot.activeTimestamp)}</strong>
         </div>
-        <div className={styles.presentationControl}>
-          <PresentationMode
-            active={snapshot.presentationMode}
-            onChange={(active) => orchestrator()?.setPresentationMode(active)}
-          />
-        </div>
-        {!snapshot.presentationMode && (
+        {(viewportMode === 'desktop' || snapshot.presentationMode) && (
+          <div className={styles.presentationControl}>
+            <PresentationMode
+              active={snapshot.presentationMode}
+              onChange={handlePresentationMode}
+            />
+          </div>
+        )}
+        {viewportMode === 'desktop' && !snapshot.presentationMode && (
           <div className={styles.shareControl}>
             <SceneShare url={sceneUrl} />
           </div>
         )}
-        <ViewerActions
-          onReset={() => orchestrator()?.reset()}
-          onRetry={hasPrimaryError ? () => orchestrator()?.retry() : undefined}
-          isLoading={snapshot.catalogStatus === 'loading' || snapshot.isFrameLoading}
-        />
+        {viewportMode === 'desktop' && (
+          <ViewerActions
+            onReset={handleReset}
+            onRetry={hasPrimaryError ? () => orchestrator()?.retry() : undefined}
+            isLoading={snapshot.catalogStatus === 'loading' || snapshot.isFrameLoading}
+          />
+        )}
       </div>
     </div>
   );

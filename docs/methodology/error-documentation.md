@@ -331,3 +331,28 @@ El VPS no expone GPU física ni `/dev/dri`; partículas WebGL corren sobre
 SwiftShader y no representan el equipo de demo. Se midió el camino estático de
 fallback a 60,1 FPS y se validaron escena, interacciones y cleanup. Continúa el
 404 no bloqueante de `/favicon.ico` ya registrado en Fase 08.
+
+## 2026-08-20 — Contingencias de validación en Fase 15
+
+### Chromium sin bibliotecas del sistema
+
+Playwright descargó Chromium, pero el binario no inició porque el host carecía
+de `libatk`, AT-SPI, GBM, ALSA y varias bibliotecas X11. `install-deps` no era
+viable sin contraseña sudo. Se descargaron paquetes Ubuntu al directorio
+temporal `/tmp/phase15-browser-deps`, se extrajeron sin privilegios y se usó un
+`LD_LIBRARY_PATH` local. No se modificó el sistema ni el repositorio.
+
+### Backend local ausente
+
+El worktree no tenía venv ni secretos. Para probar el frontend exacto de la
+rama, Next local proxyeó API/media al staging Fase 14 ya verificado; un health
+stub efímero evitó que Playwright intentara iniciar Django. Los requests del
+navegador siguieron siendo same-origin y no se copiaron credenciales.
+
+### Hitbox de atribución y cierre del sheet
+
+La primera pasada real midió el botón compacto de atribución MapLibre en
+`24×24 px`; un selector CSS específico lo elevó a `44×44 px` y la regresión
+quedó verde. El test también intentó accionar el rail detrás de un sheet `full`;
+se corrigió el recorrido para usar el cierre explícito antes de cambiar de
+panel, validando el camino táctil visible en lugar de forzar el click.

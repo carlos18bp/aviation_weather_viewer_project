@@ -341,3 +341,29 @@ QA final: gate `🟢` con 0 errores/warnings, store 15/15, route-scene live 1/1 
 Auditor KEEP para los 12 archivos de test modificados. El único rojo intermedio
 fue infraestructura local: Django con `DJANGO_DEBUG=false` no registró `/media`;
 al reiniciar el dev server con `true`, el mismo E2E pasó sin cambios productivos.
+
+## Contrato técnico — Fase 15
+
+- Media queries: phone `(max-width: 767px)` o landscape corto
+  `(max-width: 1199px) and (max-height: 500px)`; tablet
+  `(min-width: 768px) and (max-width: 1199px)` fuera del caso corto; desktop es
+  el fallback desde `1200 px`. Orientación se resuelve por media query, sin UA.
+- Layouts: `phone-sheet`, `phone-drawer`, `tablet-overlay`,
+  `tablet-sidebar` y `desktop`. El drawer phone no supera `42vw`; ambos layouts
+  tablet miden exactamente `320 px`.
+- Snap del sheet: `peek` hasta `156 px`, `half` al `52 %` del stage y `full` al
+  `100 %`. Contraer, expandir y cerrar siempre tienen botones de `44×44 px`; no
+  existe una operación disponible únicamente mediante drag.
+- Chrome persistente: warning, UTC y timeline quedan fuera del panel responsive.
+  En phone el timeline conserva transporte y revela sus seis horas mediante el
+  botón `Horas`.
+- Identidad estable: una regresión unitaria verifica una sola creación de
+  controller ante cambios de host; Playwright compara por igualdad estricta el
+  root `.maplibregl-map`, el canvas y el contexto WebGL tras cada resize.
+
+Validación dirigida: 46 pruebas unitarias de viewport/host/shell/timeline/
+acciones/aeropuerto; dos E2E desktop de Fase 14; dos E2E responsive; TypeScript
+y build Next verdes. Viewports cubiertos: `390×844`, `844×390`, `768×1024`,
+`1024×768` y `1920×1080`. Capturas reproducibles:
+`frontend/test-results/phase15-390x844.png`, `phase15-844x390.png`,
+`phase15-768x1024.png` y `phase15-1024x768.png`.

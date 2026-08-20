@@ -1,0 +1,270 @@
+.host {
+  position: relative;
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  pointer-events: none;
+}
+
+.host[data-layout="desktop"] {
+  display: grid;
+  grid-template-columns: minmax(210px, 280px) minmax(0, 1fr) minmax(190px, 240px);
+  align-items: center;
+  gap: 24px;
+}
+
+.desktopPanel {
+  min-height: 150px;
+  padding: 18px;
+  border: 1px solid rgb(219 241 250 / 16%);
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgb(10 30 43 / 86%), rgb(4 15 25 / 77%));
+  box-shadow:
+    0 22px 70px rgb(0 0 0 / 30%),
+    inset 0 1px 0 rgb(255 255 255 / 4%);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+}
+
+.desktopAirport {
+  grid-column: 1;
+}
+
+.desktopLayers {
+  grid-column: 3;
+}
+
+.actionRail {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: max(12px, var(--viewer-safe-left));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 14px;
+  background: rgb(4 15 25 / 84%);
+  box-shadow: 0 18px 46px rgb(0 0 0 / 32%);
+  backdrop-filter: blur(16px);
+  transform: translateY(-50%);
+  pointer-events: auto;
+}
+
+.actionRail:focus-visible {
+  outline: 2px solid var(--viewer-accent);
+  outline-offset: 3px;
+}
+
+.actionRail button {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 5px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--viewer-muted);
+  background: transparent;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.actionRail button > span {
+  color: var(--viewer-accent);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.actionRail button[aria-pressed="true"] {
+  color: var(--viewer-text);
+  border-color: rgb(50 211 220 / 44%);
+  background: rgb(50 211 220 / 14%);
+}
+
+.actionRail button:hover,
+.actionRail button:focus-visible,
+.panelControls button:hover:not(:disabled),
+.panelControls button:focus-visible {
+  border-color: var(--viewer-accent);
+  outline: 2px solid rgb(50 211 220 / 24%);
+  outline-offset: 2px;
+}
+
+.panel {
+  position: absolute;
+  z-index: 5;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid rgb(219 241 250 / 20%);
+  color: var(--viewer-text);
+  background: rgb(4 15 25 / 94%);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 42%);
+  backdrop-filter: blur(18px);
+  pointer-events: auto;
+}
+
+.host[data-layout="phone-sheet"] .panel {
+  right: var(--viewer-safe-right);
+  bottom: 0;
+  left: var(--viewer-safe-left);
+  border-radius: 18px 18px 0 0;
+}
+
+.host[data-layout="phone-sheet"] .panel[data-snap-point="peek"] {
+  height: min(156px, 42%);
+}
+
+.host[data-layout="phone-sheet"] .panel[data-snap-point="half"] {
+  height: 52%;
+}
+
+.host[data-layout="phone-sheet"] .panel[data-snap-point="full"] {
+  height: 100%;
+  border-radius: 14px 14px 0 0;
+}
+
+.host[data-layout="phone-drawer"] .actionRail {
+  top: 10px;
+  flex-direction: row;
+  transform: none;
+}
+
+.host[data-layout="phone-drawer"] .panel {
+  top: 0;
+  right: var(--viewer-safe-right);
+  bottom: 0;
+  width: min(42vw, 360px);
+  border-radius: 14px 0 0 14px;
+}
+
+.host[data-layout="tablet-overlay"] .panel,
+.host[data-layout="tablet-sidebar"] .panel {
+  top: 0;
+  right: var(--viewer-safe-right);
+  bottom: 0;
+  width: 320px;
+  border-radius: 14px 0 0 14px;
+}
+
+.host[data-layout="tablet-sidebar"] .panel {
+  border-radius: 0;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 60px;
+  padding: 8px 10px 8px 16px;
+  border-bottom: 1px solid var(--viewer-border);
+}
+
+.panelHeader > div:first-child {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.panelHeader h2 {
+  margin: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panelHeader h2:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid var(--viewer-accent);
+  outline-offset: 3px;
+}
+
+.handle {
+  display: block;
+  width: 36px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgb(169 186 196 / 52%);
+}
+
+.panelControls {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 5px;
+}
+
+.panelControls button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--viewer-border);
+  border-radius: 9px;
+  color: var(--viewer-text);
+  background: rgb(7 19 31 / 72%);
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.panelControls button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.panelBody {
+  min-height: 0;
+  padding: 14px 16px calc(16px + var(--viewer-safe-bottom));
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgb(50 211 220 / 45%) transparent;
+  scrollbar-width: thin;
+}
+
+.host:not([data-layout="desktop"]) .panelBody :global(button),
+.host:not([data-layout="desktop"]) .panelBody :global(summary),
+.host:not([data-layout="desktop"]) .panelBody :global(input:not([type="checkbox"])) {
+  min-height: 44px;
+}
+
+.host:not([data-layout="desktop"]) .panelBody :global(button) {
+  min-width: 44px;
+}
+
+.host:not([data-layout="desktop"]) .panelBody :global(label:has(input[type="checkbox"])) {
+  min-height: 44px;
+}
+
+.unavailable {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  min-height: 120px;
+  color: var(--viewer-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.unavailable strong {
+  color: var(--viewer-text);
+  font-size: 15px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .host,
+  .panel,
+  .actionRail,
+  .actionRail button,
+  .panelControls button {
+    scroll-behavior: auto;
+    transition: none;
+  }
+}

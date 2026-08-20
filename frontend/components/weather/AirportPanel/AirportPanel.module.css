@@ -56,8 +56,8 @@
   display: grid;
   flex: 0 0 auto;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: 1px solid var(--viewer-border);
   border-radius: 7px;
@@ -146,7 +146,9 @@
 }
 
 .errorState button {
-  padding: 7px 10px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 9px 12px;
   border: 1px solid rgb(34 211 238 / 34%);
   border-radius: 7px;
   color: var(--viewer-text);
