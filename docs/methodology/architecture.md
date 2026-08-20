@@ -163,3 +163,29 @@ presentación. La única excepción formal pendiente es el refinamiento del tipo
 `AirportFeatureCollection` en `frontend/features/airports/types.ts`; mantiene
 el `id` GeoJSON y no cruza una frontera runtime, pero requiere confirmación del
 owner de Fase 09 antes de abrir E2.
+
+## Arquitectura objetivo posterior a Fase 14
+
+Las Fases 15–23 están planificadas, no implementadas. Mantienen una instancia
+MapLibre y añaden fronteras aisladas antes de un wiring final:
+
+~~~mermaid
+flowchart LR
+    Shell[Responsive shell] --> Host[Panel host efímero]
+    Host --> Explorer[Layer explorer]
+    Host --> Point[Point forecast]
+    Touch[Touch coordinator] --> Controller[WeatherMapController]
+    Controller --> MapLibre[Una instancia MapLibre]
+    Controller --> NewAdapters[Cloud/visibility/gust adapters]
+    Quality[Adaptive renderer] --> Wind[Wind WebGL]
+    API[Django catálogo schema 3] --> Assets[42 frames + isobaras]
+    Assets --> NewAdapters
+    Assets --> Point
+~~~
+
+- Panel, orientación y perfil gráfico permanecen fuera de Zustand y URL.
+- Cuatro capas nuevas se generan staged; manifest/API solo pasan a schema 3 en
+  Fase 23 junto con el parser frontend.
+- Las Olas M1 y M2 entregan módulos aislados. Fase 23 conserva ownership
+  exclusivo de API, store, controller, orquestador, scene codec y E2E.
+- Una capa principal está visible; pressure-isobars continúa como overlay.

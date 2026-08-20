@@ -93,6 +93,7 @@ Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 - [x] Implementar tendencia controlada, compacta y colapsable.
 - [x] Pasar únicamente los tests unitarios y de componente dirigidos.
 - [x] Publicar PR #16 y handoff para fases 12 y 14.
+- [x] Integrar PR #16 en `master` mediante SHA `6795540`.
 
 ### Fase 11 — Narrativa temporal y presentación
 
@@ -103,6 +104,26 @@ Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 - [x] Mantener intactos store, controller, `page.tsx`, orquestador y flows E2E.
 - [x] Añadir harness aislado, pruebas dirigidas y guía para Fase 14.
 - [x] Integrar en `master` mediante PR #17 (`5f6f624`).
+
+## Roadmap móvil y capas aeronáuticas
+
+Estado: **documentación definida; implementación bloqueada hasta Fase 14
+integrada y verde**.
+
+- [x] Auditar limitaciones responsive del visor actual.
+- [x] Seleccionar UX móvil propia para iOS/Android y tabletas.
+- [x] Priorizar nubosidad, base de nubes, visibilidad y ráfagas.
+- [x] Definir nueve fases en dos olas paralelas y un cierre secuencial.
+- [x] Congelar contratos de viewport, touch, rendimiento, schema 3 y datos.
+- [x] Definir ownership sin solapamientos para cuatro sesiones por ola.
+- [x] Definir gates, fallbacks, matriz de dispositivos y QA final.
+- [ ] Integrar Fases 12–14 del roadmap anterior.
+- [ ] Abrir Ola M1: Fases 15–18.
+- [ ] Abrir Ola M2: Fases 19–22.
+- [ ] Ejecutar Fase 23 de integración, QA y release móvil.
+
+Fuente normativa:
+`docs/MVP_roadmap/mobile_layer_enrichment/README.md`.
 
 ## Fase 08 — Validación, despliegue y ensayo
 

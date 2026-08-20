@@ -235,3 +235,21 @@ Los seis grids conservaron los hashes registrados en `tasks/active_context.md`.
 La inspección de diffs no encontró manifests de dependencias, URLs runtime
 externas ni datos no simulados. No se ejecutó la suite completa ni QA E2E:
 estas funciones permanecen aisladas hasta Fase 14.
+
+## Contratos planificados — Fases 15–23
+
+- Viewports: phone 360–767 px, tablet 768–1199 px y desktop desde 1200 px.
+- Safe areas: viewport-fit=cover, 100dvh y env(safe-area-inset-*).
+- Touch target: 44×44 CSS px; tap válido hasta 500 ms y 8 px de movimiento.
+- Partículas: phone 900, tablet 1600, desktop 2500; degradación única al 60 %
+  si el promedio permanece bajo 24 FPS durante tres segundos.
+- Capas nuevas: cloud-cover 0–100 %, cloud-base 300–15000 ft AGL/null,
+  visibility 1–20 km y wind-gusts 0–80 kt.
+- Assets nuevos: 24 WebP RGBA 1024×1216 y 24 grids JSON 128×160.
+- Manifest final: schema 3, siete capas, 42 frames principales y seis frames de
+  pressure-isobars.
+- Fase 18 mantiene assets staged; Fase 23 publica manifest, API y parser
+  frontend de forma atómica.
+
+La especificación exacta vive en
+docs/MVP_roadmap/mobile_layer_enrichment/00_shared_contracts.md.

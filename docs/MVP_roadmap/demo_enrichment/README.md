@@ -230,6 +230,14 @@ modelos comparables, radar, satélite, productos aeronáuticos oficiales,
 optimización de vuelo, combustible, ETA operacional, auth, roles, temas,
 responsive móvil completo ni infraestructura productiva.
 
+## Roadmap posterior a la Fase 14
+
+La exclusión móvil anterior aplica únicamente a las Fases 09–14. Una vez que
+la Fase 14 esté integrada y verde, la evolución responsive y las nuevas capas
+simuladas se organizan en el
+[roadmap móvil y de capas aeronáuticas](../mobile_layer_enrichment/README.md).
+Ese paquete no cambia retroactivamente contratos u ownership de este roadmap.
+
 ## Prompt base para cada sesión
 
 ```text

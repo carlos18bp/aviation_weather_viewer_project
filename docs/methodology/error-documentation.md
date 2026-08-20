@@ -219,3 +219,18 @@ El finding fue devuelto al owner en
 Todos los checks dirigidos están verdes y no se aplicó un fix desde la sesión
 del Gate. Hasta recibir confirmación o un fix verde de Fase 09, el veredicto
 para abrir la Ola E2 permanece **NO-GO**.
+
+## 2026-08-20 — Riesgo de publicar schema 3 antes del frontend
+
+### Riesgo detectado
+
+El parser de catálogo vigente exige un conjunto exacto de capas. Si una fase de
+datos añadiera los cuatro productos nuevos al manifest/API mientras las ramas
+frontend siguen aisladas, la demo completa rechazaría el catálogo.
+
+### Prevención planificada
+
+La Fase 18 genera y valida 48 assets staged sin modificar manifest, loaders,
+views o catálogo. La Fase 23 cambia manifest a schema 3, API, parser, store y
+controller en el mismo vertical slice. El Gate M1 exige una prueba de regresión
+que confirme que el catálogo vivo conserva schema 2 hasta entonces.

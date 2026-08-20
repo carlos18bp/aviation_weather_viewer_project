@@ -1,4 +1,4 @@
-# Contexto activo — Gate de la Ola E1
+# Contexto activo — Gate E1 y roadmap móvil
 
 Actualizado: 2026-08-20.
 
@@ -8,7 +8,8 @@ Las Fases 09, 10 y 11 están integradas en `master` mediante PR #16 (`6795540`),
 PR #18 (`e6d2f28`) y PR #17 (`5f6f624`). Ninguna conectó composición, store,
 controller, orquestador o flows E2E; ese wiring permanece reservado para Fase
 14. El Gate técnico está verde, pero E2 permanece en **NO-GO** hasta que el
-owner de Fase 09 confirme o corrija su desvío formal de ownership.
+owner de Fase 09 confirme o corrija su desvío formal de ownership. Las Fases
+12 y 13 todavía no deben abrirse y la Fase 14 continúa condicionada a ambas.
 
 ## Validación del Gate E1
 
@@ -25,7 +26,7 @@ owner de Fase 09 confirme o corrija su desvío formal de ownership.
 - [ ] Ownership formal: falta confirmación de Fase 09 por
   `frontend/features/airports/types.ts`; el resto de los diffs respeta scope.
 
-## Entrega de Fase 09
+## Entrega integrada de Fase 09
 
 - Integrada en `master` mediante PR #16 (`6795540`).
 - Host: `vps-projectapp-staging` (`host_status=on-work-host`).
@@ -85,3 +86,17 @@ manifiesto resultante tiene SHA-256
 - Fase 14 registra adapter/servicio/panel, arbitra clicks de aeropuerto mediante
   `shouldHandleClick`, conecta `AirportSearch`/`AirportTrend`, integra
   transición/URL/presentación y limpia recursos al cerrar o destruir.
+
+## Roadmap posterior condicionado
+
+Se definió una ronda adicional Fases 15–23 bajo
+`docs/MVP_roadmap/mobile_layer_enrichment/`. Su implementación no comienza
+hasta que la Fase 14 esté integrada, desplegada y verde.
+
+- Ola M1: responsive, rendimiento adaptativo, touch GIS y 48 assets staged.
+- Ola M2: adapters de cuatro capas, point forecast y explorador de capas.
+- Cierre M3: schema 3, wiring central, QA multidispositivo y release.
+
+Objetivos congelados: iOS/Android en phone/tablet, portrait/landscape; capas
+cloud-cover, cloud-base, visibility y wind-gusts; una sola instancia MapLibre;
+datos simulados/locales; warning permanente.

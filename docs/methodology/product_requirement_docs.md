@@ -124,3 +124,16 @@ técnico del gate es verde, pero la apertura de la Ola E2 queda en **NO-GO**
 hasta que la sesión propietaria de Fase 09 confirme en el handoff el cambio
 mínimo realizado en `frontend/features/airports/types.ts`, fuera de su lista
 literal de ownership.
+
+## Roadmap móvil y capas aeronáuticas
+
+Después de integrar y validar la Fase 14 existe una tercera iteración opcional,
+Fases 15–23, destinada a hacer la demo completa en teléfonos/tabletas y añadir
+nubosidad, base de nubes, visibilidad y ráfagas simuladas. También incorpora
+renderizado adaptativo, interacción táctil, evolución por coordenada y un
+explorador categorizado de capas.
+
+La iteración no puede comenzar sobre una Fase 14 parcial. Conserva Colombia,
+fecha, seis timestamps, warning, una sola instancia MapLibre, datos locales y
+ausencia de uso operacional. Su fuente normativa vive en
+docs/MVP_roadmap/mobile_layer_enrichment/README.md.
