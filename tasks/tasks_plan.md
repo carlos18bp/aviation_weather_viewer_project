@@ -84,7 +84,7 @@ Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 - [x] Implementar servicio, abort y cache de evolución aeroportuaria.
 - [x] Implementar tendencia controlada, compacta y colapsable.
 - [x] Pasar únicamente los tests unitarios y de componente dirigidos.
-- [ ] Publicar PR y handoff para fases 12 y 14, sin mergear.
+- [x] Publicar PR #16 y handoff para fases 12 y 14, sin mergear.
 
 ## Fase 08 — Validación, despliegue y ensayo
 

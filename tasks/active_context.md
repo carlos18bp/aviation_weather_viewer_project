@@ -13,6 +13,7 @@ callbacks con store/controller y la Fase 12 consumirá el ranking público.
 - Base resuelta: `master`.
 - Rama de sesión: `feat/20082026-phase-09-airport-intelligence`.
 - Worktree: `~/webapps/.wt/aviation_weather_viewer_project/phase-09-airport-intelligence`.
+- PR abierto contra `master`: #16.
 - Ownership: `features/airports/search`, `features/airports/trend`,
   `AirportSearch`, `AirportTrend`, servicio e índices aeroportuarios.
 - SHA de Fase 07: `fcd8a8ae7e610ea335bcdce6154ffb309f12999b`.
@@ -37,6 +38,8 @@ callbacks con store/controller y la Fase 12 consumirá el ranking público.
 - Lint dirigido: 0 errores y 0 warnings.
 - Captura aislada: `/tmp/phase-09-airport-intelligence.png` a `1920×1080`.
 - Wiring, E2E y flow map quedan explícitamente para Fase 14.
+- PR: `https://github.com/carlos18bp/aviation_weather_viewer_project/pull/16`;
+  queda abierto y sin merge para el drenaje de la ola.
 
 ## Estado validado
 
