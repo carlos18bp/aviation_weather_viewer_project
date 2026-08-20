@@ -63,10 +63,19 @@ fases para enriquecer la presentación. Incluye búsqueda y evolución por
 aeropuerto, picker por coordenada, escenas en URL, ruta con viento relativo,
 precipitación e isobaras simuladas.
 
-Este roadmap no está implementado y no bloquea la entrega original. Conserva
-el mismo escenario, seis timestamps, cobertura, stack, warning y política de
-datos locales. Sus contratos y orden de ejecución viven en
+El enriquecimiento no bloquea la entrega original. Conserva el mismo escenario,
+seis timestamps, cobertura, stack, warning y política de datos locales. Sus
+contratos y orden de ejecución viven en
 `docs/MVP_roadmap/demo_enrichment/README.md`.
+
+## Incremento aislado — Fase 10
+
+La Fase 10 entrega, todavía sin conectarlo a la vista principal, un picker por
+coordenada capaz de combinar temperatura y viento del mismo timestamp mediante
+muestreo bilineal local. El manifiesto pasa a schema 2 y referencia seis grids
+térmicos `128×160`, simulados, determinísticos y versionados. No existe endpoint
+de muestreo ni request al reposicionar el punto; la integración visible queda
+reservada para la Fase 14.
 
 ## Estado de release — Fase 08
 

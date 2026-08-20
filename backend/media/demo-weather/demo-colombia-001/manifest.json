@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "scenario": {
     "code": "demo-colombia-001",
     "name": "Escenario meteorológico ilustrativo",
@@ -46,6 +46,7 @@
       "layer": "temperature",
       "timestamp": "2026-01-15T00:00:00Z",
       "data_path": "demo-weather/demo-colombia-001/temperature/00Z.webp",
+      "value_data_path": "demo-weather/demo-colombia-001/temperature-values/00Z.json",
       "minimum": 0,
       "maximum": 38
     },
@@ -60,6 +61,7 @@
       "layer": "temperature",
       "timestamp": "2026-01-15T03:00:00Z",
       "data_path": "demo-weather/demo-colombia-001/temperature/03Z.webp",
+      "value_data_path": "demo-weather/demo-colombia-001/temperature-values/03Z.json",
       "minimum": 0,
       "maximum": 38
     },
@@ -74,6 +76,7 @@
       "layer": "temperature",
       "timestamp": "2026-01-15T06:00:00Z",
       "data_path": "demo-weather/demo-colombia-001/temperature/06Z.webp",
+      "value_data_path": "demo-weather/demo-colombia-001/temperature-values/06Z.json",
       "minimum": 0,
       "maximum": 38
     },
@@ -88,6 +91,7 @@
       "layer": "temperature",
       "timestamp": "2026-01-15T09:00:00Z",
       "data_path": "demo-weather/demo-colombia-001/temperature/09Z.webp",
+      "value_data_path": "demo-weather/demo-colombia-001/temperature-values/09Z.json",
       "minimum": 0,
       "maximum": 38
     },
@@ -102,6 +106,7 @@
       "layer": "temperature",
       "timestamp": "2026-01-15T12:00:00Z",
       "data_path": "demo-weather/demo-colombia-001/temperature/12Z.webp",
+      "value_data_path": "demo-weather/demo-colombia-001/temperature-values/12Z.json",
       "minimum": 0,
       "maximum": 38
     },
@@ -116,6 +121,7 @@
       "layer": "temperature",
       "timestamp": "2026-01-15T15:00:00Z",
       "data_path": "demo-weather/demo-colombia-001/temperature/15Z.webp",
+      "value_data_path": "demo-weather/demo-colombia-001/temperature-values/15Z.json",
       "minimum": 0,
       "maximum": 38
     },
@@ -126,5 +132,6 @@
       "minimum": 0,
       "maximum": 60
     }
-  ]
+  ],
+  "overlays": []
 }

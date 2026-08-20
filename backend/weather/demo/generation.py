@@ -14,17 +14,19 @@ from weather.demo.constants import (
     AIRPORT_WEATHER_FILENAME,
     BBOX,
     LAYER_DEFINITIONS,
+    MANIFEST_SCHEMA_VERSION,
     MANIFEST_FILENAME,
     SCENARIO_CODE,
     SCENARIO_DATE,
     SCENARIO_NAME,
     SCENARIO_SEED,
-    SCHEMA_VERSION,
     SIMULATION_FLAGS,
     TEMPERATURE_ALPHA,
     TEMPERATURE_AUTHORING_SIZE,
     TEMPERATURE_COLOR_STOPS,
     TEMPERATURE_SIZE,
+    TEMPERATURE_VALUE_HEIGHT,
+    TEMPERATURE_VALUE_WIDTH,
     TIMESTAMP_LABELS,
     TIMESTAMPS,
     WIND_HEIGHT,
@@ -143,6 +145,41 @@ def _write_temperature_frame(path: Path, *, frame_index: int) -> None:
     )
 
 
+def _temperature_values_payload(timestamp: str, *, frame_index: int) -> dict:
+    west, south, east, north = BBOX
+    values: list[float] = []
+
+    for row_index in range(TEMPERATURE_VALUE_HEIGHT):
+        latitude = north - (north - south) * row_index / (TEMPERATURE_VALUE_HEIGHT - 1)
+        for column_index in range(TEMPERATURE_VALUE_WIDTH):
+            longitude = west + (east - west) * column_index / (
+                TEMPERATURE_VALUE_WIDTH - 1
+            )
+            values.append(
+                round(
+                    _temperature_value(
+                        longitude,
+                        latitude,
+                        frame_index=frame_index,
+                    ),
+                    4,
+                )
+            )
+
+    return {
+        "scenario": SCENARIO_CODE,
+        "layer": "temperature",
+        "width": TEMPERATURE_VALUE_WIDTH,
+        "height": TEMPERATURE_VALUE_HEIGHT,
+        "bbox": list(BBOX),
+        "unit": "°C",
+        "timestamp": timestamp,
+        **SIMULATION_FLAGS,
+        "no_data_value": None,
+        "values": values,
+    }
+
+
 def _wind_components(
     longitude: float, latitude: float, *, frame_index: int
 ) -> tuple[float, float]:
@@ -209,6 +246,9 @@ def _manifest_payload() -> dict:
                     "data_path": (
                         f"demo-weather/{SCENARIO_CODE}/temperature/{label}.webp"
                     ),
+                    "value_data_path": (
+                        f"demo-weather/{SCENARIO_CODE}/temperature-values/{label}.json"
+                    ),
                     "minimum": 0,
                     "maximum": 38,
                 },
@@ -223,7 +263,7 @@ def _manifest_payload() -> dict:
         )
 
     return {
-        "schema_version": SCHEMA_VERSION,
+        "schema_version": MANIFEST_SCHEMA_VERSION,
         "scenario": {
             "code": SCENARIO_CODE,
             "name": SCENARIO_NAME,
@@ -236,6 +276,7 @@ def _manifest_payload() -> dict:
         "layers": [dict(layer) for layer in LAYER_DEFINITIONS],
         "timestamps": list(TIMESTAMPS),
         "frames": frames,
+        "overlays": [],
     }
 
 
@@ -245,8 +286,10 @@ def generate_scenario(output_dir: Path, *, airport_weather_source: Path) -> None
         raise DemoAssetError("The generation output directory must be empty.")
     output_dir.mkdir(parents=True, exist_ok=True)
     temperature_dir = output_dir / "temperature"
+    temperature_values_dir = output_dir / "temperature-values"
     wind_dir = output_dir / "wind"
     temperature_dir.mkdir()
+    temperature_values_dir.mkdir()
     wind_dir.mkdir()
 
     try:
@@ -262,6 +305,11 @@ def generate_scenario(output_dir: Path, *, airport_weather_source: Path) -> None
         label = TIMESTAMP_LABELS[timestamp]
         _write_temperature_frame(
             temperature_dir / f"{label}.webp", frame_index=frame_index
+        )
+        _write_json(
+            temperature_values_dir / f"{label}.json",
+            _temperature_values_payload(timestamp, frame_index=frame_index),
+            compact=True,
         )
         _write_json(
             wind_dir / f"{label}.json",

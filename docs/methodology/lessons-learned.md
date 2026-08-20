@@ -83,6 +83,15 @@
   billing/spending, los gates locales sirven como evidencia, pero no sustituyen
   el rerun remoto exigido para un cierre completamente verde.
 
+## Picker por coordenada — Fase 10
+
+- Las versiones de documentos distintos no deben compartir una constante: el
+  manifiesto meteorológico puede evolucionar sin migrar el fixture aeroportuario.
+- El picker debe comprobar cobertura antes de reutilizar el sampler de viento;
+  así preserva el clamp requerido por el renderer y distingue el punto externo.
+- Mantener datos del activo y sus dos vecinos permite precarga temporal sin
+  requests por movimiento ni crecimiento no acotado del cache.
+
 ## Fase 11 — narrativa temporal
 
 - Precargar y transicionar son responsabilidades distintas: la cache prepara

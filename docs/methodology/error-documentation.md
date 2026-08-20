@@ -167,6 +167,20 @@ units systemd. El commit `b0f2a244` está publicado, pero el gate remoto requier
 acción de billing del operador y un rerun; no existe corrección de código que
 pueda iniciar el runner.
 
+## 2026-08-20 — Versiones de schema acopladas en Fase 10
+
+### Riesgo detectado
+
+La constante histórica `SCHEMA_VERSION` representaba tanto el manifiesto del
+escenario como el fixture aeroportuario. Elevarla directamente a `2` habría
+rechazado el fixture de aeropuertos, cuyo contrato permanece en schema `1`.
+
+### Resolución y verificación
+
+Se separaron `MANIFEST_SCHEMA_VERSION=2` y
+`AIRPORT_WEATHER_SCHEMA_VERSION=1`. Los tests dirigidos rechazan manifiestos
+schema 1 y conservan verdes los endpoints y validadores aeroportuarios.
+
 ## 2026-08-20 — `npm ci` quedó esperando la auditoría durante Fase 11
 
 ### Síntoma
