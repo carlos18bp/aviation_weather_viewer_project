@@ -206,3 +206,20 @@
 - Un contrato de ausencia en Zustand es una aserción de comportamiento válida,
   pero debe agrupar claves prohibidas y documentar por qué la negación es el
   resultado esperado.
+
+## Fase 18 — datos aeronáuticos staged
+
+- Una imagen creada como RGBA no garantiza que WebP conserve ese modo si todo
+  el alfa vale 255; el contrato debe decodificar el archivo final y verificar
+  modo, dimensiones y bytes contra el grid, no sólo la imagen en memoria.
+- La reproducibilidad útil compara dos árboles temporales completos y cada uno
+  debe pasar validación semántica antes de contrastar hashes.
+- Un swap de varios directorios necesita rollback alrededor de la extracción
+  del conjunto anterior y de la instalación del nuevo; validar antes del primer
+  rename no cubre fallos intermedios del filesystem.
+- Las invariantes cross-layer deben comprobar valores persistidos: null policy,
+  visibilidad frente a fixture/precipitación y gust frente a U/V, además de los
+  rangos aislados de cada producto.
+- Staged significa también aislamiento de tipos: assets, parser y descriptores
+  pueden aterrizar juntos, mientras manifest, API, store y mapa conservan el
+  schema vivo hasta el commit atómico dueño de la integración.

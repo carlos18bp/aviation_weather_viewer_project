@@ -273,3 +273,27 @@ flowchart LR
   timestamps.
 - Presentación contrae chrome secundario pero conserva warning, UTC, selector,
   leyenda, timeline, resumen de escena y salida.
+
+## Autoría aislada de capas aeronáuticas — Fase 18
+
+```mermaid
+flowchart LR
+    Drivers[Precipitación F13 + U/V + fixture aeroportuario] --> Fields[Campos puros m/p/s/v]
+    Fields --> Grid[24 grids JSON 128×160]
+    Fields --> Raster[24 WebP RGBA 1024×1216]
+    Grid --> Validator[Validadores exactos y cross-layer]
+    Raster --> Validator
+    Validator --> Swap[Temporal + swap de 8 directorios]
+    Grid --> Staged[Contratos frontend staged]
+    Staged -. Fase 23 .-> Schema3[Manifest/API schema 3]
+```
+
+- `weather.demo.mobile_layers` es un bounded package de autoría y validación;
+  reutiliza drivers integrados sin modificar sus módulos centrales.
+- El command valida el árbol completo antes del primer rename y restaura los
+  directorios anteriores si falla cualquier paso del swap. Productos ajenos al
+  ownership nunca se mueven.
+- Los contratos TypeScript staged publican tipos, parser, sampler, fixtures y
+  24 descriptores, pero no hacen fetch ni amplían `WeatherLayerId` central.
+- `manifest.json`, loaders, views, URLs, store, mapa y orquestador continúan en
+  schema `2` hasta el corte atómico de Fase 23.

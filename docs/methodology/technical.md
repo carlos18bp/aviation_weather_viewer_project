@@ -341,3 +341,31 @@ QA final: gate `🟢` con 0 errores/warnings, store 15/15, route-scene live 1/1 
 Auditor KEEP para los 12 archivos de test modificados. El único rojo intermedio
 fue infraestructura local: Django con `DJANGO_DEBUG=false` no registró `/media`;
 al reiniciar el dev server con `true`, el mismo E2E pasó sin cambios productivos.
+
+## Contrato técnico — Fase 18
+
+- Base común Ola M1: `54c61891dca39661e2e593f4715d1ef58ab37a11`, que integra
+  Fase 14 y la precipitación de Fase 13.
+- Producto: cuatro capas × seis timestamps × WebP/grid = 48 assets y
+  `3.390.006` bytes bajo ocho directorios staged.
+- Raster: WebP lossless RGBA `1024×1216`; grid: JSON `128×160`, row-major
+  norte-sur/oeste-este, bbox `[-82,-5,-66,14]`.
+- Rango/unidad: cover `0–100 %`, base `300–15000 ft AGL/null`, visibility
+  `1–20 km` y gust `0–80 kt`; todos declaran `is_simulated=true` y
+  `operational_use=false`.
+- Persistencia: cover entero, base a 100 ft y visibility/gust a una decimal.
+  Base es `null` si y sólo si el cover persistido es menor que 20.
+- Fórmulas puras: `cover=100(0.55m+0.45p)`,
+  `base=12000-95cover-4500p+900(1-v)`,
+  `vis=20-12p-7cover/100-2v` y
+  `gust=max(s,s(1.15+0.35m)+4p)`, siempre con clamp normativo.
+- Un bias RBF suave de radio `1.25°` reconcilia visibility y velocidad con los
+  seis aeropuertos sin hardcodear celdas; gust conserva el piso de magnitud U/V.
+- Command: `generate_mobile_layer_assets`, con default, `--output` y `--check`.
+  La escritura usa temporales hermanos, validación total, swap controlado y
+  rollback de renames parciales.
+- Frontend staged: `AVIATION_LAYER_DEFINITIONS`,
+  `AVIATION_LAYER_FRAME_DESCRIPTORS`, `AVIATION_MANIFEST_FRAME_FRAGMENT`, parser
+  exacto, interpolación bilineal con null policy y fixtures pequeños.
+- El manifest vivo conserva schema `2`, 18 frames principales y SHA-256
+  `7d43abfa7a482267bd51f086902dd7e6d6b053330244d9e1809113f7161e0ef8`.

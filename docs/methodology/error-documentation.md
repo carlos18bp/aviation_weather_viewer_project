@@ -331,3 +331,31 @@ El VPS no expone GPU física ni `/dev/dri`; partículas WebGL corren sobre
 SwiftShader y no representan el equipo de demo. Se midió el camino estático de
 fallback a 60,1 FPS y se validaron escena, interacciones y cleanup. Continúa el
 404 no bloqueante de `/favicon.ico` ya registrado en Fase 08.
+
+## 2026-08-20 — Hallazgos de validación durante Fase 18
+
+### WebP opaco reabierto como RGB
+
+La primera generación construía imágenes en memoria como RGBA, pero libwebp
+omitía el canal alfa cuando todos sus píxeles eran opacos y Pillow las reabría
+como RGB. El validador exacto lo detectó. Las paletas staged incorporan ahora
+alfa gradual en sus stops, preservan la lectura del mapa base y los 24 rasters
+decodifican como RGBA sin relajar el contrato.
+
+### Rollback de un rename intermedio
+
+La revisión del swap mostró que un fallo después de mover parte del conjunto
+anterior necesitaba la misma restauración que un fallo al instalar el conjunto
+nuevo. El command preflighta los ocho targets, envuelve ambas etapas de rename
+y conserva raíces de recuperación si el rollback del filesystem no pudiera
+completarse. Un fallo inyectado en el primer rename de instalación restaura los
+48 hashes previos y el contenido ajeno.
+
+### Límite local de GDAL/GEOS
+
+El host de trabajo no tiene las librerías nativas GDAL/GEOS y no permite
+instalarlas sin credenciales administrativas, por lo que Django no puede
+completar `setup()` local. Los 18 tests de Fase 18 y tres contratos puros de
+schema 2 se ejecutaron con el plugin Django desactivado y settings congelados;
+el command se ejercitó mediante su clase real. `manage.py check` y la API HTTP
+quedan como gate obligatorio del CI del PR, cuyo runner sí instala PostGIS/GIS.

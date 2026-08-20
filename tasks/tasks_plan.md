@@ -62,8 +62,8 @@ Estado: **integrada en `master` mediante PR #10**.
 
 ## Roadmap de enriquecimiento posterior
 
-Estado: **Fases 09–13 integradas; Fase 14 implementada y validada, con PR #24
-pendiente de integración en `master`**.
+Estado: **Fases 09–14 integradas en `master`; Fase 14 aterrizó mediante PR #24
+en `54c61891`**.
 
 - [x] Evaluar candidatos visuales y aeronáuticos inspirados en Windy.
 - [x] Seleccionar seis fases en dos olas de implementación.
@@ -86,7 +86,7 @@ pendiente de integración en `master`**.
 - [x] Actualizar el mapa real de flows y crear exactamente dos E2E enriquecidos.
 - [x] Validar Chrome/Edge a 1920×1080 y completar 614,5 s de estabilidad.
 - [x] Ejecutar QA, quality gate, build y E2E finales de Fase 14.
-- [ ] Integrar el PR de Fase 14 en `master`.
+- [x] Integrar el PR de Fase 14 en `master`.
 
 Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 
@@ -134,8 +134,8 @@ Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 
 ## Roadmap móvil y capas aeronáuticas
 
-Estado: **documentación definida; implementación bloqueada hasta Fase 14
-integrada y verde**.
+Estado: **Fase 14 integrada y verde; Ola M1 abierta. Fase 18 implementada y
+validada en rama propia, pendiente de integrar**.
 
 - [x] Auditar limitaciones responsive del visor actual.
 - [x] Seleccionar UX móvil propia para iOS/Android y tabletas.
@@ -144,10 +144,22 @@ integrada y verde**.
 - [x] Congelar contratos de viewport, touch, rendimiento, schema 3 y datos.
 - [x] Definir ownership sin solapamientos para cuatro sesiones por ola.
 - [x] Definir gates, fallbacks, matriz de dispositivos y QA final.
-- [ ] Integrar Fases 12–14 del roadmap anterior.
-- [ ] Abrir Ola M1: Fases 15–18.
+- [x] Integrar Fases 12–14 del roadmap anterior.
+- [x] Abrir Ola M1: Fases 15–18 desde SHA común `54c61891`.
 - [ ] Abrir Ola M2: Fases 19–22.
 - [ ] Ejecutar Fase 23 de integración, QA y release móvil.
+
+### Fase 18 — Datos simulados para capas aeronáuticas
+
+- [x] Verificar Fase 14/Fase 13 integradas y cortar desde el SHA común M1.
+- [x] Generar 24 WebP RGBA y 24 grids JSON determinísticos.
+- [x] Validar shape, rango, unidades, bbox, flags, fórmulas y cross-layer.
+- [x] Comparar los 48 hashes en dos generaciones temporales.
+- [x] Implementar command default, `--output`, `--check` y rollback seguro.
+- [x] Entregar contratos, parser, sampler, fixtures y descriptores staged.
+- [x] Mantener manifest, catálogo, API y parser central vivos en schema `2`.
+- [x] Pasar tests backend/frontend dirigidos y checks estáticos locales.
+- [ ] Integrar la rama de Fase 18 mediante su PR de sesión.
 
 Fuente normativa:
 `docs/MVP_roadmap/mobile_layer_enrichment/README.md`.

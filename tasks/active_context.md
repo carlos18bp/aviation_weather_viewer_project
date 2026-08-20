@@ -1,15 +1,41 @@
-# Contexto activo — Fase 14 / integración y release enriquecido
+# Contexto activo — Fase 18 / datos aeronáuticos staged
 
 Actualizado: 2026-08-20.
 
 ## Estado
 
-Las Fases 09–13 están integradas en `master`; no existen PR funcionales
-pendientes de esa ola y sus handoffs están disponibles. La Fase 14 conectó sus
-módulos al vertical slice original de Fase 08 desde una rama/worktree propios.
-La funcionalidad, el mapa real de flows, la validación visual/estabilidad y el
-QA/quality gate están completos. El PR #24 queda pendiente de integración en
-`master`; esta sesión no lo mergea.
+Las Fases 09–14 están integradas en `master`. La Ola M1 parte del SHA común
+`54c61891dca39661e2e593f4715d1ef58ab37a11`. Fase 18 está implementada y
+validada en una rama/worktree propios; esta sesión crea su PR y no lo mergea.
+Los 48 assets y sus contratos frontend permanecen staged, mientras manifest,
+catálogo y API continúan publicando schema `2`.
+
+## Entrega funcional de Fase 18
+
+- Cuatro productos locales: `cloud-cover`, `cloud-base`, `visibility` y
+  `wind-gusts`; seis timestamps y dos formatos por producto.
+- WebP lossless RGBA `1024×1216` y value grids JSON `128×160` row-major, con
+  bbox, fecha, flags, unidades y rangos congelados.
+- Fórmulas determinísticas sobre precipitación, U/V, humedad y valle; bias RBF
+  suave para coherencia aeroportuaria y redondeos normativos persistidos.
+- Validación exacta de 48 archivos, bytes raster/grid, null policy, fixtures,
+  paths seguros, no finitos, frames incompletos y WebP inválidos.
+- Command con default, `--output` y `--check`; generación temporal y rollback
+  seguro sin mover contenido ajeno a los ocho directorios de ownership.
+- Contratos TypeScript staged con parser, sampler bilineal, fixtures y 24 frame
+  descriptors para Fases 19–23; sin fetch ni wiring central.
+- Inventario definitivo: 48 assets, `3.390.006` bytes y dos generaciones
+  temporales con los mismos 48 hashes.
+
+## Evidencia dirigida de Fase 18
+
+- Backend Fase 18: 18/18 tests; regresión manifest schema 2: 3/3.
+- Frontend staged: 13/13; parser central schema 2: 2/2.
+- Ruff check/format, TypeScript y ESLint dirigidos: verdes.
+- `manifest.json` conserva SHA-256
+  `7d43abfa7a482267bd51f086902dd7e6d6b053330244d9e1809113f7161e0ef8`.
+- El host local no posee GDAL/GEOS; `manage.py` y API HTTP se confirman en CI
+  sin ampliar el scope ni instalar paquetes del sistema fuera del worktree.
 
 ## Entrega funcional de Fase 14
 

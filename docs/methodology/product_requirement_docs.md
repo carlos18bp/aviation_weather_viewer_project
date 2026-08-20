@@ -177,3 +177,17 @@ UTC y leyenda mediante un único commit. El reset enriquecido vuelve a
 La funcionalidad y los dos recorridos E2E de enriquecimiento están
 implementados. El estado de integración definitivo se publicará sólo después
 de completar el QA y quality gate de la fase.
+
+## Datos aeronáuticos staged — Fase 18
+
+La Fase 18 materializa cuatro productos locales y determinísticos —nubosidad,
+base de nubes, visibilidad y ráfagas— para la misma fecha, bbox y seis
+timestamps del escenario congelado. Cada producto aporta seis WebP RGBA y seis
+value grids: 48 assets en total, todos marcados como simulados y no aptos para
+uso operacional.
+
+Los datos permanecen deliberadamente staged. El catálogo y la API vivos siguen
+publicando schema `2`, tres capas principales y el overlay de isobaras; no hay
+una función visible nueva ni wiring central. La Fase 23 será la única dueña de
+incorporar los descriptores staged al manifest schema `3` junto con el parser y
+la integración frontend.
