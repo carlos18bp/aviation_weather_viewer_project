@@ -8,6 +8,16 @@ import {
   type DemoAirportIcao,
   type DemoTimestamp,
 } from '@/features/airports';
+import type { ViewerScene } from '@/features/presentation';
+import type { RouteAnalysis } from '@/features/route';
+import {
+  expectedIsobarFrame,
+  type IsobarFeatureCollection,
+} from '@/features/weather/isobars';
+import {
+  WeatherPickerDataService,
+  type WeatherPickerData,
+} from '@/features/weather/picker';
 import type { WindFallbackEvent } from '@/features/weather/wind';
 import { useWeatherViewerStore } from '@/lib/stores/weatherViewerStore';
 import type {
@@ -66,7 +76,16 @@ const CATALOG = {
   layers: [
     { id: 'temperature', name: 'Temperatura', kind: 'scalar', unit: '°C', minimum: 0, maximum: 38 },
     { id: 'wind', name: 'Viento', kind: 'vector', unit: 'kt', minimum: 0, maximum: 60 },
+    {
+      id: 'precipitation',
+      name: 'Precipitación simulada',
+      kind: 'scalar',
+      unit: 'mm/h',
+      minimum: 0,
+      maximum: 40,
+    },
   ],
+  isobarFrames: DEMO_TIMESTAMPS.map(expectedIsobarFrame),
   timestamps: DEMO_TIMESTAMPS,
 } as const;
 
@@ -84,8 +103,98 @@ const AIRPORTS = {
       department: 'Cundinamarca',
       elevation_ft: 8360,
     },
+  }, {
+    type: 'Feature',
+    id: 'SKRG',
+    geometry: { type: 'Point', coordinates: [-75.4231, 6.1645] },
+    properties: {
+      icao_code: 'SKRG',
+      iata_code: 'MDE',
+      name: 'José María Córdova',
+      city: 'Rionegro',
+      department: 'Antioquia',
+      elevation_ft: 7025,
+    },
   }],
 } as AirportFeatureCollection;
+
+const GRID_VALUES = Array(128 * 160).fill(18);
+const WIND_VALUES = Array(128 * 160).fill(5);
+const EMPTY_ISOBARS = {
+  type: 'FeatureCollection',
+  features: [],
+} as unknown as IsobarFeatureCollection;
+
+function pickerData(timestamp: DemoTimestamp): WeatherPickerData {
+  return {
+    timestamp,
+    temperature: {
+      scenario: 'demo-colombia-001',
+      layer: 'temperature',
+      width: 128,
+      height: 160,
+      bbox: [-82, -5, -66, 14],
+      unit: '°C',
+      timestamp,
+      is_simulated: true,
+      operational_use: false,
+      no_data_value: null,
+      values: GRID_VALUES,
+    },
+    wind: {
+      scenario: 'demo-colombia-001',
+      width: 128,
+      height: 160,
+      bbox: [-82, -5, -66, 14],
+      unit: 'kt',
+      timestamp,
+      is_simulated: true,
+      operational_use: false,
+      no_data_value: null,
+      u: WIND_VALUES,
+      v: WIND_VALUES,
+    },
+  };
+}
+
+function routeAnalysis(timestamp: DemoTimestamp): RouteAnalysis {
+  const wind = pickerData(timestamp).wind;
+  return {
+    route: { originIcao: 'SKBO', destinationIcao: 'SKRG' },
+    totalDistanceNm: 116,
+    meanAlongWindKt: 4,
+    maximumCrossWindKt: 7,
+    samples: [
+      {
+        coordinate: [-74.1469, 4.7016],
+        distanceNm: 0,
+        bearingDeg: 315,
+        windSpeedKt: wind.u[0],
+        alongWindKt: 4,
+        crossWindKt: 7,
+      },
+      {
+        coordinate: [-75.4231, 6.1645],
+        distanceNm: 116,
+        bearingDeg: 315,
+        windSpeedKt: wind.u[0],
+        alongWindKt: 4,
+        crossWindKt: 7,
+      },
+    ],
+    is_simulated: true,
+    operational_use: false,
+  };
+}
+
+function pickerServiceDouble() {
+  return {
+    load: jest.fn(async (timestamp: string) => pickerData(timestamp as DemoTimestamp)),
+    preloadAdjacent: jest.fn().mockResolvedValue(undefined),
+    getCached: jest.fn(),
+    destroy: jest.fn(),
+  } as unknown as WeatherPickerDataService;
+}
 
 function frameFor(layer: WeatherLayerId, timestamp: string): WeatherMapFrame {
   if (layer === 'temperature') {
@@ -93,6 +202,19 @@ function frameFor(layer: WeatherLayerId, timestamp: string): WeatherMapFrame {
       layer,
       timestamp,
       imageUrl: `/media/demo-weather/demo-colombia-001/temperature/${timestamp.slice(11, 13)}Z.webp`,
+    };
+  }
+  if (layer === 'precipitation') {
+    return {
+      scenario: 'demo-colombia-001',
+      layer,
+      timestamp: timestamp as DemoTimestamp,
+      unit: 'mm/h',
+      minimum: 0,
+      maximum: 40,
+      imageUrl: `/media/demo-weather/demo-colombia-001/precipitation/${timestamp.slice(11, 13)}Z.webp`,
+      isSimulated: true,
+      operationalUse: false,
     };
   }
   return {
@@ -139,10 +261,16 @@ function createControllerDouble(): WeatherMapController & {
   return {
     initialize: jest.fn().mockResolvedValue(undefined),
     setLayer: jest.fn(),
+    prepareWeatherFrame: jest.fn().mockResolvedValue(undefined),
     setWeatherFrame: jest.fn().mockResolvedValue(undefined),
     setAirports: jest.fn(),
     setSelectedAirport: jest.fn(),
     focusAirport: jest.fn(),
+    setSelectedCoordinate: jest.fn(),
+    setRoute: jest.fn(),
+    setIsobarFrame: jest.fn(),
+    setIsobarsVisible: jest.fn(),
+    setViewport: jest.fn(),
     resize: jest.fn(),
     reset: jest.fn(),
     destroy: jest.fn(),
@@ -150,12 +278,21 @@ function createControllerDouble(): WeatherMapController & {
   };
 }
 
-function createHarness(overrides: Partial<ViewerOrchestratorDependencies> = {}) {
+function createHarness(
+  overrides: Partial<ViewerOrchestratorDependencies> = {},
+  initialScene?: ViewerScene,
+) {
   const controller = createControllerDouble();
   const snapshots: ViewerSnapshot[] = [];
   const intervalCallbacks = new Map<number, () => void>();
   let intervalId = 0;
   let controllerOptions: DefaultWeatherMapControllerOptions | null = null;
+  const urlSynchronizer = {
+    replace: jest.fn(),
+    replaceViewport: jest.fn(),
+    flush: jest.fn(),
+    destroy: jest.fn(),
+  };
   const dependencies: ViewerOrchestratorDependencies = {
     fetchCatalog: jest.fn().mockResolvedValue(CATALOG),
     fetchFrame: jest.fn(async (layer, timestamp) => frameFor(layer, timestamp)),
@@ -163,11 +300,17 @@ function createHarness(overrides: Partial<ViewerOrchestratorDependencies> = {}) 
     fetchAirportWeather: jest.fn(async (icaoCode, timestamp) => (
       airportWeather(timestamp as DemoTimestamp, icaoCode)
     )),
+    fetchIsobarCollection: jest.fn().mockResolvedValue(EMPTY_ISOBARS),
+    analyzeRoute: jest.fn(({ timestamp }) => routeAnalysis(timestamp)),
+    createPickerDataService: pickerServiceDouble,
     createController: jest.fn((options) => {
       controllerOptions = options;
-      options.adapterFactory?.({} as MapLibreMap);
+      options.adapterFactory?.({} as MapLibreMap, options.callbacks ?? {});
       return controller;
     }),
+    createUrlSynchronizer: () => urlSynchronizer,
+    prefersReducedMotion: () => true,
+    exitFullscreen: jest.fn().mockResolvedValue(undefined),
     setInterval: jest.fn((callback) => {
       const id = ++intervalId;
       intervalCallbacks.set(id, callback);
@@ -181,6 +324,7 @@ function createHarness(overrides: Partial<ViewerOrchestratorDependencies> = {}) 
   const orchestrator = new ViewerOrchestrator({
     container: document.createElement('div'),
     callbacks: {},
+    initialScene,
     onSnapshot: (snapshot) => snapshots.push(snapshot),
     dependencies,
   });
@@ -191,6 +335,7 @@ function createHarness(overrides: Partial<ViewerOrchestratorDependencies> = {}) 
     dependencies,
     snapshots,
     intervalCallbacks,
+    urlSynchronizer,
     getControllerOptions: () => controllerOptions,
   };
 }
@@ -216,6 +361,10 @@ describe('ViewerOrchestrator', () => {
     expect(harness.controller.setWeatherFrame).toHaveBeenCalledWith(
       frameFor('wind', DEFAULT_VIEWER_TIMESTAMP),
     );
+    expect(harness.controller.prepareWeatherFrame).toHaveBeenCalledWith(
+      frameFor('wind', DEFAULT_VIEWER_TIMESTAMP),
+      expect.any(AbortSignal),
+    );
     expect(harness.orchestrator.getSnapshot()).toMatchObject({
       activeLayer: 'wind',
       activeTimestamp: DEFAULT_VIEWER_TIMESTAMP,
@@ -226,21 +375,31 @@ describe('ViewerOrchestrator', () => {
     });
   });
 
-  it('does not block meteorology while airports are still loading', async () => {
+  it('loads meteorology beside airports but commits bootstrap after airport hit targets', async () => {
     const airportsRequest = deferred<AirportFeatureCollection>();
     const harness = createHarness({
       fetchAirports: jest.fn(() => airportsRequest.promise),
     });
 
-    await harness.orchestrator.initialize();
+    const initialization = harness.orchestrator.initialize();
+    await waitFor(() => expect(harness.dependencies.fetchFrame).toHaveBeenCalled());
 
     expect(harness.orchestrator.getSnapshot()).toMatchObject({
       activeTimestamp: DEFAULT_VIEWER_TIMESTAMP,
       airportsStatus: 'loading',
+      isFrameLoading: true,
+    });
+    expect(harness.controller.setWeatherFrame).not.toHaveBeenCalled();
+    airportsRequest.resolve(AIRPORTS);
+    await initialization;
+
+    expect(harness.orchestrator.getSnapshot()).toMatchObject({
+      airportsStatus: 'ready',
       isFrameLoading: false,
     });
-    airportsRequest.resolve(AIRPORTS);
-    await waitFor(() => expect(harness.orchestrator.getSnapshot().airportsStatus).toBe('ready'));
+    expect(jest.mocked(harness.controller.setAirports).mock.invocationCallOrder[0]).toBeLessThan(
+      jest.mocked(harness.controller.setWeatherFrame).mock.invocationCallOrder[0],
+    );
   });
 
   it('keeps the previous layer and UTC visible until the new frame commits', async () => {
@@ -305,10 +464,10 @@ describe('ViewerOrchestrator', () => {
     const signals: AbortSignal[] = [];
     const fetchFrame = jest.fn((layer: WeatherLayerId, timestamp: string, signal: AbortSignal) => {
       signals.push(signal);
-      if (timestamp === DEMO_TIMESTAMPS[3]) {
+      if (timestamp === DEMO_TIMESTAMPS[4]) {
         return first.promise;
       }
-      if (timestamp === DEMO_TIMESTAMPS[4]) {
+      if (timestamp === DEMO_TIMESTAMPS[5]) {
         return second.promise;
       }
       return Promise.resolve(frameFor(layer, timestamp));
@@ -316,17 +475,17 @@ describe('ViewerOrchestrator', () => {
     const harness = createHarness({ fetchFrame });
     await harness.orchestrator.initialize();
 
-    harness.orchestrator.selectTimestamp(DEMO_TIMESTAMPS[3]);
     harness.orchestrator.selectTimestamp(DEMO_TIMESTAMPS[4]);
+    harness.orchestrator.selectTimestamp(DEMO_TIMESTAMPS[5]);
 
     expect(signals.at(-2)?.aborted).toBe(true);
-    second.resolve(frameFor('wind', DEMO_TIMESTAMPS[4]));
+    second.resolve(frameFor('wind', DEMO_TIMESTAMPS[5]));
     await waitFor(() => (
-      expect(harness.orchestrator.getSnapshot().activeTimestamp).toBe(DEMO_TIMESTAMPS[4])
+      expect(harness.orchestrator.getSnapshot().activeTimestamp).toBe(DEMO_TIMESTAMPS[5])
     ));
-    first.resolve(frameFor('wind', DEMO_TIMESTAMPS[3]));
+    first.resolve(frameFor('wind', DEMO_TIMESTAMPS[4]));
     await Promise.resolve();
-    expect(harness.orchestrator.getSnapshot().activeTimestamp).toBe(DEMO_TIMESTAMPS[4]);
+    expect(harness.orchestrator.getSnapshot().activeTimestamp).toBe(DEMO_TIMESTAMPS[5]);
   });
 
   it('preserves the complete previous view on failure and retries the intent', async () => {
@@ -336,7 +495,7 @@ describe('ViewerOrchestrator', () => {
       .mockRejectedValueOnce(new Error('network unavailable'))
       .mockImplementationOnce((layer, timestamp) => Promise.resolve(frameFor(layer, timestamp)));
 
-    harness.orchestrator.selectTimestamp(DEMO_TIMESTAMPS[3]);
+    harness.orchestrator.selectTimestamp(DEMO_TIMESTAMPS[4]);
     await waitFor(() => expect(harness.orchestrator.getSnapshot().frameError).not.toBeNull());
 
     expect(harness.orchestrator.getSnapshot()).toMatchObject({
@@ -346,7 +505,7 @@ describe('ViewerOrchestrator', () => {
     });
     harness.orchestrator.retry();
     await waitFor(() => (
-      expect(harness.orchestrator.getSnapshot().activeTimestamp).toBe(DEMO_TIMESTAMPS[3])
+      expect(harness.orchestrator.getSnapshot().activeTimestamp).toBe(DEMO_TIMESTAMPS[4])
     ));
     expect(harness.orchestrator.getSnapshot().frameError).toBeNull();
   });
@@ -355,8 +514,8 @@ describe('ViewerOrchestrator', () => {
     const harness = createHarness();
     await harness.orchestrator.initialize();
     await waitFor(() => expect(harness.orchestrator.getSnapshot().airportsStatus).toBe('ready'));
-    (harness.dependencies.fetchFrame as jest.Mock).mockRejectedValueOnce(
-      new Error('frame unavailable'),
+    (harness.dependencies.fetchAirportWeather as jest.Mock).mockRejectedValueOnce(
+      new Error('airport condition unavailable'),
     );
 
     harness.orchestrator.selectAirport('SKBO');
@@ -388,9 +547,13 @@ describe('ViewerOrchestrator', () => {
 
   it('uses one 1500 ms playback timer and skips ticks while loading', async () => {
     const nextFrame = deferred<WeatherMapFrame>();
-    const harness = createHarness();
+    const fetchFrame = jest.fn((layer: WeatherLayerId, timestamp: DemoTimestamp) => (
+      timestamp === DEMO_TIMESTAMPS[3]
+        ? nextFrame.promise
+        : Promise.resolve(frameFor(layer, timestamp))
+    ));
+    const harness = createHarness({ fetchFrame });
     await harness.orchestrator.initialize();
-    (harness.dependencies.fetchFrame as jest.Mock).mockImplementationOnce(() => nextFrame.promise);
 
     harness.orchestrator.play();
     harness.orchestrator.play();
@@ -403,7 +566,7 @@ describe('ViewerOrchestrator', () => {
     tick();
     tick();
 
-    expect(harness.dependencies.fetchFrame).toHaveBeenCalledTimes(2);
+    expect(harness.dependencies.fetchFrame).toHaveBeenCalledTimes(3);
     expect(harness.orchestrator.getSnapshot().isFrameLoading).toBe(true);
     nextFrame.resolve(frameFor('wind', DEMO_TIMESTAMPS[3]));
     await waitFor(() => expect(harness.orchestrator.getSnapshot().isFrameLoading).toBe(false));
@@ -435,6 +598,178 @@ describe('ViewerOrchestrator', () => {
     await waitFor(() => (
       expect(harness.orchestrator.getSnapshot().activeTimestamp).toBe(DEMO_TIMESTAMPS[5])
     ));
+  });
+
+  // quality: allow-too-many-assertions (one full URL bootstrap must restore every serialized scene field in one visible commit)
+  it('bootstraps and canonicalizes a complete enriched URL scene', async () => {
+    const initialScene: ViewerScene = {
+      layer: 'precipitation',
+      timestamp: DEMO_TIMESTAMPS[3],
+      viewport: { longitude: -74.15, latitude: 4.7, zoom: 6.2 },
+      airport: 'SKBO',
+      picker: [-74.15, 4.7],
+      route: { originIcao: 'SKBO', destinationIcao: 'SKRG' },
+      isobarsVisible: true,
+      presentationMode: true,
+    };
+    const harness = createHarness({}, initialScene);
+
+    await harness.orchestrator.initialize();
+
+    expect(harness.controller.setViewport).toHaveBeenCalledWith(initialScene.viewport);
+    expect(harness.controller.setWeatherFrame).toHaveBeenCalledWith(
+      frameFor('precipitation', initialScene.timestamp),
+    );
+    expect(harness.controller.setSelectedCoordinate).toHaveBeenCalledWith(initialScene.picker);
+    expect(harness.controller.setRoute).toHaveBeenCalledWith(
+      initialScene.route,
+      expect.objectContaining({ route: initialScene.route }),
+    );
+    expect(harness.controller.setIsobarsVisible).toHaveBeenCalledWith(true);
+    expect(harness.orchestrator.getSnapshot()).toMatchObject({
+      activeLayer: initialScene.layer,
+      activeTimestamp: initialScene.timestamp,
+      selectedAirport: initialScene.airport,
+      selectedCoordinate: initialScene.picker,
+      selectedRoute: initialScene.route,
+      isobarsVisible: true,
+      presentationMode: true,
+      mapViewport: initialScene.viewport,
+    });
+    expect(useWeatherViewerStore.getState()).toMatchObject({
+      activeLayer: initialScene.layer,
+      activeTimestamp: initialScene.timestamp,
+      selectedAirport: initialScene.airport,
+      selectedCoordinate: initialScene.picker,
+      selectedRoute: initialScene.route,
+      isobarsVisible: true,
+      presentationMode: true,
+      mapViewport: initialScene.viewport,
+    });
+    expect(harness.urlSynchronizer.replace).toHaveBeenLastCalledWith(initialScene);
+  });
+
+  // quality: allow-too-many-assertions (the timestamp is the atomic boundary shared by all enriched products)
+  it('commits layer, airport, picker, route, isobars, UTC source, and legend source together', async () => {
+    const initialScene: ViewerScene = {
+      layer: 'precipitation',
+      timestamp: DEMO_TIMESTAMPS[3],
+      viewport: { longitude: -74.15, latitude: 4.7, zoom: 6.2 },
+      airport: 'SKBO',
+      picker: [-74.15, 4.7],
+      route: { originIcao: 'SKBO', destinationIcao: 'SKRG' },
+      isobarsVisible: true,
+      presentationMode: false,
+    };
+    const harness = createHarness({}, initialScene);
+    await harness.orchestrator.initialize();
+
+    harness.orchestrator.selectTimestamp(DEMO_TIMESTAMPS[4]);
+    await waitFor(() => (
+      expect(harness.orchestrator.getSnapshot().activeTimestamp).toBe(DEMO_TIMESTAMPS[4])
+    ));
+
+    const snapshot = harness.orchestrator.getSnapshot();
+    expect(snapshot.activeLayer).toBe('precipitation');
+    expect(snapshot.airportWeather?.timestamp).toBe(DEMO_TIMESTAMPS[4]);
+    expect(snapshot.pickerResult).toMatchObject({
+      status: 'ready',
+      sample: { timestamp: DEMO_TIMESTAMPS[4] },
+    });
+    expect(snapshot.routeAnalysis?.route).toEqual(initialScene.route);
+    expect(snapshot.isobarsVisible).toBe(true);
+    expect((harness.controller.setWeatherFrame as jest.Mock).mock.calls.at(-1)?.[0])
+      .toMatchObject({ layer: 'precipitation', timestamp: DEMO_TIMESTAMPS[4] });
+    expect(useWeatherViewerStore.getState()).toMatchObject({
+      activeLayer: 'precipitation',
+      activeTimestamp: DEMO_TIMESTAMPS[4],
+      isobarsVisible: true,
+    });
+  });
+
+  it('keeps wind visible when temperature fails', async () => {
+    const harness = createHarness();
+    await harness.orchestrator.initialize();
+    (harness.dependencies.fetchFrame as jest.Mock).mockRejectedValueOnce(
+      new Error('temperature unavailable'),
+    );
+
+    harness.orchestrator.selectLayer('temperature');
+    await waitFor(() => expect(harness.orchestrator.getSnapshot().frameError).not.toBeNull());
+
+    expect(harness.orchestrator.getSnapshot().activeLayer).toBe('wind');
+    expect(harness.controller.setLayer).not.toHaveBeenCalledWith('temperature');
+  });
+
+  it('keeps wind visible when precipitation fails', async () => {
+    const harness = createHarness();
+    await harness.orchestrator.initialize();
+    (harness.dependencies.fetchFrame as jest.Mock).mockRejectedValueOnce(
+      new Error('precipitation unavailable'),
+    );
+
+    harness.orchestrator.selectLayer('precipitation');
+    await waitFor(() => expect(harness.orchestrator.getSnapshot().frameError).not.toBeNull());
+
+    expect(harness.orchestrator.getSnapshot().activeLayer).toBe('wind');
+    expect(harness.controller.setLayer).not.toHaveBeenCalledWith('precipitation');
+  });
+
+  it('hides failed isobars without aborting the primary frame', async () => {
+    const harness = createHarness();
+    await harness.orchestrator.initialize();
+    (harness.dependencies.fetchIsobarCollection as jest.Mock).mockRejectedValueOnce(
+      new Error('isobars unavailable'),
+    );
+
+    harness.orchestrator.setIsobars(true);
+    await waitFor(() => expect(harness.orchestrator.getSnapshot().isobarError).not.toBeNull());
+
+    expect(harness.orchestrator.getSnapshot()).toMatchObject({
+      activeLayer: 'wind',
+      activeTimestamp: DEFAULT_VIEWER_TIMESTAMP,
+      isobarsVisible: false,
+      frameError: null,
+      isFrameLoading: false,
+    });
+    expect(harness.controller.setIsobarsVisible).toHaveBeenLastCalledWith(false);
+  });
+
+  it('aborts an active request and remains idempotent across repeated resets', async () => {
+    const activeFrame = deferred<WeatherMapFrame>();
+    let activeSignal: AbortSignal | undefined;
+    const fetchFrame = jest.fn((
+      layer: WeatherLayerId,
+      timestamp: DemoTimestamp,
+      signal: AbortSignal,
+    ) => {
+      if (timestamp === DEMO_TIMESTAMPS[4]) {
+        activeSignal = signal;
+        return activeFrame.promise;
+      }
+      return Promise.resolve(frameFor(layer, timestamp));
+    });
+    const harness = createHarness({ fetchFrame });
+    await harness.orchestrator.initialize();
+
+    harness.orchestrator.selectTimestamp(DEMO_TIMESTAMPS[4]);
+    harness.orchestrator.reset();
+    harness.orchestrator.reset();
+    await waitFor(() => expect(harness.orchestrator.getSnapshot()).toMatchObject({
+      activeLayer: 'wind',
+      activeTimestamp: DEFAULT_VIEWER_TIMESTAMP,
+      selectedAirport: null,
+      selectedCoordinate: null,
+      selectedRoute: null,
+      isobarsVisible: false,
+      presentationMode: false,
+      frameError: null,
+    }));
+
+    expect(activeSignal?.aborted).toBe(true);
+    expect(harness.controller.reset).toHaveBeenCalledTimes(2);
+    expect(harness.dependencies.createController).toHaveBeenCalledTimes(1);
+    activeFrame.resolve(frameFor('wind', DEMO_TIMESTAMPS[4]));
   });
 
   // quality: allow-too-many-assertions (reset atomically restores viewer defaults, stops playback, resets the camera, and reuses the existing MapLibre controller)
@@ -471,6 +806,7 @@ describe('ViewerOrchestrator', () => {
       .mockRejectedValueOnce(new Error('bad catalog'))
       .mockResolvedValue(CATALOG);
     const fetchAirports = jest.fn()
+      .mockRejectedValueOnce(new Error('airport network'))
       .mockRejectedValueOnce(new Error('airport network'))
       .mockResolvedValue(AIRPORTS);
     const harness = createHarness({ fetchCatalog, fetchAirports });
@@ -515,6 +851,7 @@ describe('ViewerOrchestrator', () => {
 
   it('aborts network work, timers, adapters, and controller on destroy', async () => {
     const airportsRequest = deferred<AirportFeatureCollection>();
+    const frameRequest = deferred<WeatherMapFrame>();
     const capturedSignals: {
       airport?: AbortSignal;
       frame?: AbortSignal;
@@ -524,16 +861,16 @@ describe('ViewerOrchestrator', () => {
         capturedSignals.airport = signal;
         return airportsRequest.promise;
       }),
-    });
-    await harness.orchestrator.initialize();
-    const frameRequest = deferred<WeatherMapFrame>();
-    (harness.dependencies.fetchFrame as jest.Mock).mockImplementationOnce(
-      (_layer, _timestamp, signal: AbortSignal) => {
+      fetchFrame: jest.fn((_layer, _timestamp, signal: AbortSignal) => {
         capturedSignals.frame = signal;
         return frameRequest.promise;
-      },
-    );
-    harness.orchestrator.selectTimestamp(DEMO_TIMESTAMPS[3]);
+      }),
+    });
+    void harness.orchestrator.initialize();
+    await waitFor(() => expect(capturedSignals).toEqual({
+      airport: expect.any(AbortSignal),
+      frame: expect.any(AbortSignal),
+    }));
     harness.orchestrator.play();
 
     harness.orchestrator.destroy();

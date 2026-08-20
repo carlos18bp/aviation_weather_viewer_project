@@ -11,6 +11,11 @@ function viewerState() {
     activeTimestamp: state.activeTimestamp,
     availableTimestamps: state.availableTimestamps,
     selectedAirport: state.selectedAirport,
+    selectedCoordinate: state.selectedCoordinate,
+    selectedRoute: state.selectedRoute,
+    isobarsVisible: state.isobarsVisible,
+    presentationMode: state.presentationMode,
+    mapViewport: state.mapViewport,
     isPlaying: state.isPlaying,
     isMapReady: state.isMapReady,
     isFrameLoading: state.isFrameLoading,
@@ -49,6 +54,63 @@ describe('weatherViewerStore', () => {
     expect(useWeatherViewerStore.getState().selectedAirport).toBe('SKBO');
   });
 
+  it('copies coordinate, route, and viewport inputs into serializable state', () => {
+    const coordinate = [-74.15, 4.7] as [number, number];
+    const route = { originIcao: 'SKBO', destinationIcao: 'SKRG' } as const;
+    const viewport = { longitude: -74.15, latitude: 4.7, zoom: 6.2 };
+
+    useWeatherViewerStore.getState().setSelectedCoordinate(coordinate);
+    useWeatherViewerStore.getState().setSelectedRoute(route);
+    useWeatherViewerStore.getState().setMapViewport(viewport);
+    coordinate[0] = -70;
+    viewport.zoom = 9;
+
+    expect(useWeatherViewerStore.getState()).toMatchObject({
+      selectedCoordinate: [-74.15, 4.7],
+      selectedRoute: route,
+      mapViewport: { longitude: -74.15, latitude: 4.7, zoom: 6.2 },
+    });
+  });
+
+  it('controls isobars and presentation independently', () => {
+    useWeatherViewerStore.getState().setIsobarsVisible(true);
+    useWeatherViewerStore.getState().setPresentationMode(true);
+
+    expect(useWeatherViewerStore.getState()).toMatchObject({
+      isobarsVisible: true,
+      presentationMode: true,
+    });
+  });
+
+  it('commits the complete visible scene in one observable update', () => {
+    const listener = jest.fn();
+    const unsubscribe = useWeatherViewerStore.subscribe(listener);
+
+    useWeatherViewerStore.getState().commitVisibleScene({
+      layer: 'precipitation',
+      timestamp: '2026-01-15T09:00:00Z',
+      viewport: { longitude: -74.15, latitude: 4.7, zoom: 6.2 },
+      airport: 'SKBO',
+      picker: [-74.15, 4.7],
+      route: { originIcao: 'SKBO', destinationIcao: 'SKRG' },
+      isobarsVisible: true,
+      presentationMode: true,
+    });
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(viewerState()).toMatchObject({
+      activeLayer: 'precipitation',
+      activeTimestamp: '2026-01-15T09:00:00Z',
+      selectedAirport: 'SKBO',
+      selectedCoordinate: [-74.15, 4.7],
+      selectedRoute: { originIcao: 'SKBO', destinationIcao: 'SKRG' },
+      isobarsVisible: true,
+      presentationMode: true,
+      mapViewport: { longitude: -74.15, latitude: 4.7, zoom: 6.2 },
+    });
+    unsubscribe();
+  });
+
   it('changes playback state', () => {
     useWeatherViewerStore.getState().setPlaying(true);
     expect(useWeatherViewerStore.getState().isPlaying).toBe(true);
@@ -79,12 +141,34 @@ describe('weatherViewerStore', () => {
     expect(viewerState()).toEqual(INITIAL_WEATHER_VIEWER_STATE);
   });
 
-  it('does not expose discarded viewer capabilities', () => {
+  // Falla si faltan defaults de escena enriquecida al crear el store real.
+  it('installs the enriched scene defaults in the real store', () => {
     const state = useWeatherViewerStore.getState() as unknown as Record<string, unknown>;
-    expect(state.selectedCoordinate).toBeUndefined();
-    expect(state.opacity).toBeUndefined();
-    expect(state.quality).toBeUndefined();
-    expect(state.playbackSpeed).toBeUndefined();
-    expect(state.viewport).toBeUndefined();
+    expect({
+      selectedCoordinate: state.selectedCoordinate,
+      selectedRoute: state.selectedRoute,
+      isobarsVisible: state.isobarsVisible,
+      presentationMode: state.presentationMode,
+      mapViewport: state.mapViewport,
+    }).toEqual({
+      selectedCoordinate: null,
+      selectedRoute: null,
+      isobarsVisible: false,
+      presentationMode: false,
+      mapViewport: { longitude: -73.5, latitude: 4.5, zoom: 4.7 },
+    });
+  });
+
+  // Falla si una referencia de runtime prohibida entra al estado serializable de Zustand.
+  it('excludes runtime caches from the serializable scene state', () => {
+    const state = useWeatherViewerStore.getState();
+    // quality: allow-negation-only (el contrato exige que estas claves estén ausentes del estado serializable)
+    expect(Object.keys(state)).not.toEqual(expect.arrayContaining([
+      'opacity',
+      'quality',
+      'playbackSpeed',
+      'grids',
+      'abortControllers',
+    ]));
   });
 });

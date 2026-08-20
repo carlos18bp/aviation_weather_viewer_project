@@ -42,8 +42,8 @@ class DefaultTemporalTransitionRunner implements TemporalTransitionRunner {
 
   constructor(options: TemporalTransitionRunnerOptions) {
     this.onTransition = options.onTransition;
-    this.scheduleTimeout = options.setTimeout ?? globalThis.setTimeout;
-    this.cancelTimeout = options.clearTimeout ?? globalThis.clearTimeout;
+    this.scheduleTimeout = options.setTimeout ?? globalThis.setTimeout.bind(globalThis);
+    this.cancelTimeout = options.clearTimeout ?? globalThis.clearTimeout.bind(globalThis);
   }
 
   async run(

@@ -171,3 +171,38 @@
   compatibilidad puede validar el contrato nuevo y conservar temporalmente el
   DTO viejo; debe quedar explícitamente marcada para retiro en la fase dueña de
   los tipos centrales.
+
+## Fase 14 — integración enriquecida
+
+- El orden del registry es también una dependencia de readiness: inicializar el
+  renderer meteorológico antes de raster/overlays evita que placeholders de
+  source retrasen el custom layer de viento.
+- Los errores MapLibre necesitan frontera temporal: antes de `load` describen
+  bootstrap; después pertenecen al source/layer y su adapter, o un overlay puede
+  derribar una escena principal sana.
+- Un commit atómico incluye todos los consumidores derivados visibles, no sólo
+  el raster: aeropuerto, picker, ruta, isobaras, UTC y leyenda deben compartir el
+  timestamp publicado.
+- La URL es un contrato de escena, no un log de gestos. Parsear antes del
+  bootstrap y serializar viewport sólo en `moveend` evita animaciones y churn.
+- Los métodos nativos del browser que dependen de receiver deben ligarse antes
+  de almacenarse como callbacks; JSDOM puede no revelar el `Illegal invocation`
+  que sí aparece en Chrome.
+- La prueba de fallback debe completar pérdida y restauración del contexto si
+  continuará interactuando con MapLibre. Forzar sólo la pérdida mide fallback,
+  pero invalida legítimamente las transiciones posteriores.
+- En validación WebGL, geometría DOM y una captura posterior a `idle` permiten
+  distinguir colisión CSS de tearing del compositor. `reduced-motion` aporta un
+  segundo camino determinístico para esa comprobación.
+- El reset enriquecido se valida mejor como barrera final: estado, URL y
+  requests pendientes deben converger juntos, incluso después de aborts
+  esperados por navegación y precarga.
+- Un dev server Django puede responder metadata con 200 y fallar todos los
+  assets `/media` si `DEBUG` está desactivado; el smoke E2E local debe comprobar
+  un asset concreto antes de atribuir el fallback a lógica de producto.
+- Los gates estáticos necesitan al menos una aserción Playwright directa dentro
+  del test; conservar helpers ricos y añadir una expectativa observable de
+  bootstrap evita falsos `no_assertions` sin duplicar el recorrido.
+- Un contrato de ausencia en Zustand es una aserción de comportamiento válida,
+  pero debe agrupar claves prohibidas y documentar por qué la negación es el
+  resultado esperado.

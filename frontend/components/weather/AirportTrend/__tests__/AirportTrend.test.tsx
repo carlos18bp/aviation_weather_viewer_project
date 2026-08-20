@@ -36,6 +36,9 @@ describe('AirportTrend', () => {
     const timestampButtons = screen.getAllByRole('button', { name: /^Seleccionar .* evolución$/ });
     expect(timestampButtons).toHaveLength(6);
     expect(screen.getByText('Evolución simulada')).toBeInTheDocument();
+    expect(screen.getByRole('region', {
+      name: 'Evolución simulada SKBO',
+    })).toBeInTheDocument();
     expect(screen.getByText('UTC / ZULU')).toBeInTheDocument();
     expect(screen.getByRole('button', {
       name: 'Seleccionar 06:00Z desde la evolución',

@@ -236,3 +236,40 @@ La única compatibilidad central autorizada en esta fase está en
 `weatherService.ts`: valida que el catálogo enriquecido tenga las tres capas,
 pero conserva el DTO visible de temperatura/viento hasta que Fase 14 amplíe
 `viewerTypes`, store, selector y controller.
+
+## Arquitectura integrada — Fase 14
+
+```mermaid
+flowchart LR
+    UI[WeatherViewer] --> O[ViewerOrchestrator]
+    UI --> S[Zustand serializable]
+    O --> API[Servicios same-origin]
+    O --> T[Runner temporal + preloader]
+    O --> C[WeatherMapController]
+    O --> URL[Codec + replaceState]
+    C --> W[Viento / temperatura / precipitación]
+    C --> I[Isobaras]
+    C --> R[Ruta]
+    C --> A[Aeropuertos]
+    C --> P[Picker]
+    W --> M[Una instancia MapLibre]
+    I --> M
+    R --> M
+    A --> M
+    P --> M
+```
+
+- El controller registra adapters en orden meteorología → isobaras → ruta →
+  aeropuertos → picker. Sus callbacks arbitran aeropuerto antes de picker y
+  publican viewport únicamente en `moveend`.
+- El store conserva sólo escena serializable: coordinate, route, overlay,
+  presentation y viewport. Grids, U/V, mapa, caches, timers y abort controllers
+  permanecen en servicios, adapters u orquestador.
+- El orquestador es dueño de bootstrap URL previo a datos, carreras de frame,
+  carga derivada del mismo timestamp, commit atómico, precarga adyacente,
+  playback, reset y teardown.
+- Los errores de isobaras quedan separados del frame principal. Los errores de
+  producto mantienen la escena confirmada anterior y nunca crossfadean dos
+  timestamps.
+- Presentación contrae chrome secundario pero conserva warning, UTC, selector,
+  leyenda, timeline, resumen de escena y salida.

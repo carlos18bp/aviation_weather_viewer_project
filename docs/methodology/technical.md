@@ -297,3 +297,47 @@ La generación doble y el test de reproducibilidad confirmaron igualdad byte a
 byte. Los tests dirigidos de Fase 13 cubren assets/validadores, catálogo/frames,
 schemas/servicios, respuestas obsoletas, hide-during-fetch, fallbacks y cleanup;
 ESLint, Ruff, `python manage.py check` y el build Next quedaron verdes.
+
+## Contrato técnico — Fase 14
+
+- Estado serializable nuevo: `selectedCoordinate`, `selectedRoute`,
+  `isobarsVisible`, `presentationMode` y `mapViewport`.
+- API del controller: `setSelectedCoordinate`, `setRoute`,
+  `setIsobarsVisible`, `setViewport`, callback de coordenada y callback
+  `moveend`.
+- Capas principales exclusivas: `wind`, `temperature`, `precipitation`;
+  `pressure-isobars` no participa de esa exclusión.
+- URL canónica: parse antes de bootstrap, validación por bbox/ICAO/timestamp,
+  viewport sin animación, `history.replaceState` y actualización de cámara sólo
+  después de `moveend`.
+- Carga temporal: fetch de producto principal y dependencias visibles del mismo
+  timestamp, preparación/decodificación raster previa al fade-out, fade-out
+  `120 ms`, commit único, fade-in `180 ms` y precarga abortable de
+  anterior/siguiente. Cada producto raster conserva como máximo una imagen
+  preparada fuera de Zustand.
+- Picker: un grid térmico y un campo U/V del mismo timestamp; muestreo local,
+  sin endpoint nuevo y con estados distintos para fuera de cobertura y dato no
+  disponible.
+- Ruta: exactamente 24 muestras del U/V activo, origen/destino controlados,
+  perfil compacto y disclaimer no operacional.
+- Reset: abort de requests/precargas, stop de playback/transición, limpieza de
+  selecciones y errores, reset de adapters/cámara, salida de presentación y
+  carga canónica `wind/06Z`.
+- E2E permitidos: `weather-enrichment-discovery.spec.ts` y
+  `weather-enrichment-route-scene.spec.ts`; los errores permanecen en pruebas
+  unitarias/integration dirigidas.
+
+Evidencia visual local: Chrome y Edge reales a `1920×1080`, modo normal y
+presentación, tres capas principales y escena simultánea aeropuerto + picker +
+ruta. El host usa SwiftShader sin GPU física; el fallback estático de viento se
+midió a `60.1 FPS`. La estabilidad recorrió `614.5 s`, terminó en reset y dejó
+cero errores de consola/page y cero requests pendientes.
+
+Evidencia dirigida previa a QA: TypeScript, ESLint del diff y build Next verdes;
+recorrido Fase 08 `1/1` y los dos E2E enriquecidos `2/2`. La auditoría estática
+registra 21 flujos: 8 cubiertos, 13 exentos, 0 missing, 0 partial y 0 junk-only.
+
+QA final: gate `🟢` con 0 errores/warnings, store 15/15, route-scene live 1/1 y
+Auditor KEEP para los 12 archivos de test modificados. El único rojo intermedio
+fue infraestructura local: Django con `DJANGO_DEBUG=false` no registró `/media`;
+al reiniciar el dev server con `true`, el mismo E2E pasó sin cambios productivos.

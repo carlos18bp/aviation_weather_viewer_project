@@ -11,8 +11,22 @@
   top: 13px;
   right: 28px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
+}
+
+.presentationControl,
+.shareControl {
+  padding: 3px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 10px;
+  background: rgb(4 14 24 / 74%);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 22%);
+  backdrop-filter: blur(14px);
+}
+
+.shareControl {
+  max-width: 190px;
 }
 
 .utc {
@@ -45,7 +59,142 @@
 
 .layerPanel {
   display: grid;
-  gap: 20px;
+  gap: 14px;
+  max-height: 67vh;
+}
+
+.leftPanel {
+  display: grid;
+  gap: 18px;
+  max-height: 65vh;
+  padding-right: 5px;
+  overflow-y: auto;
+  scrollbar-color: rgb(50 211 220 / 45%) transparent;
+  scrollbar-width: thin;
+}
+
+.isobarToggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 9px;
+  color: var(--viewer-muted);
+  background: rgb(7 19 31 / 62%);
+  cursor: pointer;
+}
+
+.isobarToggle:has(input:checked) {
+  color: var(--viewer-text);
+  border-color: rgb(34 211 238 / 48%);
+  background: rgb(34 211 238 / 13%);
+}
+
+.isobarToggle input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--viewer-accent);
+}
+
+.isobarToggle span {
+  display: grid;
+  gap: 2px;
+}
+
+.isobarToggle strong {
+  color: inherit;
+  font-size: 11px;
+}
+
+.isobarToggle small {
+  color: var(--viewer-muted);
+  font-size: 9px;
+}
+
+.overlayWarning {
+  margin: 0;
+  color: var(--viewer-warning);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.routeDisclosure {
+  position: relative;
+  z-index: 8;
+}
+
+.routeDisclosure summary {
+  padding: 9px 10px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 8px;
+  color: var(--viewer-text);
+  background: rgb(7 19 31 / 62%);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.routeDisclosure[open] summary {
+  border-color: rgb(34 211 238 / 38%);
+}
+
+.routeDisclosure > section {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 360px;
+}
+
+.presentationSummary {
+  display: grid;
+  gap: 9px;
+  color: var(--viewer-muted);
+  font-size: 11px;
+}
+
+.presentationSummary > p {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+}
+
+.presentationSummary strong {
+  color: var(--viewer-text);
+}
+
+.presentationSummary span {
+  color: var(--viewer-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.pickerOverlay,
+.routeProfileOverlay {
+  position: absolute;
+  z-index: 8;
+  pointer-events: auto;
+}
+
+.pickerOverlay {
+  bottom: 178px;
+  left: 330px;
+}
+
+.pickerOverlay > section {
+  position: relative;
+}
+
+.routeProfileOverlay {
+  bottom: 172px;
+  left: 50%;
+  width: min(500px, calc(100vw - 720px));
+  transform: translateX(-50%);
+}
+
+.routeProfileOverlay > section {
+  width: 100%;
 }
 
 .airportAvailability {
@@ -114,6 +263,21 @@
   }
 }
 
+.viewer[data-transition-phase="exiting"] :global([data-testid="weather-map-container"]),
+.viewer[data-transition-phase="committing"] :global([data-testid="weather-map-container"]) {
+  opacity: 0.28;
+  transition: opacity 120ms ease;
+}
+
+.viewer[data-transition-phase="entering"] :global([data-testid="weather-map-container"]) {
+  opacity: 1;
+  transition: opacity 180ms ease;
+}
+
+.viewer[data-presentation-mode="true"] .headerControls {
+  top: 10px;
+}
+
 @media (max-width: 1180px) {
   .headerControls {
     right: 18px;
@@ -125,7 +289,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .loadingDot {
+  .loadingDot,
+  .viewer :global([data-testid="weather-map-container"]) {
     animation: none;
+    transition: none !important;
   }
 }
