@@ -144,12 +144,20 @@ describe('point forecast domain and series loader', () => {
   });
 
   it('rejects an external coordinate before starting any product request', async () => {
-    const { loader, loadCore, loadGrid } = successfulLoader();
+    let requestCount = 0;
+    const rejectUnexpectedRequest = async (): Promise<never> => {
+      requestCount += 1;
+      throw new Error('No product request should start for an external coordinate.');
+    };
+    const loader = new PointForecastSeriesLoader({
+      descriptorMap,
+      loadCore: rejectUnexpectedRequest,
+      loadAviationGrid: rejectUnexpectedRequest,
+    });
 
     await expect(loader.loadCommittedCoordinate([-83, 4]))
       .rejects.toBeInstanceOf(RangeError);
-    expect(loadCore).not.toHaveBeenCalled();
-    expect(loadGrid).not.toHaveBeenCalled();
+    expect(requestCount).toBe(0);
   });
 
   it('deduplicates resolved products by layer/timestamp across the active loader', async () => {
