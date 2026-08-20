@@ -134,8 +134,8 @@ Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 
 ## Roadmap móvil y capas aeronáuticas
 
-Estado: **documentación definida; implementación bloqueada hasta Fase 14
-integrada y verde**.
+Estado: **Ola M1 integrada y verde en `8180ff0`; Ola M2 abierta. Fase 20
+implementada en rama de sesión y pendiente de integración**.
 
 - [x] Auditar limitaciones responsive del visor actual.
 - [x] Seleccionar UX móvil propia para iOS/Android y tabletas.
@@ -144,9 +144,9 @@ integrada y verde**.
 - [x] Congelar contratos de viewport, touch, rendimiento, schema 3 y datos.
 - [x] Definir ownership sin solapamientos para cuatro sesiones por ola.
 - [x] Definir gates, fallbacks, matriz de dispositivos y QA final.
-- [ ] Integrar Fases 12–14 del roadmap anterior.
-- [ ] Abrir Ola M1: Fases 15–18.
-- [ ] Abrir Ola M2: Fases 19–22.
+- [x] Integrar Fases 12–14 del roadmap anterior.
+- [x] Abrir e integrar Ola M1: Fases 15–18.
+- [x] Abrir Ola M2: Fases 19–22.
 - [ ] Ejecutar Fase 23 de integración, QA y release móvil.
 
 Fuente normativa:
@@ -202,3 +202,19 @@ el toolkit**.
    publica schema 3 de forma atómica y conserva el `ResizeObserver` del shell.
 5. La integración final debe repetir los cinco viewports, targets de `44 px`,
    foco/Escape, warning/UTC/timeline y la prueba de identidad MapLibre/WebGL.
+
+## Fase 20 — Visibilidad y ráfagas
+
+- [x] Partir del SHA común M2 `8180ff0` con Fases 15–18 integradas y gate verde.
+- [x] Publicar schemas estrictos, seis descriptores y leyendas exactas para
+  visibility y wind-gusts.
+- [x] Implementar services abortables con cache LRU, object URLs, retry de grid
+  y descarte de respuestas tardías.
+- [x] Implementar samplers bilineales puros; validar gust contra U/V del mismo
+  punto/timestamp y devolver `Valor no disponible` ante incoherencia.
+- [x] Implementar adapters raster MapLibre con resources únicos,
+  `updateImage`, visibility, opacidades fijas y cleanup idempotente.
+- [x] Mantener intactos wiring central, Fase 19, WindRenderer, backend, media y
+  E2E.
+- [x] Pasar 49 tests dirigidos, TypeScript, ESLint, guardas de imports y build.
+- [x] Preparar muestras SKBO/SKRG y cuatro capturas 06Z/09Z para Fase 23.

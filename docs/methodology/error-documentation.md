@@ -356,3 +356,35 @@ La primera pasada real midió el botón compacto de atribución MapLibre en
 quedó verde. El test también intentó accionar el rail detrás de un sheet `full`;
 se corrigió el recorrido para usar el cierre explícito antes de cambiar de
 panel, validando el camino táctil visible en lugar de forzar el click.
+
+## 2026-08-20 — Evidencia visual aislada de Fase 20 bajo SwiftShader
+
+### Síntoma
+
+El primer harness efímero intentó montar MapLibre completo para capturar las
+capas nuevas, pero el evento `load` no llegó bajo Chromium headless/SwiftShader,
+sin errores de página ni requests fallidos. El código productivo no estaba
+conectado al viewer y los adapters ya tenían harness MapLibre inyectado verde.
+
+### Resolución y verificación
+
+No se alteró el adapter ni se añadió wiring para satisfacer el entorno. Las
+capturas de handoff se generaron con un visor HTML efímero que carga los WebP
+staged exactos, aplica opacidad, leyenda, timestamp, IDs y warning. Los tests
+dirigidos validan por separado creación única, `updateImage`, último frame,
+visibility y cleanup del adapter. Las cuatro capturas fueron inspeccionadas y
+quedaron fuera del repositorio bajo `/tmp/phase20-*.png`.
+
+## 2026-08-20 — Propiedad separada de raster y grid en Fase 20
+
+### Riesgo detectado
+
+Rechazar en bloque la carga paralela de imagen y grid habría ocultado una capa
+visualmente válida por un fallo exclusivo del valor puntual.
+
+### Resolución
+
+El raster es obligatorio y el grid es parcial: un grid inválido queda como
+`grid=null` con error tipado y puede reintentarse reutilizando la imagen
+cacheada. Un raster inválido rechaza el reemplazo y el adapter conserva el frame
+confirmado. Abort y supersession revocan cualquier object URL no publicada.

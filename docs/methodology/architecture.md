@@ -304,3 +304,31 @@ flowchart LR
   reconstruir controller, adapters, canvas o contexto WebGL.
 - El viewport usa `viewport-fit=cover`, `100vh` como fallback, `100dvh` y
   variables CSS basadas en `env(safe-area-inset-*)`.
+
+## Arquitectura aislada — Fase 20
+
+```mermaid
+flowchart LR
+    D[Descriptores staged Fase 18] --> VS[VisibilityLayerService]
+    D --> GS[WindGustLayerService]
+    VS --> VA[VisibilityLayerAdapter]
+    GS --> GA[WindGustLayerAdapter]
+    VS --> VSP[Sampler visibility]
+    GS --> GSP[Sampler gust + U/V público]
+    VA --> MI[ImageSource MapLibre inyectado]
+    GA --> MI
+    F23[Fase 23] -. wiring futuro .-> VS
+    F23 -. wiring futuro .-> GS
+```
+
+- Cada service posee fetch, abort, versión de request, cache LRU de `1–3`
+  frames y object URLs; cada adapter posee exclusivamente su source/layer.
+- Raster y grid tienen fronteras de error separadas: un grid fallido conserva
+  el raster, mientras un raster fallido nunca reemplaza el frame confirmado.
+- `setFrame()` usa `ImageSource.updateImage()` y no recrea resources. Visibility,
+  opacidad, reset y destroy son idempotentes y toleran lifecycle parcial.
+- Los samplers reciben grids ya cargados y no conocen marcador, store,
+  controller ni fetch. Ráfagas reutilizan el sampler U/V público sin importar o
+  modificar `WindRenderer` o partículas.
+- Registro central, composición, catálogo vivo y schema 3 permanecen reservados
+  a Fase 23.

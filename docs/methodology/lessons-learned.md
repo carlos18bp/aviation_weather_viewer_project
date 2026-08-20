@@ -226,3 +226,19 @@
 - Proxyear un backend staging verde desde Next local permite validar el frontend
   no desplegado sin copiar secretos, siempre que se registre la contingencia y
   se conserve same-origin desde la perspectiva del navegador.
+
+## Fase 20 — visibilidad y ráfagas aisladas
+
+- Imagen y grid deben tener destinos de error distintos: el raster puede seguir
+  siendo útil aunque no exista valor puntual, mientras un raster fallido nunca
+  debe desplazar el frame confirmado.
+- Abort y request-version resuelven carreras diferentes; una respuesta tardía
+  que ignora abort todavía debe descartarse y revocar su object URL.
+- Cachear el raster parcial permite reintentar sólo el grid sin repetir descarga
+  o decodificación de imagen.
+- La coherencia gust-viento se valida sobre U/V del mismo punto y timestamp. Una
+  tolerancia explícita de redondeo evita falsos negativos sin corregir datos.
+- Mantener el sampler puro y con grids inyectados elimina por construcción los
+  requests al mover el marcador y deja el debounce/interacción para Fase 23.
+- Un raster de ráfagas no necesita otro renderer: reutilizar el sampler U/V
+  público y mantener cero imports a WindRenderer evita duplicar partículas.
