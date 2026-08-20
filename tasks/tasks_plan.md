@@ -62,7 +62,8 @@ Estado: **integrada en `master` mediante PR #10**.
 
 ## Roadmap de enriquecimiento posterior
 
-Estado: **ola E1 en integración; entregas aisladas de Fases 10 y 11 listas**.
+Estado: **ola E1 en integración; Fases 10 y 11 integradas mediante PR #18 y
+PR #17, y Fase 09 completa en PR #16**.
 
 - [x] Evaluar candidatos visuales y aeronáuticos inspirados en Windy.
 - [x] Seleccionar seis fases en dos olas de implementación.
@@ -79,7 +80,16 @@ Estado: **ola E1 en integración; entregas aisladas de Fases 10 y 11 listas**.
 
 Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 
-## Fase 11 — Narrativa temporal y presentación
+### Fase 09 — Inteligencia aeroportuaria
+
+- [x] Cortar rama y worktree propios desde `origin/master`.
+- [x] Implementar búsqueda local controlada y accesible.
+- [x] Implementar servicio, abort y cache de evolución aeroportuaria.
+- [x] Implementar tendencia controlada, compacta y colapsable.
+- [x] Pasar únicamente los tests unitarios y de componente dirigidos.
+- [x] Publicar PR #16 y handoff para fases 12 y 14.
+
+### Fase 11 — Narrativa temporal y presentación
 
 - [x] Entregar plan adyacente y cache genérica acotada a tres frames.
 - [x] Entregar progreso de 1500 ms y runner de transición con commit único.

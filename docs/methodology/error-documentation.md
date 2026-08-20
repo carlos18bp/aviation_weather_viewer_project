@@ -167,6 +167,13 @@ units systemd. El commit `b0f2a244` está publicado, pero el gate remoto requier
 acción de billing del operador y un rerun; no existe corrección de código que
 pueda iniciar el runner.
 
+## 2026-08-20 — Instalación incompleta en el worktree de Fase 09
+
+El primer `npm ci` dejó `node_modules` sin el binario de Jest y el batch dirigido
+no pudo iniciar. Se repitió `npm ci --no-audit --no-fund` dentro del worktree;
+instaló 706 paquetes y los tres batches posteriores pasaron. No se modificaron
+manifest ni lockfile.
+
 ## 2026-08-20 — Versiones de schema acopladas en Fase 10
 
 ### Riesgo detectado

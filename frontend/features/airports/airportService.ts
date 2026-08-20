@@ -4,10 +4,14 @@ import {
   parseDemoAirportIcao,
   parseDemoTimestamp,
 } from './airportSchemas';
-import type {
-  AirportFeatureCollection,
-  AirportWeatherResponse,
+import {
+  DEMO_TIMESTAMPS,
+  type AirportFeatureCollection,
+  type AirportWeatherResponse,
+  type DemoAirportIcao,
 } from './types';
+import { createAirportTrendPoints } from './trend/airportTrendSeries';
+import type { AirportTrendPoint } from './trend/types';
 
 
 const AIRPORTS_ENDPOINT = '/api/v1/airports';
@@ -95,4 +99,35 @@ export async function fetchAirportWeather(
   const url = `${airportPath}?timestamp=${encodeURIComponent(normalizedTimestamp)}`;
   const payload = await requestJson(url, options);
   return parseAirportWeatherResponse(payload, normalizedIcaoCode, normalizedTimestamp);
+}
+
+export async function fetchAirportWeatherSeries(
+  icaoCode: DemoAirportIcao,
+  options: AirportRequestOptions = {},
+): Promise<readonly AirportTrendPoint[]> {
+  const normalizedIcaoCode = parseDemoAirportIcao(icaoCode);
+  const requestController = new AbortController();
+  const abortRequest = () => requestController.abort();
+
+  if (options.signal?.aborted) {
+    requestController.abort();
+  } else {
+    options.signal?.addEventListener('abort', abortRequest, { once: true });
+  }
+
+  try {
+    const responses = await Promise.all(
+      DEMO_TIMESTAMPS.map((timestamp) => fetchAirportWeather(
+        normalizedIcaoCode,
+        timestamp,
+        { signal: requestController.signal },
+      )),
+    );
+    return createAirportTrendPoints(responses);
+  } catch (error) {
+    requestController.abort();
+    throw error;
+  } finally {
+    options.signal?.removeEventListener('abort', abortRequest);
+  }
 }

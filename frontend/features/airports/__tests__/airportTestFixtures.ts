@@ -1,7 +1,11 @@
 import type {
   AirportFeatureCollection,
+  AirportTrendPoint,
   AirportWeatherResponse,
+  DemoAirportIcao,
+  DemoTimestamp,
 } from '@/features/airports';
+import { DEMO_TIMESTAMPS } from '@/features/airports';
 
 
 const AIRPORT_COLLECTION: AirportFeatureCollection = {
@@ -104,4 +108,33 @@ export const AIRPORT_WEATHER_FIXTURE: AirportWeatherResponse = {
 
 export function createAirportCollectionFixture(): AirportFeatureCollection {
   return JSON.parse(JSON.stringify(AIRPORT_COLLECTION)) as AirportFeatureCollection;
+}
+
+export function createAirportWeatherSeriesFixture(
+  icaoCode: DemoAirportIcao = 'SKBO',
+): AirportWeatherResponse[] {
+  return DEMO_TIMESTAMPS.map((timestamp, index) => ({
+    airport: icaoCode,
+    timestamp,
+    is_simulated: true,
+    operational_use: false,
+    weather: {
+      temperature_c: 13 + index,
+      wind_speed_kt: 7 + index,
+      wind_direction_deg: 70 + index * 5,
+      visibility_km: 8 + index,
+      pressure_hpa: 1019 - index,
+    },
+  }));
+}
+
+export function createAirportTrendFixture(): AirportTrendPoint[] {
+  return createAirportWeatherSeriesFixture().map((response) => ({
+    timestamp: response.timestamp as DemoTimestamp,
+    temperatureC: response.weather.temperature_c,
+    windSpeedKt: response.weather.wind_speed_kt,
+    windDirectionDeg: response.weather.wind_direction_deg,
+    visibilityKm: response.weather.visibility_km,
+    pressureHpa: response.weather.pressure_hpa,
+  }));
 }

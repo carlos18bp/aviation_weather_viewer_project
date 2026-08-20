@@ -172,6 +172,20 @@ cd frontend && PLAYWRIGHT_BASE_URL=https://aviation-weather-platform.projectapp.
 La evidencia manual y los comandos de contingencia viven en
 `docs/release/phase08-demo-handoff.md`.
 
+## Contratos frontend de Fase 09
+
+- `searchAirports()` normaliza espacios, casing y diacríticos; prioriza código
+  exacto, prefijo y texto parcial conservando el orden canónico en empates.
+- `fetchAirportWeatherSeries()` reutiliza el endpoint individual para los seis
+  timestamps, valida serie completa y aborta el lote ante un fallo.
+- `useAirportWeatherSeries()` cachea por ICAO durante la vida del hook y
+  descarta respuestas de selecciones obsoletas.
+- `AirportSearch` y `AirportTrend` reciben selección/timestamp por props y solo
+  emiten callbacks.
+
+Verificación dirigida: 18 tests de búsqueda/componente, 16 de servicio/cache y
+7 de tendencia. El lint se ejecuta solo sobre los módulos de Fase 09.
+
 ## Contrato técnico — Fase 10
 
 - Manifiesto: schema `2`, doce frames originales y `overlays: []`.

@@ -4,13 +4,23 @@ Actualizado: 2026-08-20.
 
 ## Estado
 
-La Fase 11 quedó integrada en `master` mediante PR #17 y SHA `5f6f624`. La
-implementación aislada de Fase 10 está completa y validada en
-`feat/20082026-phase-10-weather-picker`; Fase 09 continúa en su PR #16. Ninguna
-de estas entregas conecta todavía composición, store, controller, orquestador o
-flows E2E: ese wiring permanece reservado para Fase 14.
+Las Fases 10 y 11 quedaron integradas en `master` mediante PR #18 (`e6d2f28`) y
+PR #17 (`5f6f624`). La Fase 09 está completa en su PR #16 y absorbe ambas bases
+sin conectar todavía composición, store, controller, orquestador o flows E2E;
+ese wiring permanece reservado para Fase 14.
 
-## Entrega de Fase 10
+## Entrega de Fase 09
+
+- Rama `feat/20082026-phase-09-airport-intelligence`, PR #16 contra `master`.
+- Host: `vps-projectapp-staging` (`host_status=on-work-host`).
+- Búsqueda pura y `AirportSearch`: completos; 18 tests verdes.
+- Serie, validación, abort y cache: completos; 16 tests verdes.
+- `AirportTrend`: completo; 7 tests verdes.
+- Lint dirigido: 0 errores y 0 warnings.
+- Captura aislada: `/tmp/phase-09-airport-intelligence.png` a `1920×1080`.
+- Wiring, E2E y flow map quedan explícitamente para Fase 14.
+
+## Entrega integrada de Fase 10
 
 - Manifiesto schema 2 con `overlays: []` y `value_data_path` sólo térmico.
 - Seis grids térmicos `128×160` versionados; los seis WebP permanecen intactos.
@@ -42,14 +52,17 @@ manifiesto resultante tiene SHA-256
 - Timeline controlado con progreso de 1500 ms y transición temporal atómica.
 - Codec/sincronizador URL puros y controles `PresentationMode`/`SceneShare`.
 - Harness aislado y guía de integración preparados para Fase 14.
-- Verificación: 99/99 tests dirigidos, quality gate 100/100, ESLint y build Next.
+- No se editaron archivos centrales ni flows E2E.
+- Verificación dirigida: 99/99 tests, quality gate 100/100, ESLint del ownership y build Next verdes.
+- Integrada en `master` mediante PR #17 (`5f6f624`).
 
 ## Handoff
 
+- Fase 12 reutiliza `searchAirports` y el ranking aeroportuario público.
 - Fase 12 importa `isCoordinateInsideCoverage`, `sampleScalarGrid` y
   `sampleWeatherAtCoordinate` desde `frontend/features/weather/picker`.
 - Fase 13 extiende el mismo schema 2; no crea schema 3 y conserva
   `value_data_path` exclusivo de temperatura.
 - Fase 14 registra adapter/servicio/panel, arbitra clicks de aeropuerto mediante
-  `shouldHandleClick`, integra transición/URL/presentación y limpia recursos al
-  cerrar o destruir.
+  `shouldHandleClick`, conecta `AirportSearch`/`AirportTrend`, integra
+  transición/URL/presentación y limpia recursos al cerrar o destruir.

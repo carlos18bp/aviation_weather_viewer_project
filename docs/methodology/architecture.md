@@ -104,6 +104,18 @@ flowchart LR
   hasta que el resolver canónico pueda asignar `server:`; esto no altera la
   topología ya desplegada en staging.
 
+## Módulos aislados de Fase 09
+
+```text
+AirportFeatureCollection → searchAirports → AirportSearch → onSelectAirport
+DemoAirportIcao → useAirportWeatherSeries/cache → 6 GET existentes
+                → AirportTrend → onSelectTimestamp
+```
+
+La cache `Map` y los `AbortController` viven dentro del hook, nunca en Zustand.
+`AirportSearch` y `AirportTrend` no conocen MapLibre, controller u orquestador;
+Fase 14 será dueña del wiring y Fase 12 consumirá el ranking público.
+
 ## Arquitectura aislada — Fase 10
 
 El endpoint de frames valida y publica `value_data_url` únicamente para
