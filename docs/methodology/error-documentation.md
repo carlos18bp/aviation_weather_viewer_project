@@ -354,8 +354,10 @@ completarse. Un fallo inyectado en el primer rename de instalación restaura los
 ### Límite local de GDAL/GEOS
 
 El host de trabajo no tiene las librerías nativas GDAL/GEOS y no permite
-instalarlas sin credenciales administrativas, por lo que Django no puede
-completar `setup()` local. Los 18 tests de Fase 18 y tres contratos puros de
-schema 2 se ejecutaron con el plugin Django desactivado y settings congelados;
-el command se ejercitó mediante su clase real. `manage.py check` y la API HTTP
-quedan como gate obligatorio del CI del PR, cuyo runner sí instala PostGIS/GIS.
+instalarlas sin credenciales administrativas. Los 18 tests de Fase 18 y tres
+contratos puros de schema 2 se ejecutaron primero con el plugin Django
+desactivado y settings congelados. Después, un wheel efímero dentro del venv del
+worktree aportó únicamente las librerías compartidas para confirmar
+`manage.py check`, el command real `--check` y los cuatro tests HTTP schema 2.
+No se versionó ni instaló una dependencia del sistema. El runner CI confirmó
+además `backend-health` con su stack GIS/PostGIS completo.

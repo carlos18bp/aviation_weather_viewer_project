@@ -6,7 +6,8 @@ Actualizado: 2026-08-20.
 
 Las Fases 09–14 están integradas en `master`. La Ola M1 parte del SHA común
 `54c61891dca39661e2e593f4715d1ef58ab37a11`. Fase 18 está implementada y
-validada en una rama/worktree propios; esta sesión crea su PR y no lo mergea.
+validada en una rama/worktree propios y publicada mediante PR #27; esta sesión
+no lo mergea.
 Los 48 assets y sus contratos frontend permanecen staged, mientras manifest,
 catálogo y API continúan publicando schema `2`.
 
@@ -29,13 +30,15 @@ catálogo y API continúan publicando schema `2`.
 
 ## Evidencia dirigida de Fase 18
 
-- Backend Fase 18: 18/18 tests; regresión manifest schema 2: 3/3.
+- Backend Fase 18: 18/18 tests; manifest schema 2: 3/3; API schema 2: 4/4.
 - Frontend staged: 13/13; parser central schema 2: 2/2.
-- Ruff check/format, TypeScript y ESLint dirigidos: verdes.
+- Ruff check/format, TypeScript, ESLint y build Next dirigidos: verdes.
+- Quality gate `100/100`; los cuatro checks del PR #27 están verdes.
 - `manifest.json` conserva SHA-256
   `7d43abfa7a482267bd51f086902dd7e6d6b053330244d9e1809113f7161e0ef8`.
-- El host local no posee GDAL/GEOS; `manage.py` y API HTTP se confirman en CI
-  sin ampliar el scope ni instalar paquetes del sistema fuera del worktree.
+- El host local no posee GDAL/GEOS del sistema; un wheel efímero dentro del venv
+  permitió confirmar `manage.py check`, el command real y la API. CI confirmó
+  nuevamente el system check con sus librerías GIS/PostGIS completas.
 
 ## Entrega funcional de Fase 14
 

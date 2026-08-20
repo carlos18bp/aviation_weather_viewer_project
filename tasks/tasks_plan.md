@@ -135,7 +135,7 @@ Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 ## Roadmap móvil y capas aeronáuticas
 
 Estado: **Fase 14 integrada y verde; Ola M1 abierta. Fase 18 implementada y
-validada en rama propia, pendiente de integrar**.
+validada en PR #27, pendiente de integrar**.
 
 - [x] Auditar limitaciones responsive del visor actual.
 - [x] Seleccionar UX móvil propia para iOS/Android y tabletas.
