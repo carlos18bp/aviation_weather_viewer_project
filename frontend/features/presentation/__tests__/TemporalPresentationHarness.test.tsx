@@ -7,7 +7,7 @@ import { TemporalPresentationHarness } from '../testing/TemporalPresentationHarn
 
 
 describe('TemporalPresentationHarness', () => {
-  it('collapses secondary chrome while preserving every critical surface and exit', async () => {
+  it('collapses secondary chrome in presentation mode', async () => {
     const user = userEvent.setup();
     render(
       <TemporalPresentationHarness
@@ -21,11 +21,24 @@ describe('TemporalPresentationHarness', () => {
     expect(screen.queryByLabelText('Búsqueda aeroportuaria')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Detalles secundarios')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Ayudas de uso')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Salir de presentación' })).toBeVisible();
+  });
+
+  it('preserves critical presentation surfaces', async () => {
+    const user = userEvent.setup();
+    render(
+      <TemporalPresentationHarness
+        clipboard={null}
+        fullscreenRequest={null}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /Modo presentación/ }));
+
     expect(screen.getByLabelText('Mapa meteorológico')).toBeVisible();
     expect(screen.getByLabelText('UTC visible')).toBeVisible();
     expect(screen.getByLabelText('Capas meteorológicas')).toBeVisible();
     expect(screen.getByRole('region', { name: 'Línea de tiempo meteorológica' })).toBeVisible();
     expect(screen.getByText(DEMO_WARNING_TEXT)).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Salir de presentación' })).toBeVisible();
   });
 });

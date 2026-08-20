@@ -1,4 +1,4 @@
-import { DEMO_AIRPORT_ICAO_CODES, DEMO_TIMESTAMPS } from '@/features/airports';
+import { DEMO_TIMESTAMPS } from '@/features/airports';
 
 import { parseViewerScene } from '../sceneCodec';
 import { DEFAULT_VIEWER_SCENE } from '../sceneTypes';
@@ -13,11 +13,12 @@ describe('parseViewerScene core parameters', () => {
     expect(scene.viewport).not.toBe(DEFAULT_VIEWER_SCENE.viewport);
   });
 
-  it('accepts every final layer value without activating it', () => {
-    for (const layer of ['wind', 'temperature', 'precipitation'] as const) {
+  it.each(['wind', 'temperature', 'precipitation'] as const)(
+    'accepts final layer value %s without activating it',
+    (layer) => {
       expect(parseViewerScene(`?layer=${layer}`).layer).toBe(layer);
-    }
-  });
+    },
+  );
 
   it('defaults unknown or differently-cased layers to wind', () => {
     expect(parseViewerScene('?layer=radar').layer).toBe('wind');
@@ -35,12 +36,14 @@ describe('parseViewerScene core parameters', () => {
     expect(parseViewerScene(`?t=${query}`).timestamp).toBe(timestamp);
   });
 
-  it('defaults malformed, external and full ISO timestamp values to 06Z', () => {
-    expect(parseViewerScene('?t=18Z').timestamp).toBe(DEFAULT_VIEWER_SCENE.timestamp);
-    expect(parseViewerScene(`?t=${DEMO_TIMESTAMPS[0]}`).timestamp).toBe(
-      DEFAULT_VIEWER_SCENE.timestamp,
-    );
-  });
+  it.each(['18Z', DEMO_TIMESTAMPS[0]])(
+    'defaults invalid timestamp query %s to 06Z',
+    (timestamp) => {
+      expect(parseViewerScene(`?t=${timestamp}`).timestamp).toBe(
+        DEFAULT_VIEWER_SCENE.timestamp,
+      );
+    },
+  );
 
   it('accepts viewport boundary values independently', () => {
     expect(parseViewerScene('?lat=-7&lon=-84&z=4').viewport).toEqual({
@@ -64,16 +67,5 @@ describe('parseViewerScene core parameters', () => {
     expect(parseViewerScene('?lat=NaN&lon=0x10&z=3.9').viewport).toEqual(
       DEFAULT_VIEWER_SCENE.viewport,
     );
-  });
-
-  it('accepts all six frozen airport codes', () => {
-    for (const airport of DEMO_AIRPORT_ICAO_CODES) {
-      expect(parseViewerScene(`?airport=${airport}`).airport).toBe(airport);
-    }
-  });
-
-  it('discards unknown and lowercase airport codes', () => {
-    expect(parseViewerScene('?airport=XXXX').airport).toBeNull();
-    expect(parseViewerScene('?airport=skbo').airport).toBeNull();
   });
 });

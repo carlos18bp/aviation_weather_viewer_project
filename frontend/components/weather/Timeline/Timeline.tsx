@@ -153,6 +153,7 @@ export function Timeline({
         <i
           key={activeTimestamp}
           className={styles.progressFill}
+          data-testid="timeline-playback-progress"
           data-playing={isPlaying ? 'true' : 'false'}
         />
       </div>

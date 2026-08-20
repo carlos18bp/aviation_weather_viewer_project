@@ -12,16 +12,21 @@ function completeScene(overrides: Partial<ViewerScene> = {}): ViewerScene {
 }
 
 describe('viewer scene selections and canonical serialization', () => {
-  it('accepts picker coordinates on the weather coverage boundaries', () => {
+  it('accepts picker coordinates on meteorological boundaries', () => {
     expect(parseViewerScene('?picker=-82,-5').picker).toEqual([-82, -5]);
     expect(parseViewerScene('?picker=-66,14').picker).toEqual([-66, 14]);
   });
 
-  it('discards malformed, non-finite and out-of-coverage pickers', () => {
-    expect(parseViewerScene('?picker=-74').picker).toBeNull();
-    expect(parseViewerScene('?picker=-74,4,5').picker).toBeNull();
-    expect(parseViewerScene('?picker=-65,4.5').picker).toBeNull();
-    expect(parseViewerScene('?picker=NaN,4.5').picker).toBeNull();
+  it.each([
+    '-74',
+    '-74,4,5',
+    '-65,4.5',
+    'NaN,4.5',
+  ])('discards invalid picker %s', (picker) => {
+    const scene = parseViewerScene(`?picker=${picker}`);
+
+    expect(scene.picker).toBeNull();
+    expect(scene.layer).toBe('wind');
   });
 
   it('accepts a route between distinct frozen airports', () => {
@@ -31,29 +36,36 @@ describe('viewer scene selections and canonical serialization', () => {
     });
   });
 
-  it('discards equal, unknown, lowercase and malformed routes', () => {
-    expect(parseViewerScene('?route=SKBO-SKBO').route).toBeNull();
-    expect(parseViewerScene('?route=SKBO-XXXX').route).toBeNull();
-    expect(parseViewerScene('?route=skbo-skrg').route).toBeNull();
-    expect(parseViewerScene('?route=SKBO-SKRG-SKCL').route).toBeNull();
+  it.each([
+    'SKBO-SKBO',
+    'SKBO-XXXX',
+    'skbo-skrg',
+    'SKBO-SKRG-SKCL',
+  ])('discards invalid route %s', (route) => {
+    const scene = parseViewerScene(`?route=${route}`);
+
+    expect(scene.route).toBeNull();
+    expect(scene.timestamp).toBe(DEFAULT_VIEWER_SCENE.timestamp);
   });
 
-  it('enables isobars and presentation only for their exact sentinel values', () => {
-    expect(parseViewerScene('?isobars=1&mode=present')).toEqual(expect.objectContaining({
-      isobarsVisible: true,
-      presentationMode: true,
-    }));
-    expect(parseViewerScene('?isobars=0&mode=normal')).toEqual(expect.objectContaining({
-      isobarsVisible: false,
-      presentationMode: false,
-    }));
+  it('enables isobars for its exact sentinel value', () => {
+    expect(parseViewerScene('?isobars=1').isobarsVisible).toBe(true);
+    expect(parseViewerScene('?isobars=0').isobarsVisible).toBe(false);
   });
 
-  it('ignores unknown parameters and uses the first duplicate value', () => {
-    const scene = parseViewerScene('?unknown=x&layer=temperature&layer=wind');
+  it('enables presentation for its exact sentinel value', () => {
+    expect(parseViewerScene('?mode=present').presentationMode).toBe(true);
+    expect(parseViewerScene('?mode=normal').presentationMode).toBe(false);
+  });
 
-    expect(scene.layer).toBe('temperature');
-    expect(serializeViewerScene(scene)).not.toContain('unknown');
+  it('removes unknown parameters from canonical output', () => {
+    const scene = parseViewerScene('?unknown=x&layer=temperature');
+
+    expect(serializeViewerScene(scene)).toBe('?layer=temperature');
+  });
+
+  it('uses the first duplicate parameter value', () => {
+    expect(parseViewerScene('?layer=temperature&layer=wind').layer).toBe('temperature');
   });
 
   it('omits every default and null field', () => {

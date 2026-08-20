@@ -175,20 +175,21 @@ describe('Timeline', () => {
     expect(callbacks.onPlay).not.toHaveBeenCalled();
   });
 
-  it('starts, pauses and restarts playback progress from controlled props', () => {
-    const { container, rerender } = render(<Timeline {...createProps()} />);
-    const pausedProgress = container.querySelector('[data-playing="false"]');
-    expect(pausedProgress).toBeInTheDocument();
+  it('tracks controlled playback progress across state changes', () => {
+    const { rerender } = render(<Timeline {...createProps()} />);
+    const pausedProgress = screen.getByTestId('timeline-playback-progress');
+    expect(pausedProgress).toHaveAttribute('data-playing', 'false');
 
     rerender(<Timeline {...createProps({ isPlaying: true })} />);
-    const runningProgress = container.querySelector('[data-playing="true"]');
+    const runningProgress = screen.getByTestId('timeline-playback-progress');
+    expect(runningProgress).toHaveAttribute('data-playing', 'true');
     expect(runningProgress).toBe(pausedProgress);
 
     rerender(<Timeline {...createProps({
       isPlaying: true,
       activeTimestamp: TIMESTAMPS[3],
     })} />);
-    expect(container.querySelector('[data-playing="true"]')).not.toBe(runningProgress);
+    expect(screen.getByTestId('timeline-playback-progress')).not.toBe(runningProgress);
   });
 
   it('reflects the controlled atomic transition without changing the active timestamp', () => {
