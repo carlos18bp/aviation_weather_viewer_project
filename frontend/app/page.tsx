@@ -1,7 +1,7 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import { WeatherViewerShell } from '@/components/weather/WeatherViewerShell';
+import { WeatherViewer } from '@/features/viewer/WeatherViewer';
 
 export default function HomePage() {
-  return <WeatherViewerShell />;
+  return <WeatherViewer />;
 }

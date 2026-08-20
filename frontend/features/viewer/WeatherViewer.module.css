@@ -1,0 +1,131 @@
+.viewer {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.headerControls {
+  position: absolute;
+  z-index: 5;
+  top: 13px;
+  right: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.utc {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 9px;
+  min-height: 38px;
+  padding: 7px 11px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 9px;
+  background: rgb(4 14 24 / 72%);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 22%);
+  backdrop-filter: blur(14px);
+}
+
+.utc span {
+  color: var(--viewer-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.utc strong {
+  color: var(--viewer-text);
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.layerPanel {
+  display: grid;
+  gap: 20px;
+}
+
+.airportAvailability {
+  display: grid;
+  min-height: 150px;
+  align-content: center;
+  justify-items: start;
+  gap: 10px;
+  color: var(--viewer-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.airportAvailability h2,
+.airportAvailability p {
+  margin: 0;
+}
+
+.airportAvailability h2 {
+  color: var(--viewer-text);
+  font-size: 17px;
+}
+
+.airportAvailability[data-status="error"] > p:not(.kicker) {
+  color: var(--viewer-warning);
+}
+
+.airportAvailability button {
+  padding: 8px 11px;
+  border: 1px solid rgb(34 211 238 / 38%);
+  border-radius: 8px;
+  color: var(--viewer-text);
+  background: rgb(34 211 238 / 12%);
+  cursor: pointer;
+  font: inherit;
+}
+
+.airportAvailability button:hover,
+.airportAvailability button:focus-visible {
+  border-color: var(--viewer-accent);
+  outline: 2px solid rgb(34 211 238 / 24%);
+  outline-offset: 2px;
+}
+
+.kicker {
+  color: var(--viewer-accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.loadingDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--viewer-accent);
+  box-shadow: 0 0 16px var(--viewer-accent);
+  animation: viewer-loading-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes viewer-loading-pulse {
+  50% {
+    opacity: 0.42;
+    transform: scale(0.78);
+  }
+}
+
+@media (max-width: 1180px) {
+  .headerControls {
+    right: 18px;
+  }
+
+  .utc span {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadingDot {
+    animation: none;
+  }
+}
