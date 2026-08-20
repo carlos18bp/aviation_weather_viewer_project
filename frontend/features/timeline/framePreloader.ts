@@ -1,4 +1,19 @@
+import type { WindRenderProfileId } from '@/features/performance';
+
 const MAX_RETAINED_FRAMES = 3;
+
+export type FrameRetentionLimit = 1 | 2 | 3;
+
+export interface AdaptiveFrameWindow<TKey> {
+  previous: TKey;
+  active: TKey;
+  next: TKey;
+}
+
+export interface AdaptiveFrameRetentionPlan<TKey> {
+  retainedKeys: readonly TKey[];
+  preloadKeys: readonly TKey[];
+}
 
 type Loader<TValue> = (signal: AbortSignal) => Promise<TValue>;
 type FrameRequestPriority = 'preload' | 'requested';
@@ -12,7 +27,7 @@ interface CacheEntry<TValue> {
 
 export interface FramePreloader<TKey, TValue> {
   get(key: TKey, loader: Loader<TValue>): Promise<TValue>;
-  retain(keys: readonly TKey[]): void;
+  retain(keys: readonly TKey[], limit?: FrameRetentionLimit): void;
   clear(): void;
 }
 
@@ -26,6 +41,8 @@ class BoundedFramePreloader<TKey, TValue>
 implements ManagedFramePreloader<TKey, TValue> {
   private readonly entries = new Map<TKey, CacheEntry<TValue>>();
   private accessSequence = 0;
+  private retentionLimit: FrameRetentionLimit = MAX_RETAINED_FRAMES;
+  private retainedKeys: Set<TKey> | null = null;
 
   get size(): number {
     return this.entries.size;
@@ -36,6 +53,9 @@ implements ManagedFramePreloader<TKey, TValue> {
   }
 
   async preload(key: TKey, loader: Loader<TValue>): Promise<void> {
+    if (this.retainedKeys && !this.retainedKeys.has(key)) {
+      return;
+    }
     try {
       await this.load(key, loader, 'preload');
     } catch {
@@ -43,14 +63,19 @@ implements ManagedFramePreloader<TKey, TValue> {
     }
   }
 
-  retain(keys: readonly TKey[]): void {
+  retain(
+    keys: readonly TKey[],
+    limit: FrameRetentionLimit = MAX_RETAINED_FRAMES,
+  ): void {
+    this.retentionLimit = limit;
     const retained = new Set<TKey>();
     for (const key of keys) {
-      if (retained.size === MAX_RETAINED_FRAMES) {
+      if (retained.size === limit) {
         break;
       }
       retained.add(key);
     }
+    this.retainedKeys = retained;
 
     for (const [key, entry] of this.entries) {
       if (!retained.has(key)) {
@@ -81,7 +106,12 @@ implements ManagedFramePreloader<TKey, TValue> {
       return cached.promise;
     }
 
-    this.evictForInsertion(priority);
+    if (priority === 'requested') {
+      this.admitRequestedKey(key);
+    }
+    if (!this.evictForInsertion(priority)) {
+      return Promise.reject(new DOMException('Preload capacity reached.', 'AbortError'));
+    }
     const controller = new AbortController();
     let promise: Promise<TValue>;
     try {
@@ -109,21 +139,60 @@ implements ManagedFramePreloader<TKey, TValue> {
     return promise;
   }
 
-  private evictForInsertion(priority: FrameRequestPriority): void {
-    if (this.entries.size < MAX_RETAINED_FRAMES) {
+  private admitRequestedKey(key: TKey): void {
+    if (!this.retainedKeys || this.retainedKeys.has(key)) {
       return;
     }
 
+    const retained = [key, ...this.retainedKeys];
+    this.retainedKeys = new Set(retained.slice(0, this.retentionLimit));
+  }
+
+  private evictForInsertion(priority: FrameRequestPriority): boolean {
+    if (this.entries.size < this.retentionLimit) {
+      return true;
+    }
+
     const candidates = [...this.entries.entries()];
-    const preferred = priority === 'requested'
-      ? candidates.filter(([, entry]) => entry.priority === 'preload')
-      : candidates;
-    const pool = preferred.length > 0 ? preferred : candidates;
+    const preloadCandidates = candidates.filter(
+      ([, entry]) => entry.priority === 'preload',
+    );
+    const pool = preloadCandidates.length > 0
+      ? preloadCandidates
+      : priority === 'requested' ? candidates : [];
+    if (pool.length === 0) {
+      return false;
+    }
     const [key, entry] = pool.reduce((oldest, candidate) => (
       candidate[1].lastAccess < oldest[1].lastAccess ? candidate : oldest
     ));
     entry.controller.abort();
     this.entries.delete(key);
+    return true;
+  }
+}
+
+export function getAdaptiveFrameRetentionPlan<TKey>(
+  profileId: WindRenderProfileId,
+  frameWindow: AdaptiveFrameWindow<TKey>,
+): AdaptiveFrameRetentionPlan<TKey> {
+  switch (profileId) {
+    case 'degraded':
+      return {
+        retainedKeys: [frameWindow.active],
+        preloadKeys: [],
+      };
+    case 'phone':
+      return {
+        retainedKeys: [frameWindow.active, frameWindow.next],
+        preloadKeys: [frameWindow.next],
+      };
+    case 'tablet':
+    case 'desktop':
+      return {
+        retainedKeys: [frameWindow.active, frameWindow.previous, frameWindow.next],
+        preloadKeys: [frameWindow.previous, frameWindow.next],
+      };
   }
 }
 
