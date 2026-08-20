@@ -1,6 +1,6 @@
 # Plan de trabajo — Aviation Weather Viewer
 
-Actualizado: 2026-08-19.
+Actualizado: 2026-08-20.
 
 ## Fase 00 — Limpieza y dirección visual
 
@@ -21,7 +21,7 @@ Estado: **integrada en `master` mediante PR #3**.
 
 ## Fase 01 — Mapa de Colombia y shell GIS
 
-Estado: **implementada y verificada; PR #5 abierto sin merge**.
+Estado: **integrada en `master` mediante PR #5**.
 
 - [x] Validar que Fase 00 está integrada en la base resuelta.
 - [x] Versionar style, GeoJSON, glyphs y worker completamente locales.
@@ -32,18 +32,18 @@ Estado: **implementada y verificada; PR #5 abierto sin merge**.
 - [x] Montar shell fullscreen con slots vacíos y estados WebGL2/ready/error.
 - [x] Registrar procedencia y licencias de assets.
 - [x] Pasar tests dirigidos, build y validación Chromium offline.
-- [x] Abrir PR #5 contra `master` sin hacer merge.
+- [x] Integrar PR #5 en `master`.
 
 ## Fases siguientes
 
 | Fase | Entrega | Estado |
 |---:|---|---|
-| 02 | Backend y datos mínimos de demo | Habilitada por Fase 00; sesión independiente |
-| 03 | Renderer de viento | Habilitada por Fase 00; sesión independiente |
-| 04 | Aeropuertos | Pendiente de integrar ola 1 |
-| 05 | Temperatura | Pendiente de integrar ola 1 |
-| 06 | Controles y timeline | Pendiente de integrar ola 1 |
-| 07 | Integración y acabado | Pendiente de integrar ola 2 |
+| 02 | Backend y datos mínimos de demo | Integrada mediante PR #4 |
+| 03 | Renderer de viento | Integrada mediante PR #6 |
+| 04 | Aeropuertos | Integrada mediante PR #8 |
+| 05 | Temperatura | Integrada mediante PR #9 |
+| 06 | Controles y timeline | Integrada mediante PR #7 |
+| 07 | Integración y acabado | En ejecución en sesión independiente |
 | 08 | Entrega de la demo | Pendiente de Fase 07 |
 
 Los scopes normativos y dependencias entre olas están en
@@ -51,11 +51,27 @@ Los scopes normativos y dependencias entre olas están en
 
 ## Corrección operativa — confiabilidad APT en CI
 
-Estado: **implementada en rama separada; pendiente de CI y merge**.
+Estado: **integrada en `master` mediante PR #10**.
 
 - [x] Confirmar que la demora ocurre antes de Python/Django y no en Fase 06.
 - [x] Separar actualización e instalación APT con logs visibles.
 - [x] Agregar retries y timeouts de conexión, step y job.
 - [x] Mantener paquetes, servicio PostGIS y tests dirigidos sin cambios.
-- [ ] Confirmar `backend-health` verde en GitHub Actions.
-- [ ] Integrar el fix, sincronizar PR #7 y completar su merge.
+- [x] Confirmar `backend-health` verde en GitHub Actions.
+- [x] Integrar el fix y desbloquear el merge de Fase 06.
+
+## Roadmap de enriquecimiento posterior
+
+Estado: **documentado; ejecución bloqueada hasta integrar y validar Fase 08**.
+
+- [x] Evaluar candidatos visuales y aeronáuticos inspirados en Windy.
+- [x] Seleccionar seis fases en dos olas de implementación.
+- [x] Congelar contratos de datos, API, estado, URL, picker y ruta.
+- [x] Definir ownership sin solapamientos para fases paralelas.
+- [x] Definir gates, pruebas, fallback y criterios de release enriquecido.
+- [ ] Integrar y validar Fase 08.
+- [ ] Abrir ola E1: fases 09, 10 y 11.
+- [ ] Abrir ola E2: fases 12 y 13.
+- [ ] Ejecutar fase 14 de integración, QA y ensayo.
+
+Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.

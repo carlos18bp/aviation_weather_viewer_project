@@ -169,10 +169,13 @@ La fase 03 usa el fixture U/V congelado en contratos; no espera assets de fase
 
 ## Fuera de este plan
 
-No se crean fases futuras para búsqueda, picker por coordenada, control de
-opacidad, selector de calidad, responsive móvil, dark/light mode, persistencia
-en URL, autenticación ni módulos del starter. Si el cliente valida la muestra,
-esas capacidades se priorizarán en un roadmap posterior.
+Búsqueda, picker por coordenada, persistencia en URL y nuevas capas no se
+incorporan antes de cerrar la fase 08. Su iteración posterior, junto con el
+análisis de candidatos descartados, está definida en el
+[`roadmap de enriquecimiento`](../demo_enrichment/README.md).
+
+Control de opacidad, selector de calidad, responsive móvil, dark/light mode,
+autenticación y módulos del starter continúan fuera de ambos planes.
 
 ## Política de cambios al contrato
 

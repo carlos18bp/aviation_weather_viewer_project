@@ -1533,6 +1533,11 @@ Un ticket estará terminado cuando:
 
 ## 30. Backlog posterior al MVP
 
+Las mejoras visuales que pueden ejecutarse sin datos oficiales —fases 09–14,
+olas, contratos y ownership— se detallan en el
+[`roadmap de enriquecimiento`](demo_enrichment/README.md). La tabla siguiente
+conserva el backlog de evolución hacia capacidades reales o productivas.
+
 | ID | Funcionalidad |
 |---|---|
 | POST-MVP-001 | Integración con APIs reales de Aerocivil |

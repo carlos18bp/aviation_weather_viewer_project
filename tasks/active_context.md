@@ -1,46 +1,49 @@
-# Contexto activo — confiabilidad APT del CI
+# Contexto activo — Roadmap de enriquecimiento del demo
 
-Actualizado: 2026-08-19.
+Actualizado: 2026-08-20.
 
 ## Objetivo actual
 
-Evitar que `backend-health` permanezca silencioso durante horas cuando un
-runner o mirror APT falla, y desbloquear la validación del PR #7 sin mezclar el
-fix operativo con el ownership funcional de Fase 06.
+Documentar una iteración posterior a la fase 08 que aumente el impacto visual y
+aeronáutico del demo sin introducir datos reales, dependencias externas ni
+funciones productivas.
 
 ## Coordenada Git
 
 - Base resuelta: `master`.
-- SHA base: `381404ba06da3510ac7fd313657bea5893d8bf4f`.
-- Rama: `fix/19082026-ci-apt-reliability`.
-- Worktree: `~/webapps/.wt/aviation_weather_viewer_project/ci-apt-reliability`.
+- SHA base: `af0c31361cac54df469d08078d2d882f82732799`.
+- Rama: `docs/20082026-demo-enrichment-roadmap`.
+- Worktree: `~/webapps/.wt/aviation_weather_viewer_project/demo-enrichment-roadmap`.
 - Host: `vps-projectapp-staging` (`host_status=on-work-host`).
-- PR afectado, no modificado por este fix: #7, Fase 06.
 
-## Diagnóstico confirmado
+## Estado concurrente conocido
 
-- Dos runners distintos quedaron detenidos en el mismo step APT.
-- El primer intento no emitió salida de paquetes durante 16 minutos.
-- El segundo superó 45 minutos sin alcanzar Python ni Django.
-- Runs sanos del mismo workflow completaron APT en aproximadamente 2 minutos.
-- Los tres checks frontend/calidad de PR #7 permanecieron verdes.
+- Fases 00–06 están integradas en `master`.
+- Fase 07 se implementa en una sesión/worktree independiente.
+- Fase 08 no ha comenzado.
+- El directorio `.playwright-mcp/` del clon principal pertenece a otra sesión y
+  permanece intacto.
+- El stash previo de `master` permanece intacto.
 
-## Cambio implementado
+## Cambio de esta sesión
 
-- Job backend acotado a 20 minutos.
-- Actualización APT separada y acotada a 5 minutos.
-- Instalación GeoDjango acotada a 10 minutos y en modo no interactivo.
-- Tres reintentos y timeout HTTP/HTTPS de 30 segundos.
-- Salida visible; mismos paquetes y mismos tests dirigidos.
+- Crear un paquete documental separado para fases 09–14.
+- Seleccionar candidatos equilibrados entre experiencia tipo Windy e identidad
+  aeronáutica.
+- Congelar schema 2, picker, URL, ruta, precipitación e isobaras.
+- Dividir ejecución en E1 paralela, E2 paralela y un cierre de integración.
+- Definir ownership, gates, pruebas, fallbacks y criterios de aceptación.
+- Enlazar el paquete desde el roadmap original sin reabrir fases 00–08.
 
-## Handoff
+## Próximo gate
 
-El fix debe pasar su propio CI y entrar a `master` mediante PR separado. Luego
-la rama de Fase 06 absorbe `origin/master` con `$git-sync`, relanza sus cuatro
-checks y sólo se mergea cuando todos estén verdes.
+Integrar y validar primero las fases 07 y 08. Solo entonces se cortan, desde el
+mismo SHA, las ramas independientes de fases 09, 10 y 11.
 
 ## Límites activos
 
-No modificar componentes frontend, backend, contratos de producto ni los
-PR #8 y #9. El directorio `.playwright-mcp/` del clon principal pertenece a
-otra sesión y permanece intacto.
+- Esta rama modifica documentación; no implementa features de enriquecimiento.
+- No tocar el worktree de fase 07 ni el checkout principal.
+- No abrir ola E1 antes del release base.
+- Mantener todos los datos futuros simulados, determinísticos, locales y no
+  operacionales.
