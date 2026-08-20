@@ -150,3 +150,19 @@ flechas estáticas, aviso y controles operativos. Resultado: 60,8 FPS en fallbac
   reunión debe ensayarse y el fallback estático queda listo.
 - El guard de `projects.yml` y el resolver discrepan sobre quién puede asignar
   `server:` a un scaffold ya desplegado; no se evadió el guard.
+
+## 2026-08-20 — CI del toolkit sin runner por billing
+
+### Síntoma
+
+El workflow remoto `Validation Coverage` (`32328692139`) marcó todos los jobs
+rojos de inmediato, sin steps ni logs y con `runner_id=0`.
+
+### Causa y estado
+
+La anotación de GitHub indica pagos recientes fallidos o spending limit
+insuficiente. Los gates equivalentes locales quedaron verdes: schema 24/24,
+integridad 72/72, roster 9/9, doc-claims 15/15, parity, detector harnesses y 94
+units systemd. El commit `b0f2a244` está publicado, pero el gate remoto requiere
+acción de billing del operador y un rerun; no existe corrección de código que
+pueda iniciar el runner.

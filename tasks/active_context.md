@@ -4,9 +4,10 @@ Actualizado: 2026-08-20.
 
 ## Objetivo actual
 
-Fase 08 cerrada: conservar la demo validada y preparar únicamente el ensayo en
-el equipo físico de la reunión. No se autorizan features, refactors ni
-expansión del producto.
+El producto de Fase 08 está integrado y validado. Falta únicamente que el
+operador restablezca billing/spending de GitHub Actions y reejecute el CI remoto
+del toolkit; hasta entonces no declarar cierre global verde. No se autorizan
+features, refactors ni expansión del producto.
 
 ## Coordenada Git
 
@@ -49,9 +50,12 @@ fluido. Repetir el ensayo en el portátil de la reunión antes de presentar.
 
 ## Hallazgos operativos separados
 
-- El toolkit tiene la metadata de dominio/servicios preparada, pero el guard no
-  permite asignar `server:` y el resolver tampoco lo escribe.
-- El gate global del toolkit está rojo por unidades de backup faltantes de
-  `crushme_project`, fuera del ownership de esta fase. Sus cambios no se publican
-  mientras ese error exista.
+- El toolkit publicó dominio/servicios en `b0f2a244`; el guard no permite
+  asignar `server:` y el resolver tampoco lo escribe, por lo que el registro
+  conserva `status: scaffold` con la explicación operativa.
+- El falso rojo de backup de `crushme_project` se resolvió mediante su exención
+  Huey explícita; los gates locales quedaron completamente verdes.
+- El CI remoto del toolkit no arrancó ningún step: GitHub reporta payments
+  fallidos o spending limit. Requiere acción de billing del operador y rerun del
+  workflow `32328692139`.
 - El 404 de favicon es no bloqueante y queda para después de la reunión.

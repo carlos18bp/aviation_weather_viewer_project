@@ -80,4 +80,7 @@ El producto visible no se amplía: conserva mapa Colombia, viento, temperatura,
 seis timestamps, seis aeropuertos, datos simulados locales y warning permanente.
 El PR QA #13 quedó integrado y su SHA `054ebdd27b459ba24cff3d65f580ea7bbae95f0d`
 fue desplegado y verificado con health, build y recorrido E2E live en la URL
-final. La Fase 08 está formalmente cerrada sin ampliar el producto visible.
+final. El producto y su repositorio están integrados sin ampliar el alcance
+visible. El cierre operativo global permanece bloqueado únicamente porque el CI
+del toolkit no recibe runner por billing/spending de GitHub; sus gates locales
+y la metadata publicada están verdes.

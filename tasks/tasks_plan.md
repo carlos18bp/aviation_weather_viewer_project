@@ -44,7 +44,7 @@ Estado: **integrada en `master` mediante PR #5**.
 | 05 | Temperatura | Integrada mediante PR #9 |
 | 06 | Controles y timeline | Integrada mediante PR #7 |
 | 07 | Integración y acabado | Integrada mediante PR #12 (`fcd8a8ae`) |
-| 08 | Entrega de la demo | Integrada mediante PR #13 (`054ebdd2`) y verificada en HTTPS |
+| 08 | Entrega de la demo | Integrada/verificada; gate externo del toolkit bloqueado por billing |
 
 Los scopes normativos y dependencias entre olas están en
 `docs/MVP_roadmap/phase_scopes/README.md`.
@@ -62,7 +62,8 @@ Estado: **integrada en `master` mediante PR #10**.
 
 ## Roadmap de enriquecimiento posterior
 
-Estado: **documentado; Fase 08 integrada y validada, enriquecimiento no iniciado**.
+Estado: **documentado; enriquecimiento no iniciado mientras el gate externo de
+Fase 08 permanezca bloqueado**.
 
 - [x] Evaluar candidatos visuales y aeronáuticos inspirados en Windy.
 - [x] Seleccionar seis fases en dos olas de implementación.
@@ -78,8 +79,9 @@ Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 
 ## Fase 08 — Validación, despliegue y ensayo
 
-Estado: **integrada en `master` mediante PR #13 y SHA `054ebdd2` validado en
-HTTPS**.
+Estado: **producto integrado en `master` y SHA final validado en HTTPS; cierre
+operativo global bloqueado únicamente por billing/spending de GitHub Actions en
+el toolkit**.
 
 - [x] Confirmar Fase 07 integrada y árbol limpio.
 - [x] Desplegar Django + Next detrás de Nginx con HTTPS.
@@ -92,3 +94,6 @@ HTTPS**.
 - [x] Registrar heap, FPS, red, captura, guion y contingencia.
 - [x] Integrar el PR QA con `merge-when-green`.
 - [x] Desplegar/verificar el SHA de merge en la URL final.
+- [x] Publicar dominio, Postgres, servicios y límites en `projects.yml`.
+- [ ] Restablecer billing/spending de GitHub Actions y reejecutar verde el CI
+  del toolkit para su SHA `b0f2a244`.
