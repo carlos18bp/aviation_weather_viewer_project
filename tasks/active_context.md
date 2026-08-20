@@ -4,13 +4,16 @@ Actualizado: 2026-08-20.
 
 ## Objetivo actual
 
-Integrar el release candidate QA y verificar el SHA resultante en la URL HTTPS.
-No se autorizan features, refactors ni expansión del producto.
+Fase 08 cerrada: conservar la demo validada y preparar únicamente el ensayo en
+el equipo físico de la reunión. No se autorizan features, refactors ni
+expansión del producto.
 
 ## Coordenada Git
 
 - Base resuelta: `master`.
 - SHA de Fase 07: `fcd8a8ae7e610ea335bcdce6154ffb309f12999b`.
+- PR QA integrado: #13.
+- SHA QA desplegado y verificado: `054ebdd27b459ba24cff3d65f580ea7bbae95f0d`.
 - Rama de QA: `qa/20082026-phase-08-demo-release`.
 - Worktree: `~/webapps/.wt/aviation_weather_viewer_project/phase-08-demo-release`.
 - Host: `vps-projectapp-staging` (`host_status=on-work-host`).
@@ -33,15 +36,16 @@ aproximadamente 0,6–1,4 FPS y no permiten acreditar el objetivo de ~30 FPS par
 una GPU física. La densidad ya está fija en 2500 y el fallback de flechas es
 fluido. Repetir el ensayo en el portátil de la reunión antes de presentar.
 
-## Próximo gate
+## Cierre alcanzado
 
-1. Commit/push y PR de la rama QA.
-2. Esperar CI verde.
-3. Ejecutar `merge-when-green` por instrucción del operador.
-4. Actualizar el checkout desplegado al SHA integrado.
-5. Verificar health, HTTPS y el flujo final sobre ese SHA.
-
-La Fase 08 no se declara terminada antes de completar los cinco pasos.
+1. El PR QA #13 pasó los cuatro checks obligatorios y se integró con
+   `merge-when-green`.
+2. El checkout de staging avanzó a `054ebdd27b459ba24cff3d65f580ea7bbae95f0d`.
+3. Django check, migraciones, build, servicios, health y raíz HTTPS quedaron
+   verdes sobre ese SHA.
+4. El recorrido E2E live final pasó 1/1 después de ampliar exclusivamente la
+   espera de bootstrap a 60 s; no se modificó producción ni se relajaron
+   aserciones funcionales.
 
 ## Hallazgos operativos separados
 

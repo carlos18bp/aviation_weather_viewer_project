@@ -108,8 +108,11 @@ custom layer a `1920×1080` puede exceder una espera corta bajo carga concurrent
 ### Resolución y verificación
 
 El harness manual espera hasta 60 s por el snapshot completo y conserva timeouts
-acotados. Chrome, Edge, E2E y estabilidad terminaron verdes; no se cambió código
-de producción para ocultar el estado de carga.
+acotados. El primer E2E post-merge reprodujo el mismo flake con su espera default
+de 10 s; el spec se alineó a 60 s tanto al iniciar como al recargar, sin cambiar
+producción ni relajar aserciones. La repetición live pasó 1/1 en 1,9 min sobre
+`054ebdd27b459ba24cff3d65f580ea7bbae95f0d`. Chrome, Edge, E2E y estabilidad
+terminaron verdes.
 
 ## 2026-08-20 — Local `runserver` devolvía 404 para fixtures
 
