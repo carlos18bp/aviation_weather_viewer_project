@@ -110,25 +110,26 @@ def weather_frame(request):
     layer_definition = next(item for item in manifest["layers"] if item["id"] == layer)
     west, south, east, north = manifest["scenario"]["bbox"]
     media_prefix = settings.MEDIA_URL.rstrip("/")
-    return Response(
-        {
-            "scenario": manifest["scenario"]["code"],
-            "layer": layer,
-            "timestamp": timestamp,
-            "unit": layer_definition["unit"],
-            "is_simulated": manifest["scenario"]["is_simulated"],
-            "operational_use": manifest["scenario"]["operational_use"],
-            "coverage": {
-                "west": west,
-                "south": south,
-                "east": east,
-                "north": north,
-            },
-            "minimum": frame["minimum"],
-            "maximum": frame["maximum"],
-            "data_url": f"{media_prefix}/{frame['data_path']}",
-        }
-    )
+    payload = {
+        "scenario": manifest["scenario"]["code"],
+        "layer": layer,
+        "timestamp": timestamp,
+        "unit": layer_definition["unit"],
+        "is_simulated": manifest["scenario"]["is_simulated"],
+        "operational_use": manifest["scenario"]["operational_use"],
+        "coverage": {
+            "west": west,
+            "south": south,
+            "east": east,
+            "north": north,
+        },
+        "minimum": frame["minimum"],
+        "maximum": frame["maximum"],
+        "data_url": f"{media_prefix}/{frame['data_path']}",
+    }
+    if layer == "temperature":
+        payload["value_data_url"] = f"{media_prefix}/{frame['value_data_path']}"
+    return Response(payload)
 
 
 @api_view(["GET"])

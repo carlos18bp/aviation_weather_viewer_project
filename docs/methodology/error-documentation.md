@@ -174,6 +174,20 @@ no pudo iniciar. Se repitió `npm ci --no-audit --no-fund` dentro del worktree;
 instaló 706 paquetes y los tres batches posteriores pasaron. No se modificaron
 manifest ni lockfile.
 
+## 2026-08-20 — Versiones de schema acopladas en Fase 10
+
+### Riesgo detectado
+
+La constante histórica `SCHEMA_VERSION` representaba tanto el manifiesto del
+escenario como el fixture aeroportuario. Elevarla directamente a `2` habría
+rechazado el fixture de aeropuertos, cuyo contrato permanece en schema `1`.
+
+### Resolución y verificación
+
+Se separaron `MANIFEST_SCHEMA_VERSION=2` y
+`AIRPORT_WEATHER_SCHEMA_VERSION=1`. Los tests dirigidos rechazan manifiestos
+schema 1 y conservan verdes los endpoints y validadores aeroportuarios.
+
 ## 2026-08-20 — `npm ci` quedó esperando la auditoría durante Fase 11
 
 ### Síntoma

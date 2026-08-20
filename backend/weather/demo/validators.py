@@ -11,17 +11,21 @@ from PIL import Image, UnidentifiedImageError
 
 from weather.demo.airports import AIRPORT_ICAO_CODES
 from weather.demo.constants import (
+    AIRPORT_WEATHER_SCHEMA_VERSION,
     AIRPORT_WEATHER_FILENAME,
     BBOX,
     LAYER_DEFINITIONS,
     LAYER_IDS,
+    MANIFEST_SCHEMA_VERSION,
     MANIFEST_FILENAME,
     MEDIA_SCENARIO_PREFIX,
     SCENARIO_CODE,
     SCENARIO_DATE,
-    SCHEMA_VERSION,
     SIMULATION_FLAGS,
     TEMPERATURE_SIZE,
+    TEMPERATURE_VALUE_COUNT,
+    TEMPERATURE_VALUE_HEIGHT,
+    TEMPERATURE_VALUE_WIDTH,
     TIMESTAMP_LABELS,
     TIMESTAMPS,
     WIND_HEIGHT,
@@ -76,12 +80,31 @@ def expected_frame_data_path(layer: str, timestamp: str) -> str:
     return f"{MEDIA_SCENARIO_PREFIX}/{layer}/{label}.{suffix}"
 
 
+def expected_temperature_value_data_path(timestamp: str) -> str:
+    label = TIMESTAMP_LABELS[timestamp]
+    return f"{MEDIA_SCENARIO_PREFIX}/temperature-values/{label}.json"
+
+
 def validate_manifest(
     payload: dict[str, Any], *, require_complete: bool = True
 ) -> dict[str, Any]:
     """Validate the catalog manifest and optionally its full frame product."""
     _require(
-        payload.get("schema_version") == SCHEMA_VERSION, "Invalid manifest schema."
+        payload.get("schema_version") == MANIFEST_SCHEMA_VERSION,
+        "Invalid manifest schema.",
+    )
+    _require(
+        set(payload)
+        == {
+            "schema_version",
+            "scenario",
+            "airport_weather_path",
+            "layers",
+            "timestamps",
+            "frames",
+            "overlays",
+        },
+        "Manifest fields are invalid.",
     )
     _require(
         payload.get("airport_weather_path") == AIRPORT_WEATHER_FILENAME,
@@ -107,6 +130,7 @@ def validate_manifest(
     expected_layers = [dict(layer) for layer in LAYER_DEFINITIONS]
     _require(payload.get("layers") == expected_layers, "Invalid layer definitions.")
     _require(payload.get("timestamps") == list(TIMESTAMPS), "Invalid timestamps.")
+    _require(payload.get("overlays") == [], "Manifest overlays are invalid.")
 
     frames = payload.get("frames")
     _require(isinstance(frames, list), "Manifest frames are invalid.")
@@ -115,14 +139,14 @@ def validate_manifest(
 
     for frame in frames:
         _require(isinstance(frame, dict), "Frame descriptor is invalid.")
-        _require(
-            set(frame) == {"layer", "timestamp", "data_path", "minimum", "maximum"},
-            "Frame descriptor fields are invalid.",
-        )
         layer = frame.get("layer")
         timestamp = frame.get("timestamp")
         _require(layer in LAYER_IDS, "Frame layer is invalid.")
         _require(timestamp in TIMESTAMPS, "Frame timestamp is invalid.")
+        expected_fields = {"layer", "timestamp", "data_path", "minimum", "maximum"}
+        if layer == "temperature":
+            expected_fields.add("value_data_path")
+        _require(set(frame) == expected_fields, "Frame descriptor fields are invalid.")
         pair = (layer, timestamp)
         _require(pair not in frame_pairs, "Frame descriptor is duplicated.")
         frame_pairs.add(pair)
@@ -132,6 +156,12 @@ def validate_manifest(
             data_path == expected_frame_data_path(layer, timestamp),
             "Frame data path is invalid.",
         )
+        if layer == "temperature":
+            value_data_path = _validate_relative_path(frame.get("value_data_path"))
+            _require(
+                value_data_path == expected_temperature_value_data_path(timestamp),
+                "Temperature value data path is invalid.",
+            )
         layer_definition = layer_lookup[layer]
         _require(
             frame.get("minimum") == layer_definition["minimum"],
@@ -154,7 +184,10 @@ def validate_manifest(
 
 def validate_airport_weather(payload: dict[str, Any]) -> dict[str, Any]:
     """Validate the fixed 6-airport by 6-timestamp weather fixture."""
-    _require(payload.get("schema_version") == SCHEMA_VERSION, "Invalid fixture schema.")
+    _require(
+        payload.get("schema_version") == AIRPORT_WEATHER_SCHEMA_VERSION,
+        "Invalid fixture schema.",
+    )
     _require(payload.get("scenario") == SCENARIO_CODE, "Invalid fixture scenario.")
     _validate_scenario_flags(payload)
     records = payload.get("records")
@@ -266,6 +299,66 @@ def validate_temperature_image(path: Path) -> None:
         raise DemoAssetError("Temperature frame cannot be decoded.") from exc
 
 
+def validate_temperature_value_grid(
+    payload: dict[str, Any], *, expected_timestamp: str
+) -> dict[str, Any]:
+    """Validate one row-major scalar temperature grid."""
+    _require(
+        set(payload)
+        == {
+            "scenario",
+            "layer",
+            "width",
+            "height",
+            "bbox",
+            "unit",
+            "timestamp",
+            "is_simulated",
+            "operational_use",
+            "no_data_value",
+            "values",
+        },
+        "Temperature value grid fields are invalid.",
+    )
+    _require(
+        payload.get("scenario") == SCENARIO_CODE,
+        "Invalid temperature value scenario.",
+    )
+    _require(payload.get("layer") == "temperature", "Invalid temperature value layer.")
+    _require(
+        payload.get("width") == TEMPERATURE_VALUE_WIDTH,
+        "Invalid temperature value width.",
+    )
+    _require(
+        payload.get("height") == TEMPERATURE_VALUE_HEIGHT,
+        "Invalid temperature value height.",
+    )
+    _require(payload.get("bbox") == list(BBOX), "Invalid temperature value coverage.")
+    _require(payload.get("unit") == "°C", "Invalid temperature value unit.")
+    _require(
+        payload.get("timestamp") == expected_timestamp,
+        "Invalid temperature value timestamp.",
+    )
+    _require(
+        payload.get("no_data_value") is None,
+        "Invalid temperature value no-data value.",
+    )
+    _validate_scenario_flags(payload)
+
+    values = payload.get("values")
+    _require(isinstance(values, list), "Temperature values are invalid.")
+    _require(
+        len(values) == TEMPERATURE_VALUE_COUNT,
+        "Temperature value shape is invalid.",
+    )
+    for value in values:
+        _require(
+            _is_finite_number(value) and 0 <= value <= 38,
+            "Temperature values must be finite and inside the frozen range.",
+        )
+    return payload
+
+
 def frame_path_for_scenario(scenario_root: Path, data_path: str) -> Path:
     """Map a media-relative manifest path to a safe scenario-local path."""
     normalized_path = _validate_relative_path(data_path)
@@ -281,6 +374,14 @@ def validate_frame_asset(scenario_root: Path, frame: dict[str, Any]) -> None:
     path = frame_path_for_scenario(scenario_root, frame["data_path"])
     if frame["layer"] == "temperature":
         validate_temperature_image(path)
+        value_path = frame_path_for_scenario(
+            scenario_root,
+            frame["value_data_path"],
+        )
+        validate_temperature_value_grid(
+            load_json_document(value_path),
+            expected_timestamp=frame["timestamp"],
+        )
         return
 
     wind_payload = load_json_document(path)

@@ -62,8 +62,8 @@ Estado: **integrada en `master` mediante PR #10**.
 
 ## Roadmap de enriquecimiento posterior
 
-Estado: **ola E1 en ejecución paralela; Fase 11 integrada mediante PR #17,
-Fase 09 completa en PR #16 y Fase 10 en su rama propia**.
+Estado: **ola E1 en integración; Fases 10 y 11 integradas mediante PR #18 y
+PR #17, y Fase 09 completa en PR #16**.
 
 - [x] Evaluar candidatos visuales y aeronáuticos inspirados en Windy.
 - [x] Seleccionar seis fases en dos olas de implementación.
@@ -72,6 +72,9 @@ Fase 09 completa en PR #16 y Fase 10 en su rama propia**.
 - [x] Definir gates, pruebas, fallback y criterios de release enriquecido.
 - [x] Integrar y validar Fase 08.
 - [x] Abrir ola E1: fases 09, 10 y 11.
+- [x] Implementar Fase 10 sin wiring central ni E2E.
+- [x] Implementar e integrar Fase 11 sin wiring central ni E2E.
+- [ ] Completar ola E1: integrar las entregas pendientes.
 - [ ] Abrir ola E2: fases 12 y 13.
 - [ ] Ejecutar fase 14 de integración, QA y ensayo.
 
@@ -94,7 +97,7 @@ Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 - [x] Implementar modo presentación, atajo `P`, Clipboard y Fullscreen fallback.
 - [x] Mantener intactos store, controller, `page.tsx`, orquestador y flows E2E.
 - [x] Añadir harness aislado, pruebas dirigidas y guía para Fase 14.
-- [x] Integrar mediante PR #17.
+- [x] Integrar en `master` mediante PR #17 (`5f6f624`).
 
 ## Fase 08 — Validación, despliegue y ensayo
 

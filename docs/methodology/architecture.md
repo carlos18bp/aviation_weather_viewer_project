@@ -116,6 +116,20 @@ La cache `Map` y los `AbortController` viven dentro del hook, nunca en Zustand.
 `AirportSearch` y `AirportTrend` no conocen MapLibre, controller u orquestador;
 Fase 14 será dueña del wiring y Fase 12 consumirá el ranking público.
 
+## Arquitectura aislada — Fase 10
+
+El endpoint de frames valida y publica `value_data_url` únicamente para
+temperatura. En el navegador, `WeatherPickerDataService` carga el grid térmico y
+el campo U/V del mismo timestamp, acepta un U/V ya disponible y conserva como
+máximo el activo y sus adyacentes. El sampler puro verifica cobertura antes de
+reutilizar la interpolación de viento que clampa bordes, por lo que un punto
+externo nunca se convierte en un valor válido.
+
+`CoordinatePickerAdapter` es dueño sólo de su source, layer y listener; el panel
+React es controlado. Ambos quedan sin registrar en el controller, store u
+orquestador hasta la Fase 14. No se añadió endpoint de muestreo, generación en
+runtime ni dependencia externa.
+
 ## Módulos aislados de Fase 11
 
 ```mermaid

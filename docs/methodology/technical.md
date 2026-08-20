@@ -186,6 +186,21 @@ La evidencia manual y los comandos de contingencia viven en
 Verificación dirigida: 18 tests de búsqueda/componente, 16 de servicio/cache y
 7 de tendencia. El lint se ejecuta solo sobre los módulos de Fase 09.
 
+## Contrato técnico — Fase 10
+
+- Manifiesto: schema `2`, doce frames originales y `overlays: []`.
+- Valores térmicos: seis JSON `128×160`, row-major norte-sur/oeste-este, rango
+  `0–38 °C`, bajo `temperature-values/`.
+- API: `value_data_url` existe sólo para frames de temperatura; viento conserva
+  su descriptor anterior.
+- Exports públicos: `isCoordinateInsideCoverage`, `sampleScalarGrid` y
+  `sampleWeatherAtCoordinate` desde `frontend/features/weather/picker`.
+- IDs MapLibre reservados: `weather-picker-source` y `weather-picker-point`.
+- Cache: timestamp activo más anterior/siguiente; abort y versión de request
+  impiden publicar respuestas tardías.
+- El manifiesto de aeropuertos conserva schema `1`; su versión es independiente
+  de la versión del manifiesto meteorológico.
+
 ## Contratos técnicos de Fase 11
 
 - Playback: `1500 ms`; fade-out: `120 ms`; fade-in: `180 ms`; reduced motion

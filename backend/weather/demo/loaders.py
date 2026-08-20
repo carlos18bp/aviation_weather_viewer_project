@@ -67,14 +67,20 @@ def _validate_frame_cached(
     data_path: str,
     modified_ns: int,
     size: int,
+    value_data_path: str,
+    value_modified_ns: int,
+    value_size: int,
 ) -> None:  # noqa: ARG001
+    frame = {
+        "layer": layer,
+        "timestamp": timestamp,
+        "data_path": data_path,
+    }
+    if value_data_path:
+        frame["value_data_path"] = value_data_path
     validate_frame_asset(
         Path(root_value),
-        {
-            "layer": layer,
-            "timestamp": timestamp,
-            "data_path": data_path,
-        },
+        frame,
     )
 
 
@@ -83,12 +89,19 @@ def ensure_frame_available(frame: dict) -> None:
     scenario_root = Path(settings.DEMO_WEATHER_SCENARIO_ROOT)
     frame_path = frame_path_for_scenario(scenario_root, frame["data_path"])
     signature = _file_signature(frame_path)
+    value_data_path = frame.get("value_data_path", "")
+    value_signature = (-1, -1)
+    if value_data_path:
+        value_path = frame_path_for_scenario(scenario_root, value_data_path)
+        value_signature = _file_signature(value_path)
     _validate_frame_cached(
         str(scenario_root),
         frame["layer"],
         frame["timestamp"],
         frame["data_path"],
         *signature,
+        value_data_path,
+        *value_signature,
     )
 
 
