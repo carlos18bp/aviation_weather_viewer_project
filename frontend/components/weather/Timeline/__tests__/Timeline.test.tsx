@@ -48,6 +48,20 @@ describe('Timeline', () => {
     );
   });
 
+  it('keeps transport visible and reveals all timestamps explicitly in compact mode', async () => {
+    const user = userEvent.setup();
+    render(<Timeline {...createProps({ compact: true })} />);
+
+    expect(screen.getByRole('button', { name: 'Timestamp anterior' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Iniciar reproducción' })).toBeVisible();
+    expect(screen.getByLabelText('Timestamps disponibles')).toHaveAttribute('data-expanded', 'false');
+
+    await user.click(screen.getByRole('button', { name: 'Mostrar los seis timestamps' }));
+
+    expect(screen.getByLabelText('Timestamps disponibles')).toHaveAttribute('data-expanded', 'true');
+    expect(screen.getAllByRole('button', { name: /^Seleccionar / })).toHaveLength(6);
+  });
+
   it('emits direct, previous, next and play callbacks once per click', async () => {
     const user = userEvent.setup();
     const callbacks = createCallbacks();

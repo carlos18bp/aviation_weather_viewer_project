@@ -1,15 +1,29 @@
-# Contexto activo — Fase 14 / integración y release enriquecido
+# Contexto activo — Fase 15 / fundación responsive y shell táctil
 
 Actualizado: 2026-08-20.
 
-## Estado
+## Estado de la Ola M1
+
+La Fase 15 parte del SHA común de Ola M1
+`54c61891dca39661e2e593f4715d1ef58ab37a11`. Ese commit integra la Fase 14
+mediante PR #24, tiene CI y quality gate verdes y está desplegado en staging con
+backend/frontend activos y health HTTP 200. Las ramas paralelas de las Fases
+16–18 parten del mismo SHA y conservan ownership disjunto.
+
+La sesión trabaja en `feat/20082026-phase-15-responsive-foundation` y limita su
+implementación al shell, composición responsive, panel host, controles
+existentes y smoke E2E responsive. Panel, snap, orientación y clasificación de
+viewport serán estado React local/efímero; no entrarán en Zustand, URL,
+controller, adapters ni backend.
+
+## Estado heredado de Fase 14
 
 Las Fases 09–13 están integradas en `master`; no existen PR funcionales
 pendientes de esa ola y sus handoffs están disponibles. La Fase 14 conectó sus
 módulos al vertical slice original de Fase 08 desde una rama/worktree propios.
 La funcionalidad, el mapa real de flows, la validación visual/estabilidad y el
-QA/quality gate están completos. El PR #24 queda pendiente de integración en
-`master`; esta sesión no lo mergea.
+QA/quality gate están completos. El PR #24 está integrado en `master` y su SHA
+de merge es la base congelada de la Ola M1.
 
 ## Entrega funcional de Fase 14
 
@@ -218,3 +232,24 @@ hasta que la Fase 14 esté integrada, desplegada y verde.
 Objetivos congelados: iOS/Android en phone/tablet, portrait/landscape; capas
 cloud-cover, cloud-base, visibility y wind-gusts; una sola instancia MapLibre;
 datos simulados/locales; warning permanente.
+
+## Entrega local — Fase 15
+
+- `useViewerViewport` clasifica por media queries y limpia listeners de media,
+  resize y orientación; `844×390` se trata como phone landscape.
+- `ResponsivePanelHost` implementa sheet phone portrait, drawer phone landscape,
+  panel tablet de `320 px` y los dos slots desktop de Fase 14.
+- `WeatherViewer` conserva panel/snap localmente y distribuye Capas, Lugar,
+  Aeropuerto, Ruta y Más sin modificar store, `viewerTypes` u orquestador.
+- Warning, UTC y timeline están fuera del host y siguen disponibles incluso con
+  un panel `full` o en presentación.
+- `ResizeObserver` sólo llama `controller.resize()`. Unit test y Playwright
+  confirman una creación del controller y la misma identidad de root/canvas/
+  contexto WebGL en todos los cambios de tamaño.
+- Evidencia final: unitarios dirigidos, regresión desktop `2/2`, responsive
+  `2/2`, cinco viewports y build Next verdes; cuatro capturas inspeccionadas en
+  `frontend/test-results/phase15-*.png`.
+
+El siguiente wiring central pertenece exclusivamente a Fase 23. Fases 19–22
+deben consumir los slots públicos mediante componentes controlados y permanecer
+desconectadas de MapLibre central hasta esa integración.

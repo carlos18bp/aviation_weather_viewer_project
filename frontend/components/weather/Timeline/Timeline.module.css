@@ -11,7 +11,7 @@
   grid-template-columns: minmax(110px, 1fr) auto minmax(110px, 1fr);
   align-items: center;
   gap: 14px;
-  min-height: 34px;
+  min-height: 44px;
 }
 
 .activeTime {
@@ -43,14 +43,43 @@
 .iconButton {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: 1px solid var(--viewer-border);
   border-radius: 8px;
   color: var(--viewer-text);
   background: rgb(7 19 31 / 74%);
   cursor: pointer;
+}
+
+.expandButton {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 3px 6px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 8px;
+  color: var(--viewer-muted);
+  background: rgb(7 19 31 / 74%);
+  cursor: pointer;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.expandButton span {
+  color: var(--viewer-accent);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.expandButton:hover,
+.expandButton:focus-visible {
+  color: var(--viewer-text);
+  border-color: var(--viewer-accent);
+  outline: 2px solid rgb(34 211 238 / 26%);
+  outline-offset: 2px;
 }
 
 .iconButton svg {
@@ -136,12 +165,39 @@
   justify-items: center;
   gap: 5px;
   min-width: 0;
-  padding: 0 2px 2px;
+  min-height: 44px;
+  padding: 4px 2px 2px;
   border: 0;
   color: var(--viewer-muted);
   background: transparent;
   font: inherit;
   cursor: pointer;
+}
+
+.timeline[data-compact="true"] .summary {
+  grid-template-columns: auto minmax(142px, 1fr) auto;
+  gap: 8px;
+}
+
+.timeline[data-compact="true"] .activeTime span,
+.timeline[data-compact="true"] .loadingState {
+  display: none;
+}
+
+.timeline[data-compact="true"] .timestamps[data-expanded="false"] {
+  display: none;
+}
+
+.timeline[data-compact="true"] .progressTrack {
+  margin-bottom: 0;
+}
+
+.timeline[data-compact="true"] .transport {
+  gap: 4px;
+}
+
+.timeline[data-compact="true"] .iconButton {
+  width: 44px;
 }
 
 .timestampButton i {

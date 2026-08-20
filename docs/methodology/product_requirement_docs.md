@@ -174,6 +174,26 @@ anterior durante la carga y publica capa, aeropuerto, picker, ruta, isobaras,
 UTC y leyenda mediante un único commit. El reset enriquecido vuelve a
 `wind/06Z`, cámara inicial y URL canónica sin selecciones ni recursos pendientes.
 
-La funcionalidad y los dos recorridos E2E de enriquecimiento están
-implementados. El estado de integración definitivo se publicará sólo después
-de completar el QA y quality gate de la fase.
+La funcionalidad y los dos recorridos E2E de enriquecimiento están integrados,
+desplegados y con QA verde en el SHA
+`54c61891dca39661e2e593f4715d1ef58ab37a11`.
+
+## Fundación responsive — Fase 15
+
+La misma aplicación de Fase 14 funciona ahora en phone, tablet y desktop sin
+crear una variante móvil ni una segunda instancia de MapLibre. La clasificación
+usa media queries, nunca user-agent; phone cubre `360–767 px` y también el
+landscape corto hasta `1199×500`, tablet cubre `768–1199 px` fuera de ese caso
+y desktop comienza en `1200 px`.
+
+Phone portrait presenta un bottom sheet con estados `peek`, `half` y `full`;
+phone landscape usa drawer derecho; tablet usa un panel fijo de `320 px`; y
+desktop conserva la composición enriquecida vigente. Capas, lugar/aeropuerto,
+ruta y acciones se alcanzan por botones explícitos. Warning no operacional,
+UTC y timeline permanecen visibles; todos los controles táctiles tienen como
+mínimo `44×44 CSS px`.
+
+El estado de panel, snap y orientación es React local y efímero. No cambia la
+escena canónica, Zustand, `viewerTypes`, controller, adapters, renderer, backend
+ni media. Resize y orientación sólo disparan `resize()` sobre la superficie
+existente; el canvas, root MapLibre y contexto WebGL conservan identidad.
