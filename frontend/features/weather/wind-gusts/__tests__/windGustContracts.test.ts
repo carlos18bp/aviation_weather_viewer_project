@@ -159,7 +159,7 @@ describe('wind-gust contracts and sampler', () => {
     })).toMatchObject({ status: 'unavailable' });
   });
 
-  it('distinguishes coordinates outside coverage without clamping', () => {
+  it('distinguishes coordinates outside the frozen bbox without clamping', () => {
     const grid = parseWindGustGrid(
       createAviationScalarGridFixture('wind-gusts', TIMESTAMP, { value: 20 }),
       TIMESTAMP,

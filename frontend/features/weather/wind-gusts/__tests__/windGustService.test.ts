@@ -104,7 +104,7 @@ describe('WindGustLayerService', () => {
 
     const frame = await service.load(descriptor);
 
-    expect(frame.image).toBeDefined();
+    expect(frame.image.src).toBe(frame.objectUrl);
     expect(frame.grid).toBeNull();
     expect(frame.gridError).toBeInstanceOf(WindGustGridLoadError);
     service.destroy();

@@ -125,7 +125,7 @@ describe('visibility contracts and sampler', () => {
     })).toMatchObject({ status: 'unavailable', message: 'Valor no disponible' });
   });
 
-  it('distinguishes coordinates outside coverage without clamping', () => {
+  it('distinguishes coordinates outside the frozen bbox without clamping', () => {
     const grid = parseVisibilityGrid(
       createAviationScalarGridFixture('visibility', TIMESTAMP),
       TIMESTAMP,
