@@ -332,3 +332,47 @@ flowchart LR
   modificar `WindRenderer` o partículas.
 - Registro central, composición, catálogo vivo y schema 3 permanecen reservados
   a Fase 23.
+
+## Arquitectura integrada — Fase 23
+
+```mermaid
+flowchart LR
+    API[Catálogo + frames schema 3] --> FS[WeatherFrameService]
+    FS --> O[ViewerOrchestrator]
+    URL[Scene codec] --> O
+    O --> C[WeatherMapController]
+    C --> R[Registry único]
+    R --> Main[7 adapters principales]
+    R --> Iso[Isobar overlay]
+    R --> GIS[Aeropuerto + picker + ruta]
+    R --> Touch[TouchMapCoordinator coarse]
+    Wind[WindRenderer] --> Adaptive[AdaptiveRenderingController]
+    O --> UI[WeatherViewer]
+    UI --> Host[ResponsivePanelHost]
+    UI --> Explorer[LayerExplorer]
+    UI --> Forecast[PointForecast]
+    UI --> Legend[CompactLegend]
+    C --> Map[1 MapLibre / 1 canvas]
+```
+
+- `WeatherFrameService` valida schema 3 y coordina raster/grid por descriptor.
+  Services específicos conservan cache, request-version, abort y object URLs.
+- `ViewerOrchestrator` posee la barrera temporal. El frame principal y todos los
+  consumidores visibles se preparan para el mismo timestamp antes del commit.
+- El controller registra los siete adapters una sola vez, mantiene exclusividad
+  de capa principal y conserva isobaras fuera de esa exclusión.
+- `AdaptiveRenderingController` sólo está activo cuando `wind` es visible. Sus
+  eventos de perfil/visibility suben al snapshot del orquestador, no a Zustand
+  ni a la URL.
+- `TouchMapCoordinator` se crea una vez sólo con pointer coarse. Una excepción
+  de setup deja disponibles paneles y arbitraje click de desktop.
+- Responsive cambia host/layout alrededor del mapa. Resize y orientation sólo
+  llaman `resize()`; teardown destruye en orden inverso e idempotente.
+- `ViewerProductBoundary` mantiene loading/error local por producto; una falla
+  de explorer vuelve a quick row y una falla de grid no oculta el raster.
+- El warning y reset viven fuera de los paneles. Presentation mode conserva
+  warning y salida visible.
+
+El backend mantiene generación offline y validación runtime por hash/semántica;
+no existe endpoint point-sample ni generación por request. API/media permanecen
+same-origin y nunca exponen paths internos.

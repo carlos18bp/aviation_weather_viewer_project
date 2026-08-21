@@ -191,7 +191,18 @@ describe('DefaultWeatherMapController', () => {
 
   it('routes weather frames to their adapter', async () => {
     const wind = createWindAdapter();
-    const harness = createHarness({ wind });
+    const cloudCover = createAdapter('cloud-cover');
+    const cloudBase = createAdapter('cloud-base');
+    const visibility = createAdapter('visibility');
+    const windGusts = createAdapter('wind-gusts');
+    cloudCover.cancelPreparedFrame = jest.fn();
+    const harness = createHarness({
+      wind,
+      cloudCover,
+      cloudBase,
+      visibility,
+      windGusts,
+    });
     const frame: WindWeatherMapFrame = {
       layer: 'wind',
       timestamp: '2026-01-15T06:00:00Z',
@@ -216,6 +227,19 @@ describe('DefaultWeatherMapController', () => {
 
     expect(wind.prepareFrame).toHaveBeenCalledWith(frame, signal);
     expect(wind.setFrame).toHaveBeenCalledWith(frame);
+    for (const [layer, adapter] of [
+      ['cloud-cover', cloudCover],
+      ['cloud-base', cloudBase],
+      ['visibility', visibility],
+      ['wind-gusts', windGusts],
+    ] as const) {
+      const aviationFrame = { layer, timestamp: frame.timestamp, frame: {} } as never;
+      await harness.controller.prepareWeatherFrame(aviationFrame, signal);
+      await harness.controller.setWeatherFrame(aviationFrame);
+      expect(adapter.setFrame).toHaveBeenCalledWith(aviationFrame);
+    }
+    harness.controller.cancelPendingWeatherFrame();
+    expect(cloudCover.cancelPreparedFrame).toHaveBeenCalledTimes(1);
   });
 
   it('resets the camera to the frozen view', async () => {
@@ -322,18 +346,28 @@ describe('DefaultWeatherMapController', () => {
 
   it('initializes adapters in meteorology, overlay, route, airport, picker order', async () => {
     const order: string[] = [];
-    const adapter = (id: WeatherLayerAdapter<unknown>['id']) => createAdapter(
-      id,
-      jest.fn(async () => { order.push(id); }),
-    );
+    const destroyed: string[] = [];
+    const adapter = (id: WeatherLayerAdapter<unknown>['id']) => {
+      const instance = createAdapter(
+        id,
+        jest.fn(async () => { order.push(id); }),
+      );
+      instance.destroy = jest.fn(() => { destroyed.push(id); });
+      return instance;
+    };
     const harness = createHarness({
       temperature: adapter('temperature'),
       wind: adapter('wind'),
       precipitation: adapter('precipitation'),
+      cloudCover: adapter('cloud-cover'),
+      cloudBase: adapter('cloud-base'),
+      visibility: adapter('visibility'),
+      windGusts: adapter('wind-gusts'),
       isobars: adapter('pressure-isobars'),
       route: adapter('route'),
       airports: adapter('airports'),
       picker: adapter('picker'),
+      touch: adapter('touch-coordinator'),
     } as WeatherLayerAdapterRegistry);
 
     await emitLoaded(harness);
@@ -342,28 +376,47 @@ describe('DefaultWeatherMapController', () => {
       'wind',
       'temperature',
       'precipitation',
+      'cloud-cover',
+      'cloud-base',
+      'visibility',
+      'wind-gusts',
       'pressure-isobars',
       'route',
       'airports',
       'picker',
+      'touch-coordinator',
     ]);
+    harness.controller.destroy();
+    expect(destroyed).toEqual([...order].reverse());
   });
 
   it('keeps exactly one primary weather adapter visible', () => {
     const temperature = createAdapter('temperature');
     const wind = createAdapter('wind');
     const precipitation = createAdapter('precipitation');
+    const cloudCover = createAdapter('cloud-cover');
+    const cloudBase = createAdapter('cloud-base');
+    const visibility = createAdapter('visibility');
+    const windGusts = createAdapter('wind-gusts');
     const harness = createHarness({
       temperature,
       wind,
       precipitation,
+      cloudCover,
+      cloudBase,
+      visibility,
+      windGusts,
     } as WeatherLayerAdapterRegistry);
 
-    harness.controller.setLayer('precipitation');
+    harness.controller.setLayer('wind-gusts');
 
     expect(temperature.setVisible).toHaveBeenLastCalledWith(false);
     expect(wind.setVisible).toHaveBeenLastCalledWith(false);
-    expect(precipitation.setVisible).toHaveBeenLastCalledWith(true);
+    expect(precipitation.setVisible).toHaveBeenLastCalledWith(false);
+    expect(cloudCover.setVisible).toHaveBeenLastCalledWith(false);
+    expect(cloudBase.setVisible).toHaveBeenLastCalledWith(false);
+    expect(visibility.setVisible).toHaveBeenLastCalledWith(false);
+    expect(windGusts.setVisible).toHaveBeenLastCalledWith(true);
   });
 
   // quality: allow-too-many-assertions (independent scene channels must reach only their dedicated adapters and camera)
@@ -371,10 +424,14 @@ describe('DefaultWeatherMapController', () => {
     const picker = createAdapter('picker');
     const routeAdapter = createAdapter('route');
     const isobars = createAdapter('pressure-isobars');
+    const touch = createAdapter('touch-coordinator');
+    touch.setRouteCapture = jest.fn();
+    touch.setReposition = jest.fn();
     const harness = createHarness({
       picker,
       route: routeAdapter,
       isobars,
+      touch,
     } as WeatherLayerAdapterRegistry);
     await emitLoaded(harness);
     const route = { originIcao: 'SKBO', destinationIcao: 'SKRG' } as const;
@@ -385,12 +442,16 @@ describe('DefaultWeatherMapController', () => {
     harness.controller.setRoute(route, analysis);
     harness.controller.setIsobarFrame(collection);
     harness.controller.setIsobarsVisible(true);
+    harness.controller.setTouchRouteCapture(true);
+    harness.controller.setTouchReposition(true);
     harness.controller.setViewport({ longitude: -74.15, latitude: 4.7, zoom: 6.2 });
 
     expect(picker.setFrame).toHaveBeenCalledWith([-74.15, 4.7]);
     expect(routeAdapter.setFrame).toHaveBeenCalledWith(analysis);
     expect(isobars.setFrame).toHaveBeenCalledWith(collection);
     expect(isobars.setVisible).toHaveBeenLastCalledWith(true);
+    expect(touch.setRouteCapture).toHaveBeenCalledWith(true);
+    expect(touch.setReposition).toHaveBeenCalledWith(true);
     expect(harness.map.jumpTo).toHaveBeenLastCalledWith({
       center: [-74.15, 4.7],
       zoom: 6.2,

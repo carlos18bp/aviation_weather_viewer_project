@@ -60,7 +60,7 @@ def load_airport_weather(manifest: dict) -> dict:
     return deepcopy(_load_airport_weather_cached(str(fixture_path), *signature))
 
 
-@lru_cache(maxsize=24)
+@lru_cache(maxsize=48)
 def _validate_frame_cached(
     root_value: str,
     layer: str,

@@ -33,8 +33,8 @@ describe('weatherViewerStore', () => {
   });
 
   it('changes the active layer', () => {
-    useWeatherViewerStore.getState().setActiveLayer('temperature');
-    expect(useWeatherViewerStore.getState().activeLayer).toBe('temperature');
+    useWeatherViewerStore.getState().setActiveLayer('visibility');
+    expect(useWeatherViewerStore.getState().activeLayer).toBe('visibility');
   });
 
   it('changes the committed timestamp', () => {
@@ -169,6 +169,10 @@ describe('weatherViewerStore', () => {
       'playbackSpeed',
       'grids',
       'abortControllers',
+      'panel',
+      'orientation',
+      'profile',
+      'pointForecastMetric',
     ]));
   });
 });

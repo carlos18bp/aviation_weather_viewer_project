@@ -1,6 +1,49 @@
-# Contexto activo — Fase 20 / visibilidad y ráfagas
+# Contexto activo — Fase 23 / integración móvil, QA y release
 
-Actualizado: 2026-08-20.
+Actualizado: 2026-08-21.
+
+## Base integrada de cierre M3
+
+La sesión trabaja en `feat/20082026-phase-23-mobile-release`, cortada desde
+`origin/master` en `662668292acc3236270c4633f069102d5a9c1d9c`. Las Fases
+15–22 están integradas, no existen PR funcionales M1/M2 pendientes y los checks
+de backend, frontend, build y quality gate están verdes en sus ocho PR.
+
+El precheck de assets se ejecutó sobre este SHA en `vps-projectapp-staging`:
+`generate_mobile_layer_assets --check` validó 48/48 archivos determinísticos
+(3.360.836 bytes). El recorrido desktop de Fase 14 continúa verde 2/2 en HTTPS,
+sin errores de consola ni requests meteorológicas/cartográficas externas.
+
+Fase 23 es dueña exclusivamente del wiring central, schema 3, pruebas de
+integración, flow map, Memory Bank y evidencia de release. Consume los exports
+públicos de Fases 15–22 y no modifica sus módulos internos ni los scopes del
+roadmap.
+
+## Estado actual de Fase 23
+
+Backend y frontend están funcionalmente completos. Schema 3 publica siete
+capas, 42 frames y seis isobaras; los 48 assets y hashes pasan validación. El
+viewer integra explorer, leyenda compacta, point forecast, responsive/touch y
+adaptive rendering sobre una sola instancia MapLibre, con transición temporal y
+reset atómicos.
+
+La matriz C/D pasó en Mobile Chrome, Mobile Safari/WebKit, Tablet Chrome y
+Tablet Safari/WebKit. Los recorridos desktop continúan verdes. El flow map real
+tiene 30 flows, 13 cubiertos y 17 exentos, sin missing/partial/junk en auditoría
+estática completa.
+
+El soak definitivo completó 600,380 s: 54,54 FPS promedio, perfil
+`phone→degraded`, heap final 20,2 MB frente a 15,7 MB inicial, listeners 693
+frente a 689, cuatro object URLs estables, una canvas, cero crashes/page errors,
+cero requests externas y cero errores inesperados. El 503 de `cloud-base` fue
+inducido y recuperó `wind`; el reset terminó exacto.
+
+Evidencia y procedimiento físico:
+`docs/release/phase23-mobile-integration-release-handoff.md`. Próximo gate:
+ejecutar `$qa`, corregir findings, pasar quality gate, ejecutar build separado,
+abrir PR, esperar CI, integrar por squash y verificar CI/ejecución local del SHA
+integrado. Despliegue se omite por instrucción del operador. Smoke real iPhone y
+Android permanece explícitamente pendiente.
 
 ## Base común de la Ola M2
 

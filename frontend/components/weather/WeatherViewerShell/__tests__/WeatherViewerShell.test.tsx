@@ -69,14 +69,16 @@ describe('WeatherViewerShell', () => {
     useWeatherViewerStore.getState().reset();
   });
 
-  it('shows a controlled error when WebGL2 is unavailable', () => {
+  it('shows a controlled error when WebGL2 is unavailable', async () => {
     mockedSupportsWebGL2.mockReturnValue(false);
     const controller = createController();
     const { factory } = createFactory([controller]);
 
     render(<WeatherViewerShell controllerFactory={factory} />);
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Este navegador no ofrece WebGL2');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Este navegador no ofrece WebGL2',
+    );
     expect(factory).not.toHaveBeenCalled();
   });
 

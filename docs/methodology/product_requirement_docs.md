@@ -211,3 +211,31 @@ timestamp con el campo U/V y, con tolerancia de redondeo de `0.1 kt`, no es
 menor que la velocidad del viento. Una incoherencia o grid inválido produce
 `Valor no disponible`; nunca se corrige silenciosamente ni dispara requests al
 mover el marcador.
+
+## Release móvil integrado — Fase 23
+
+La demo completa funciona como un único vertical slice en teléfono, tableta y
+desktop. Conserva una sola instancia MapLibre, seis timestamps sincronizados,
+datos determinísticos locales, warning permanente y cero dependencias
+meteorológicas/cartográficas externas.
+
+El catálogo schema 3 publica exactamente siete capas principales: temperatura,
+viento, precipitación, nubosidad, base de nubes, visibilidad y ráfagas. Isobaras
+permanece como overlay independiente. Las cuatro capas aeronáuticas nuevas
+aportan 48 assets congelados —seis raster y seis grids por capa— y las cinco
+capas con valor puntual alimentan el point forecast local.
+
+Layer Explorer y Compact Legend sustituyen los controles anteriores sólo en la
+composición integrada. ResponsivePanelHost aloja capas, lugar/aeropuerto,
+picker y ruta; una selección touch abre el producto correspondiente en `peek`.
+Warning, reset, UTC y salida de presentación nunca dependen de un panel
+ocultable.
+
+El reset canónico vuelve a `wind/06Z`, cámara `[-73.5,4.5,4.7]` y limpia
+aeropuerto, coordenada, ruta, isobaras, playback y panel. URL sólo serializa la
+escena durable; panel, orientación y perfil gráfico son estado efímero.
+
+La entrega automatizada cubre los Flujos C/D en Chrome y WebKit para phone y
+tablet, conserva los recorridos desktop y documenta un soak de diez minutos.
+Despliegue fue omitido por instrucción del operador y el smoke en iPhone/Android
+reales permanece como gate explícito, sin resultados inferidos.

@@ -242,3 +242,29 @@
   requests al mover el marcador y deja el debounce/interacción para Fase 23.
 - Un raster de ráfagas no necesita otro renderer: reutilizar el sampler U/V
   público y mantener cero imports a WindRenderer evita duplicar partículas.
+
+## Fase 23 — integración móvil y cierre
+
+- Una transición atómica necesita separar intención, preparación y publicación.
+  Abort evita trabajo; request-version evita que una respuesta que ignora abort
+  llegue a estado visible.
+- Los módulos aislados se integran mejor por registry/service público que por
+  imports internos. Esto permitió conectar Fases 15–22 sin cambiar sus owners.
+- El raster y su valor puntual no comparten severidad: mantener imagen ante grid
+  parcial preserva utilidad y permite forecast degradado por métrica.
+- Responsive debe basarse en geometría observable. La combinación de media
+  query y dimensiones físicas resiste rotaciones emuladas sin user-agent.
+- La visibilidad de `wind` es parte del lifecycle adaptativo. Activar el monitor
+  para otra capa falsea FPS y consume recursos sin beneficio.
+- Exponer perfil y document visibility en snapshot/atributos, no en store o URL,
+  mejora observabilidad sin contaminar la escena compartible.
+- Los `ERR_ABORTED` son señal esperada en una UI versionada; un reporte útil los
+  clasifica por causa y no los mezcla con HTTP 4xx/5xx.
+- Un stress de FPS debe respetar `MAXIMUM_MEASURED_FRAME_GAP_MS`; pausas mayores
+  prueban suspensión, no degradación sostenida.
+- Heap máximo aislado no demuestra fuga. La serie, GC final, listeners cercanos
+  al baseline y object URLs estables sí permiten decidir crecimiento continuo.
+- Playwright WebKit aporta compatibilidad, pero nunca evidencia física. Un
+  release serio deja el gate pendiente y entrega un procedimiento reproducible.
+- El warning y reset deben vivir fuera de toda boundary ocultable: son las dos
+  salidas de seguridad que deben sobrevivir a cualquier fallback.

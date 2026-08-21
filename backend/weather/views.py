@@ -11,6 +11,7 @@ from weather.demo.airports import AIRPORT_ICAO_CODES
 from weather.demo.constants import (
     ERROR_MESSAGES,
     LAYER_IDS,
+    MANIFEST_SCHEMA_VERSION,
     SIMULATION_FLAGS,
     TIMESTAMPS,
 )
@@ -86,6 +87,7 @@ def weather_catalog(_request):
     ]
     return Response(
         {
+            "schema_version": MANIFEST_SCHEMA_VERSION,
             "scenario": {
                 "code": scenario["code"],
                 "name": scenario["name"],
@@ -125,7 +127,7 @@ def weather_frame(request):
         None,
     )
     if frame is None:
-        return _error_response("frame_not_found", status.HTTP_404_NOT_FOUND)
+        return _error_response("asset_unavailable", status.HTTP_503_SERVICE_UNAVAILABLE)
 
     try:
         ensure_frame_available(frame)
@@ -152,7 +154,7 @@ def weather_frame(request):
         "maximum": frame["maximum"],
         "data_url": f"{media_prefix}/{frame['data_path']}",
     }
-    if layer == "temperature":
+    if "value_data_path" in frame:
         payload["value_data_url"] = f"{media_prefix}/{frame['value_data_path']}"
     return Response(payload)
 

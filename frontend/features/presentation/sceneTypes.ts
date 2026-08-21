@@ -1,7 +1,14 @@
 import type { DemoAirportIcao, DemoTimestamp } from '@/features/airports';
 
 
-export type SceneWeatherLayerId = 'wind' | 'temperature' | 'precipitation';
+export type SceneWeatherLayerId =
+  | 'wind'
+  | 'temperature'
+  | 'precipitation'
+  | 'cloud-cover'
+  | 'cloud-base'
+  | 'visibility'
+  | 'wind-gusts';
 export type Coordinate = readonly [longitude: number, latitude: number];
 
 export interface MapViewport {

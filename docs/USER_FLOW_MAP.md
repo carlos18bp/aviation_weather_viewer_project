@@ -1,11 +1,13 @@
 # Mapa de flujos de usuario
 
-Versión: 4.0.0
+Versión: 5.0.0
 
-Actualizado: 2026-08-20
+Actualizado: 2026-08-21
 
-Alcance inspeccionado: Fase 14, ruta pública `/`, visor desktop enriquecido a
-`1920×1080`, composición normal y modo presentación.
+Alcance inspeccionado: Fase 23, ruta pública `/`, vertical slice schema 3 en
+phone, tablet y desktop. La matriz automatizada cubre Chrome `360×800`,
+`800×360`, `800×1280`, `1280×800` y `1920×1080`; WebKit cubre `390×844`,
+`844×390`, `768×1024` y `1024×768`.
 
 ## Roles
 
@@ -24,7 +26,7 @@ superficies administrativas.
   exige valores del escenario congelado, no sólo que un elemento sea visible.
 - `error` cubre validación de búsquedas, ruta y URL; `failure` cubre requests,
   assets, Clipboard, Fullscreen, WebGL o renderer fallidos.
-- Los dos nuevos specs autorizados cubren únicamente los journeys comerciales.
+- Los dos nuevos tests del único spec de Fase 23 cubren únicamente los journeys comerciales C y D.
   Races y negativos permanecen exentos (`expectedSpecs: 0`) con tests
   unit/integration dirigidos; no son gaps ocultos.
 - Un cambio temporal sólo termina cuando capa, aeropuerto, picker, ruta,
@@ -39,10 +41,12 @@ superficies administrativas.
 
 | Superficie | Evidencia principal | Interacciones reales |
 |---|---|---|
-| `/` | `frontend/app/page.tsx`, `frontend/features/viewer/WeatherViewer.tsx` | Bootstrap/URL, búsqueda, tendencia, capas, isobaras, ruta, compartir, presentación, reset y recovery. |
-| Mapa | `WeatherMapController.ts`, `viewerAdapters.ts` | Pan/zoom, click ICAO con precedencia, click de fondo, picker, ruta y overlays. |
+| `/` | `frontend/app/page.tsx`, `frontend/features/viewer/WeatherViewer.tsx` | Bootstrap/URL, búsqueda, tendencia, explorer de siete capas, point forecast, isobaras, ruta, compartir, presentación, responsive panels, reset y recovery. |
+| Mapa único | `WeatherMapController.ts`, `viewerAdapters.ts`, `responsiveIntegration.ts` | Pan/zoom, click ICAO con precedencia, tap/click de fondo, picker, ruta, cuatro adapters nuevos, touch coarse y resize/orientation sin recreación. |
+| Panels responsive | `ResponsivePanelHost`, `WeatherViewer.tsx` | Phone sheet/drawer y tablet overlay/sidebar para lugar, capas, ruta y acciones, con apertura touch en `peek`. |
+| Capas y punto | `LayerExplorer`, `CompactLegend`, `PointForecast` | Siete capas principales categorizadas, overlay independiente, seis filas temporales y métricas parciales recuperables. |
 | Timeline | `Timeline`, `ViewerOrchestrator`, módulos de Fase 11 | Directo, anterior, siguiente, play/pausa, fade atómico y precarga adyacente. |
-| Datos same-origin | servicios de catálogo, aeropuerto, picker, ruta, precipitación e isobaras | Metadata, WebP, grids U/V/temperatura y GeoJSON exclusivamente locales. |
+| Datos same-origin | `weatherService.ts` y servicios públicos de Fases 18–21 | Schema 3, metadata, 42 WebP, grids de cinco capas y seis GeoJSON de isobaras exclusivamente locales. |
 
 ### Matriz por interacción y outcome
 
@@ -57,6 +61,9 @@ superficies administrativas.
 | Tendencia | Reintentar serie fallida | failure | Fallar alguna condición → conservar aeropuerto → mostrar error+retry → descartar races y cachear éxito. | `viewer-trend-recovery` | Exenta: hook/component tests. |
 | Mapa/picker | Click de fondo dentro del bbox | success | Click sin feature ICAO → colocar/reposicionar un único marcador → cargar temperatura+U/V del mismo timestamp y muestrear localmente. | `viewer-weather-picker` | Primer E2E. |
 | Mapa/picker | Leer condición del punto | display | Ver coordenadas, °C, kt, dirección y UTC con flags de simulación. | `viewer-weather-picker` | Primer E2E. |
+| Touch GIS | Tocar fondo en phone | success | Coordinador coarse registrado una vez → arbitrar aeropuerto antes que picker → abrir panel Lugar en `peek` sin crear otro mapa. | `viewer-touch-integration` | Flujo C, Chrome y WebKit. |
+| Point forecast | Leer evolución de coordenada | display / success | Tocar mapa → cargar productos sanos para seis timestamps → mostrar tabla y métrica activa sincronizadas → elegir otra hora desde timeline. | `viewer-point-forecast` | Flujo C, Chrome y WebKit. |
+| Point forecast | Fallar un grid | failure | Mantener raster → marcar sólo el valor fallido como no disponible → conservar métricas sanas y descartar horas obsoletas. | `viewer-point-forecast-recovery` | Exenta: domain/service/component/orchestrator. |
 | Mapa/picker | Click sobre aeropuerto | success | Click renderizado sobre ICAO → airport adapter selecciona → picker rechaza ese mismo evento. | `viewer-airport-intelligence` | Primer E2E + integration test. |
 | Picker | Cerrar o mover punto | success | Reposicionar con otro click o cerrar → un marcador actualizado o ninguno, sin request por muestra React. | `viewer-weather-picker` | Primer E2E cierra vía reset; movimiento en estabilidad. |
 | Picker | Fuera de cobertura / datos fallidos | error / failure | Rechazar coordenada externa o producto incoherente → distinguir estado, conservar marcador y ofrecer retry sólo cuando aplica. | `viewer-picker-recovery` | Exenta: sampler/service/component/orchestrator. |
@@ -64,21 +71,29 @@ superficies administrativas.
 | Ruta | Leer perfil | display | Ver NM, frente/cola/cruzado, timestamp y disclaimer no operacional. | `viewer-route-story` | Segundo E2E. |
 | Ruta | Invertir o limpiar | success | Invertir extremos o limpiar → recalcular o eliminar ruta/perfil sin alterar la capa. | `viewer-route-validation` | Exenta de E2E: component test + estabilidad. |
 | Ruta | Elegir el mismo extremo / recalcular fallido | error / failure | Rechazar origen=destino o campo U/V inválido → conservar controles, mostrar error y permitir retry/clear. | `viewer-route-validation` | Exenta: validation/analysis/orchestrator. |
-| Capas | Cambiar viento/temperatura/precipitación | success | Elegir producto → cargar sin mezclar → mantener exactamente una capa principal y leyenda/unidad correctas. | `viewer-atmospheric-layers` | Base cubre dos; segundo E2E cubre precipitación. |
+| Capas base | Cambiar viento/temperatura/precipitación | success | Elegir producto → cargar sin mezclar → mantener exactamente una capa principal y leyenda/unidad correctas. | `viewer-atmospheric-layers` | E2E desktop existente. |
+| Explorer | Descubrir siete capas | display | Abrir Capas → ver esenciales y aviación → disponer de wind, temperature, precipitation, cloud-cover, cloud-base, visibility y wind-gusts. | `viewer-layer-explorer` | Flujo C. |
+| Explorer | Elegir capa nueva | success | Elegir cloud-cover/visibility/gusts → preparar raster+grid cuando aplica → commit atómico con leyenda y UTC de la misma hora. | `viewer-layer-explorer` | Flujos C/D. |
+| Explorer | Fallar composición o catálogo parcial | failure | Product boundary → mostrar quick row → mantener warning, reset y acceso a wind. | `viewer-explorer-fallback` | Exenta: catalog/component/boundary tests. |
 | Isobaras | Activar/desactivar overlay | success / display | Toggle independiente → cargar GeoJSON de la hora activa → mostrar líneas/labels hPa sin cambiar capa principal. | `viewer-atmospheric-layers` | Segundo E2E. |
 | Isobaras | Fallar overlay | failure | Fallar GeoJSON → ocultar isobaras+avisar → capa, hora, UTC y leyenda principal siguen comprometidas. | `viewer-isobar-recovery` | Exenta: orchestrator+adapter tests. |
 | Timeline | Elegir/anterior/siguiente | success | Aumentar version, abortar obsoleto, cargar productos requeridos, fade-out, commit único, fade-in y precarga adyacente. | `viewer-demo-journey` | E2E base + integration. |
 | Timeline | Play/pausa | success | Un timer de `1500 ms` avanza sin tick durante loading → pausa elimina el timer. | `viewer-demo-journey` | E2E base. |
-| Frame | Fallo/race de producto requerido | failure | Fallar frame/aeropuerto/picker/ruta o ganar tarde → preservar escena anterior, pausar y ofrecer recovery. | `viewer-frame-recovery` | Exenta: 20 tests de orchestrator. |
+| Frame | Fallo/race de producto requerido | failure | Fallar capa nueva/aeropuerto/picker/forecast/ruta o ganar tarde → conservar raster/snapshot anterior, impedir otra hora y mantener wind/temperature accesibles. | `viewer-frame-recovery` | Exenta: orchestrator/service/adapter. |
 | Compartir | Copiar y abrir URL | success / display | Copiar escena normalizada → abrir/reload → recuperar valores y datos reales del fixture. | `viewer-scene-sharing` | Segundo E2E. |
 | Compartir | Clipboard ausente/rechazado | failure | Mostrar input read-only enfocado y seleccionado para copia manual. | `viewer-share-fallback` | Exenta: SceneShare tests. |
 | Presentación | Entrar/salir por botón o `P` | success / display | Contraer buscador/tendencia/forms → conservar marca, UTC, capa, leyenda, timeline, warning, resultados y salida. | `viewer-presentation-mode` | Segundo E2E. |
 | Presentación | Fullscreen no disponible | failure | Explicar fallback → conservar modo interno y salida. | `viewer-presentation-fallback` | Exenta: PresentationMode tests. |
 | Mapa/URL | Pan o zoom | success | Navegar bounds → sólo `moveend` publica viewport redondeado → reemplazo debounced de URL. | `viewer-scene-sharing` | Estabilidad + controller/synchronizer tests. |
-| Reset | Reiniciar escena enriquecida | success | Abortar requests/precargas y parar timers/transición → limpiar ICAO/picker/ruta/isobaras/modo → cámara inicial + wind/06Z + URL vacía. | `viewer-enriched-reset` | Ambos journeys terminan en reset. |
+| Responsive | Rotar phone | success / display | `390×844` o `360×800` → landscape correspondiente → medir geometría real, llamar `resize`, conservar canvas, visibility, 09Z, picker, warning y URL. | `viewer-responsive-continuity` | Flujo C, Chrome y WebKit. |
+| Responsive | Rotar tablet | success / display | Portrait overlay → landscape sidebar → conservar ruta, panel, timestamp, gusts, isobaras, warning y el mismo canvas. | `viewer-responsive-continuity` | Flujo D, Chrome y WebKit. |
+| Tablet aeronáutica | Construir/restaurar escena | success / display | SKBO → SKBO-SKRG → gusts → isobars → copiar/abrir URL → rotar → ruta/panel/hora intactos. | `viewer-tablet-aviation` | Flujo D. |
+| Reset | Reiniciar escena enriquecida | success | Abortar versiones/timers → `layer=wind`, `timestamp=06Z`, cámara `[-73.5,4.5,4.7]`, airport/coordinate/route/panel nulos, isobars/play false y URL `/`. | `viewer-enriched-reset` | Flujos C/D y desktop terminan en reset. |
 | Catálogo | Reintentar catálogo fallido | failure | Shell/map siguen visibles → retry valida catálogo y carga default. | `viewer-catalog-recovery` | Exenta: orchestrator. |
 | Aeropuertos | Reintentar GeoJSON fallido | failure | Meteorología sigue usable → retry independiente restaura puntos. | `viewer-airports-recovery` | Exenta: orchestrator. |
 | Viento | Continuar tras fallo de partículas | failure | Aviso fallback → flechas estáticas y controles activos. | `viewer-wind-fallback` | Exenta: renderer/orchestrator + estabilidad. |
+| Touch | Fallar coordinador coarse | failure | Conservar controles de panel y arbitration de click desktop; cleanup inverso e idempotente. | `viewer-touch-fallback` | Exenta: coordinator/adapter tests. |
+| Rendimiento | Degradar o fallar perfil adaptativo | failure | Activar sólo con wind visible → degradar bajo FPS sostenido o usar perfil conservador → pausar/reanudar con visibilidad documental. | `viewer-adaptive-fallback` | Exenta: adaptive/renderer/visibility tests + estabilidad. |
 | Mapa | Fallar WebGL2/MapLibre | failure | Mostrar bloqueo o retry honesto sin ocultar warning. | `viewer-map-recovery` | Exenta: shell/controller. |
 | Viewer | Permiso denegado | error | n/a: no existen autenticación, roles privilegiados ni acciones autorizables. | n/a | No aplica con razón. |
 
@@ -93,6 +108,7 @@ superficies administrativas.
 | Error requerido | Escena previa, mensaje en español y retry/reset. |
 | Error opcional | Sólo la mejora fallida se oculta o degrada; demo base sigue usable. |
 | Warning | Texto inmutable visible permanentemente. |
+| Phone/tablet | Panel activo y snap son estado local; orientación cambia layout sin entrar a Zustand ni URL. |
 
 ## E2E Coverage Index
 
@@ -106,19 +122,25 @@ superficies administrativas.
 | `viewer-scene-sharing` | P1 | success, display | `weather-enrichment-route-scene.spec.ts`. |
 | `viewer-presentation-mode` | P2 | success, display | `weather-enrichment-route-scene.spec.ts`. |
 | `viewer-enriched-reset` | P1 | success | Ambos specs enriquecidos. |
-| 13 flows negativos | P1–P3 | `expectedSpecs: 0` | Exentos deliberadamente; evidencia dirigida indicada en `flow-definitions.json`. |
+| `viewer-layer-explorer` | P1 | success, display | `mobile-integration-release.spec.ts`, Flujo C. |
+| `viewer-point-forecast` | P1 | success, display | `mobile-integration-release.spec.ts`, Flujo C. |
+| `viewer-touch-integration` | P1 | success, display | `mobile-integration-release.spec.ts`, Flujo C. |
+| `viewer-responsive-continuity` | P1 | success, display | `mobile-integration-release.spec.ts`, Flujos C/D en Chrome y WebKit. |
+| `viewer-tablet-aviation` | P1 | success, display | `mobile-integration-release.spec.ts`, Flujo D. |
+| 17 flows negativos | P1–P3 | `expectedSpecs: 0` | Exentos deliberadamente; evidencia dirigida indicada en `flow-definitions.json`. |
 
-Resumen registrado: 21 flows; 8 con cobertura E2E prevista y 13 exentos
-deliberados. No hay `junk-only`. Las dos nuevas pruebas deben conducir todos
-los controles declarados; los negativos no se duplican en browser.
+Resumen registrado: 30 flows; 13 con cobertura E2E prevista y 17 exentos
+deliberados. No hay `junk-only`. Los dos tests de Fase 23 conducen los controles
+reales; races, corrupción y degradaciones no se duplican en browser.
 
 ## Clases por módulo
 
 | Módulo | success | error | failure | display |
 |---|---|---|---|---|
-| Viewer enriquecido | Búsqueda, picker, ruta, capas, URL, modo y reset. | No-result, ruta inválida y URL normalizada. | Requests/assets/runtime/Clipboard/Fullscreen con recovery. | Datos congelados de aeropuerto, punto, ruta, capas y escena restaurada. |
+| Viewer integrado | Búsqueda, touch/picker, point forecast, ruta, siete capas, isobaras, responsive, URL, modo y reset. | No-result, ruta inválida y URL normalizada. | Requests/assets/runtime/touch/perfil/Clipboard/Fullscreen con recovery. | Datos congelados de aeropuerto, seis horas, punto, ruta, capas y escena restaurada. |
 
 ## Preguntas abiertas
 
-Ninguna. El alcance sigue limitado al escenario local `demo-colombia-001`, la
-fecha `2026-01-15`, seis timestamps y desktop Chrome/Edge `1920×1080`.
+No hay decisiones funcionales abiertas. La validación física en iPhone Safari
+y Android Chrome sigue siendo un gate de release externo a esta matriz; no se
+reemplaza con Playwright WebKit.

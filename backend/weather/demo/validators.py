@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 from pathlib import Path, PurePosixPath
@@ -13,12 +14,14 @@ from weather.demo.airports import AIRPORT_ICAO_CODES
 from weather.demo.constants import (
     AIRPORT_WEATHER_SCHEMA_VERSION,
     AIRPORT_WEATHER_FILENAME,
+    AVIATION_LAYER_IDS,
     BBOX,
     LAYER_DEFINITIONS,
     LAYER_IDS,
     MANIFEST_SCHEMA_VERSION,
     MANIFEST_FILENAME,
     MEDIA_SCENARIO_PREFIX,
+    MOBILE_LAYER_ASSET_SHA256,
     OVERLAY_DEFINITIONS,
     OVERLAY_IDS,
     PRECIPITATION_SIZE,
@@ -32,6 +35,7 @@ from weather.demo.constants import (
     TEMPERATURE_VALUE_WIDTH,
     TIMESTAMP_LABELS,
     TIMESTAMPS,
+    VALUE_DATA_LAYER_IDS,
     WIND_HEIGHT,
     WIND_VALUE_COUNT,
     WIND_WIDTH,
@@ -80,13 +84,13 @@ def _validate_relative_path(raw_path: object) -> str:
 
 def expected_frame_data_path(layer: str, timestamp: str) -> str:
     label = TIMESTAMP_LABELS[timestamp]
-    suffix = "webp" if layer in {"temperature", "precipitation"} else "json"
+    suffix = "json" if layer == "wind" else "webp"
     return f"{MEDIA_SCENARIO_PREFIX}/{layer}/{label}.{suffix}"
 
 
-def expected_temperature_value_data_path(timestamp: str) -> str:
+def expected_value_data_path(layer: str, timestamp: str) -> str:
     label = TIMESTAMP_LABELS[timestamp]
-    return f"{MEDIA_SCENARIO_PREFIX}/temperature-values/{label}.json"
+    return f"{MEDIA_SCENARIO_PREFIX}/{layer}-values/{label}.json"
 
 
 def expected_overlay_data_path(overlay_id: str, timestamp: str) -> str:
@@ -151,7 +155,7 @@ def validate_manifest(
         _require(layer in LAYER_IDS, "Frame layer is invalid.")
         _require(timestamp in TIMESTAMPS, "Frame timestamp is invalid.")
         expected_fields = {"layer", "timestamp", "data_path", "minimum", "maximum"}
-        if layer == "temperature":
+        if layer in VALUE_DATA_LAYER_IDS:
             expected_fields.add("value_data_path")
         _require(set(frame) == expected_fields, "Frame descriptor fields are invalid.")
         pair = (layer, timestamp)
@@ -163,11 +167,11 @@ def validate_manifest(
             data_path == expected_frame_data_path(layer, timestamp),
             "Frame data path is invalid.",
         )
-        if layer == "temperature":
+        if layer in VALUE_DATA_LAYER_IDS:
             value_data_path = _validate_relative_path(frame.get("value_data_path"))
             _require(
-                value_data_path == expected_temperature_value_data_path(timestamp),
-                "Temperature value data path is invalid.",
+                value_data_path == expected_value_data_path(layer, timestamp),
+                "Frame value data path is invalid.",
             )
         layer_definition = layer_lookup[layer]
         _require(
@@ -184,7 +188,7 @@ def validate_manifest(
             (layer, timestamp) for layer in LAYER_IDS for timestamp in TIMESTAMPS
         }
         _require(frame_pairs == expected_pairs, "Manifest frame product is incomplete.")
-        _require(len(frames) == 18, "Manifest must contain eighteen frames.")
+        _require(len(frames) == 42, "Manifest must contain forty-two frames.")
 
     overlays = payload.get("overlays")
     _require(isinstance(overlays, list), "Manifest overlays are invalid.")
@@ -519,6 +523,27 @@ def frame_path_for_scenario(scenario_root: Path, data_path: str) -> Path:
     return scenario_root.joinpath(*relative_path.parts)
 
 
+def _validate_mobile_asset_hash(scenario_root: Path, path: Path) -> None:
+    """Validate one staged aviation asset without reimplementing its schema."""
+    try:
+        resolved_root = scenario_root.resolve(strict=True)
+        resolved_path = path.resolve(strict=True)
+        relative_path = resolved_path.relative_to(resolved_root)
+    except (OSError, ValueError) as exc:
+        raise DemoAssetError("An aviation asset is unavailable.") from exc
+    _require(path.is_file() and not path.is_symlink(), "Invalid aviation asset path.")
+    expected_hash = MOBILE_LAYER_ASSET_SHA256.get(relative_path.as_posix())
+    _require(expected_hash is not None, "Unknown aviation asset path.")
+    digest = hashlib.sha256()
+    try:
+        with path.open("rb") as file_handle:
+            for chunk in iter(lambda: file_handle.read(128 * 1024), b""):
+                digest.update(chunk)
+    except OSError as exc:
+        raise DemoAssetError("An aviation asset cannot be read.") from exc
+    _require(digest.hexdigest() == expected_hash, "Aviation asset hash is invalid.")
+
+
 def validate_frame_asset(scenario_root: Path, frame: dict[str, Any]) -> None:
     """Validate the artifact referenced by one manifest frame."""
     path = frame_path_for_scenario(scenario_root, frame["data_path"])
@@ -536,6 +561,15 @@ def validate_frame_asset(scenario_root: Path, frame: dict[str, Any]) -> None:
 
     if frame["layer"] == "precipitation":
         validate_precipitation_image(path)
+        return
+
+    if frame["layer"] in AVIATION_LAYER_IDS:
+        _validate_mobile_asset_hash(scenario_root, path)
+        value_path = frame_path_for_scenario(
+            scenario_root,
+            frame["value_data_path"],
+        )
+        _validate_mobile_asset_hash(scenario_root, value_path)
         return
 
     wind_payload = load_json_document(path)
@@ -558,6 +592,8 @@ def validate_overlay_asset(
 
 def validate_scenario(scenario_root: Path) -> dict[str, Any]:
     """Validate the complete frozen scenario before publishing it."""
+    from weather.demo.mobile_layers.validators import validate_asset_tree
+
     manifest = validate_manifest(
         load_json_document(scenario_root / MANIFEST_FILENAME), require_complete=True
     )
@@ -568,4 +604,5 @@ def validate_scenario(scenario_root: Path) -> dict[str, Any]:
     for overlay in manifest["overlays"]:
         for frame in overlay["frames"]:
             validate_overlay_asset(scenario_root, overlay["id"], frame)
+    validate_asset_tree(scenario_root, dependency_root=scenario_root)
     return manifest

@@ -2,9 +2,13 @@ import type { FeatureCollection } from 'geojson';
 import type { Map as MapLibreMap, MapMouseEvent } from 'maplibre-gl';
 
 import { isDemoAirportIcao, type DemoAirportIcao } from '@/features/airports';
+import type { WindRenderProfile } from '@/features/performance';
 import type { RouteAnalysis } from '@/features/route';
 import type { IsobarFeatureCollection } from '@/features/weather/isobars';
-import type { Coordinate } from '@/features/weather/picker';
+import {
+  isCoordinateInsideCoverage,
+  type Coordinate,
+} from '@/features/weather/picker';
 import {
   defaultPrecipitationImageLoader,
   releasePrecipitationImage,
@@ -24,17 +28,35 @@ import {
 } from '@/features/weather/temperature';
 import type { WindFallbackEvent } from '@/features/weather/wind';
 import type {
+  CloudBaseWeatherMapFrame,
+  CloudCoverWeatherMapFrame,
   PrecipitationWeatherMapFrame,
   TemperatureWeatherMapFrame,
+  VisibilityWeatherMapFrame,
   WeatherLayerAdapter,
   WeatherLayerAdapterRegistry,
+  WindGustWeatherMapFrame,
   WindWeatherMapFrame,
 } from '@/lib/weather/viewerTypes';
 import { BASEMAP_LAYER_IDS } from '@/map/constants';
 import {
+  TouchMapCoordinator,
+  type TouchMapCoordinate,
+  type TouchMapFacade,
+  type TouchMapPoint,
+} from '@/map/interactions';
+import {
   AIRPORT_LAYER_IDS,
   createAirportLayerAdapter,
 } from '@/map/layers/airport';
+import {
+  CLOUD_BASE_RASTER_LAYER_ID,
+  createCloudBaseLayerAdapter,
+} from '@/map/layers/cloud-base';
+import {
+  CLOUD_COVER_RASTER_LAYER_ID,
+  createCloudCoverLayerAdapter,
+} from '@/map/layers/cloud-cover';
 import {
   createIsobarLayerAdapter,
 } from '@/map/layers/isobars';
@@ -50,10 +72,22 @@ import {
   createTemperatureLayerAdapter,
   TEMPERATURE_RASTER_LAYER_ID,
 } from '@/map/layers/temperature';
-import { createWindLayerAdapter } from '@/map/layers/wind';
+import {
+  createVisibilityLayerAdapter,
+  VISIBILITY_RASTER_LAYER_ID,
+} from '@/map/layers/visibility';
+import {
+  createWindLayerAdapter,
+  type WindLayerAdapterOptions,
+} from '@/map/layers/wind';
+import {
+  createWindGustLayerAdapter,
+  WIND_GUST_RASTER_LAYER_ID,
+} from '@/map/layers/wind-gusts';
 import {
   WIND_FALLBACK_LAYER_ID,
   WIND_PARTICLE_LAYER_ID,
+  type WindRendererOptions,
 } from '@/map/renderers/wind';
 
 
@@ -61,6 +95,9 @@ export interface ViewerAdapterCallbacks {
   onAirportSelect(icaoCode: string): void;
   onCoordinateSelect(coordinate: Coordinate): void;
   onWindFallback(event: WindFallbackEvent): void;
+  onWindProfileChange?(profile: Readonly<WindRenderProfile>): void;
+  onWindDocumentVisibilityChange?(visible: boolean): void;
+  onTouchFallback?(message: string): void;
 }
 
 interface AirportHitTarget {
@@ -133,6 +170,10 @@ function orderWeatherLayers(map: MapLibreMap): void {
   moveBefore(map, WIND_FALLBACK_LAYER_ID, BASEMAP_LAYER_IDS.departmentBoundaries);
   moveBefore(map, WIND_PARTICLE_LAYER_ID, BASEMAP_LAYER_IDS.departmentBoundaries);
   moveBefore(map, PRECIPITATION_RASTER_LAYER_ID, BASEMAP_LAYER_IDS.departmentBoundaries);
+  moveBefore(map, CLOUD_COVER_RASTER_LAYER_ID, BASEMAP_LAYER_IDS.departmentBoundaries);
+  moveBefore(map, CLOUD_BASE_RASTER_LAYER_ID, BASEMAP_LAYER_IDS.departmentBoundaries);
+  moveBefore(map, VISIBILITY_RASTER_LAYER_ID, BASEMAP_LAYER_IDS.departmentBoundaries);
+  moveBefore(map, WIND_GUST_RASTER_LAYER_ID, BASEMAP_LAYER_IDS.departmentBoundaries);
 }
 
 function orderAirportLayers(map: MapLibreMap): void {
@@ -170,12 +211,17 @@ export function createViewerAdapterRegistry(
   const temperatureAdapter = createTemperatureLayerAdapter(map, {
     imageLoader: temperatureImages.consume,
   });
-  const windAdapter = createWindLayerAdapter(map, {
+  const windOptions: WindLayerAdapterOptions & WindRendererOptions = {
     onFallback: (event) => {
       orderWeatherLayers(map);
       callbacks.onWindFallback(event);
     },
-  });
+    adaptiveRendering: {
+      onProfileChange: callbacks.onWindProfileChange,
+      onDocumentVisibilityChange: callbacks.onWindDocumentVisibilityChange,
+    },
+  };
+  const windAdapter = createWindLayerAdapter(map, windOptions);
   const airportAdapter = createAirportLayerAdapter(
     map,
     (icaoCode) => callbacks.onAirportSelect(icaoCode),
@@ -183,13 +229,19 @@ export function createViewerAdapterRegistry(
   const precipitationAdapter = createPrecipitationLayerAdapter(map, {
     imageLoader: precipitationImages.consume,
   });
+  const cloudCoverAdapter = createCloudCoverLayerAdapter(map);
+  const cloudBaseAdapter = createCloudBaseLayerAdapter(map);
+  const visibilityAdapter = createVisibilityLayerAdapter(map);
+  const windGustsAdapter = createWindGustLayerAdapter(map);
   const isobarAdapter = createIsobarLayerAdapter(map);
   const routeAdapter = createRouteLayerAdapter(map);
+  let touchCoordinatorAttached = false;
   const pickerAdapter = createCoordinatePickerAdapter(
     map,
     callbacks.onCoordinateSelect,
     {
       shouldHandleClick: (event: MapMouseEvent) => {
+        if (touchCoordinatorAttached) return false;
         const airportLayers = Object.values(AIRPORT_LAYER_IDS).filter(
           (layerId) => Boolean(map.getLayer(layerId)),
         );
@@ -217,6 +269,69 @@ export function createViewerAdapterRegistry(
       },
     },
   );
+  let touchCoordinator: TouchMapCoordinator | null = null;
+  const coarsePointer = (
+    typeof window !== 'undefined'
+    && typeof window.matchMedia === 'function'
+    && window.matchMedia('(pointer: coarse)').matches
+  );
+  if (coarsePointer) {
+    try {
+      const canvas = map.getCanvas();
+      const localPoint = (point: TouchMapPoint): [number, number] => {
+        const bounds = canvas.getBoundingClientRect();
+        return [point[0] - bounds.left, point[1] - bounds.top];
+      };
+      const touchFacade: TouchMapFacade = {
+        on: (type, listener) => canvas.addEventListener(type, listener, { passive: true }),
+        off: (type, listener) => canvas.removeEventListener(type, listener),
+        queryAirportAt(point) {
+          const airportLayers = Object.values(AIRPORT_LAYER_IDS).filter(
+            (layerId) => Boolean(map.getLayer(layerId)),
+          );
+          if (airportLayers.length > 0) {
+            const feature = map.queryRenderedFeatures(localPoint(point), {
+              layers: airportLayers,
+            }).find((candidate) => isDemoAirportIcao(candidate.properties?.icao_code));
+            if (feature && isDemoAirportIcao(feature.properties?.icao_code)) {
+              return feature.properties.icao_code;
+            }
+          }
+          const [x, y] = localPoint(point);
+          const fallbackTarget = airportHitTargets.find(({ coordinate }) => {
+            const projected = map.project(coordinate);
+            return Math.hypot(projected.x - x, projected.y - y) <= AIRPORT_CLICK_TOLERANCE_PX;
+          });
+          return fallbackTarget?.icaoCode ?? null;
+        },
+        unproject(point): TouchMapCoordinate {
+          const coordinate = map.unproject(localPoint(point));
+          return [coordinate.lng, coordinate.lat];
+        },
+      };
+      touchCoordinator = new TouchMapCoordinator({
+        map: touchFacade,
+        isInsideCoverage: (coordinate) => isCoordinateInsideCoverage([
+          coordinate[0],
+          coordinate[1],
+        ]),
+        onIntent(intent) {
+          if (intent.kind === 'airport' || intent.kind === 'route-airport') {
+            callbacks.onAirportSelect(intent.icaoCode);
+          } else if (intent.kind === 'coordinate') {
+            callbacks.onCoordinateSelect([intent.coordinate[0], intent.coordinate[1]]);
+          }
+        },
+        onOutsideCoverage: () => callbacks.onTouchFallback?.(
+          'El toque quedó fuera de la cobertura simulada. Use los controles del panel.',
+        ),
+      });
+    } catch {
+      callbacks.onTouchFallback?.(
+        'La interacción touch no está disponible. Use los controles del panel.',
+      );
+    }
+  }
 
   const temperature: WeatherLayerAdapter<TemperatureWeatherMapFrame> = {
     id: 'temperature',
@@ -225,6 +340,7 @@ export function createViewerAdapterRegistry(
       orderWeatherLayers(map);
     },
     prepareFrame: (frame, signal) => temperatureImages.prepare(frame.imageUrl, signal),
+    cancelPreparedFrame: () => temperatureImages.clear(),
     async setFrame(frame) {
       await temperatureAdapter.setFrame(toTemperatureFrame(frame));
       orderWeatherLayers(map);
@@ -265,6 +381,7 @@ export function createViewerAdapterRegistry(
       orderWeatherLayers(map);
     },
     prepareFrame: (frame, signal) => precipitationImages.prepare(frame.imageUrl, signal),
+    cancelPreparedFrame: () => precipitationImages.clear(),
     async setFrame(frame) {
       await precipitationAdapter.setFrame(frame);
       orderWeatherLayers(map);
@@ -278,6 +395,66 @@ export function createViewerAdapterRegistry(
       precipitationImages.clear();
       precipitationAdapter.destroy();
     },
+  };
+
+  const cloudCover: WeatherLayerAdapter<CloudCoverWeatherMapFrame> = {
+    id: 'cloud-cover',
+    async initialize() {
+      await cloudCoverAdapter.initialize();
+      orderWeatherLayers(map);
+    },
+    async setFrame(frame) {
+      await cloudCoverAdapter.setFrame(frame.frame);
+      orderWeatherLayers(map);
+    },
+    setVisible: (visible) => cloudCoverAdapter.setVisible(visible),
+    reset: () => cloudCoverAdapter.reset(),
+    destroy: () => cloudCoverAdapter.destroy(),
+  };
+
+  const cloudBase: WeatherLayerAdapter<CloudBaseWeatherMapFrame> = {
+    id: 'cloud-base',
+    async initialize() {
+      await cloudBaseAdapter.initialize();
+      orderWeatherLayers(map);
+    },
+    async setFrame(frame) {
+      await cloudBaseAdapter.setFrame(frame.frame);
+      orderWeatherLayers(map);
+    },
+    setVisible: (visible) => cloudBaseAdapter.setVisible(visible),
+    reset: () => cloudBaseAdapter.reset(),
+    destroy: () => cloudBaseAdapter.destroy(),
+  };
+
+  const visibility: WeatherLayerAdapter<VisibilityWeatherMapFrame> = {
+    id: 'visibility',
+    async initialize() {
+      await visibilityAdapter.initialize();
+      orderWeatherLayers(map);
+    },
+    async setFrame(frame) {
+      await visibilityAdapter.setFrame(frame.frame);
+      orderWeatherLayers(map);
+    },
+    setVisible: (visible) => visibilityAdapter.setVisible(visible),
+    reset: () => visibilityAdapter.reset(),
+    destroy: () => visibilityAdapter.destroy(),
+  };
+
+  const windGusts: WeatherLayerAdapter<WindGustWeatherMapFrame> = {
+    id: 'wind-gusts',
+    async initialize() {
+      await windGustsAdapter.initialize();
+      orderWeatherLayers(map);
+    },
+    async setFrame(frame) {
+      await windGustsAdapter.setFrame(frame.frame);
+      orderWeatherLayers(map);
+    },
+    setVisible: (visible) => windGustsAdapter.setVisible(visible),
+    reset: () => windGustsAdapter.reset(),
+    destroy: () => windGustsAdapter.destroy(),
   };
 
   const isobars: WeatherLayerAdapter<IsobarFeatureCollection | null> = {
@@ -344,13 +521,48 @@ export function createViewerAdapterRegistry(
     destroy: () => pickerAdapter.destroy(),
   };
 
+  const touch: WeatherLayerAdapter<null> | undefined = touchCoordinator
+    ? {
+        id: 'touch-coordinator',
+        initialize() {
+          try {
+            touchCoordinator?.attach();
+            touchCoordinatorAttached = true;
+          } catch {
+            touchCoordinatorAttached = false;
+            touchCoordinator?.destroy();
+            callbacks.onTouchFallback?.(
+              'La interacción touch no está disponible. Use los controles del panel.',
+            );
+          }
+          return Promise.resolve();
+        },
+        setRouteCapture: (active) => touchCoordinator?.setRouteCapture(active),
+        setReposition: (active) => touchCoordinator?.setReposition(active),
+        setVisible: () => undefined,
+        reset() {
+          touchCoordinator?.setRouteCapture(false);
+          touchCoordinator?.setReposition(false);
+        },
+        destroy() {
+          touchCoordinatorAttached = false;
+          touchCoordinator?.destroy();
+        },
+      }
+    : undefined;
+
   return {
     temperature,
     wind,
     precipitation,
+    cloudCover,
+    cloudBase,
+    visibility,
+    windGusts,
     isobars,
     route,
     airports,
     picker,
+    touch,
   };
 }

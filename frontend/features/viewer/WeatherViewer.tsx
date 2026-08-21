@@ -5,7 +5,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AirportPanel } from '@/components/weather/AirportPanel';
 import { AirportSearch } from '@/components/weather/AirportSearch';
 import { AirportTrend } from '@/components/weather/AirportTrend';
-import { LayerSelector } from '@/components/weather/LayerSelector';
+import { CompactLegend } from '@/components/weather/CompactLegend';
+import {
+  LayerExplorer,
+  LayerQuickRow,
+} from '@/components/weather/LayerExplorer';
+import { PointForecast } from '@/components/weather/PointForecast';
 import { PresentationMode } from '@/components/weather/PresentationMode';
 import {
   ResponsivePanelHost,
@@ -24,7 +29,6 @@ import {
   type ViewerStatusKind,
 } from '@/components/weather/ViewerStatus';
 import { WeatherLegend } from '@/components/weather/WeatherLegend';
-import { WeatherPicker } from '@/components/weather/WeatherPicker';
 import {
   WeatherViewerShell,
   type WeatherMapControllerFactory,
@@ -40,6 +44,11 @@ import {
   serializeViewerScene,
   type ViewerScene,
 } from '@/features/presentation';
+import {
+  buildLayerExplorerCatalog,
+  type LayerExplorerLayerId,
+} from '@/features/weather/layer-explorer';
+import type { PointForecastMetric } from '@/features/weather/point-forecast';
 import { PRECIPITATION_LEGEND } from '@/features/weather/precipitation';
 import { TEMPERATURE_LEGEND } from '@/features/weather/temperature';
 import { WIND_LEGEND } from '@/features/weather/wind';
@@ -50,6 +59,11 @@ import {
   ViewerOrchestrator,
   type ViewerSnapshot,
 } from './ViewerOrchestrator';
+import { ViewerProductBoundary } from './ViewerProductBoundary';
+import {
+  COARSE_TABLET_QUERY,
+  useIntegratedViewerViewport,
+} from './responsiveIntegration';
 
 
 function zuluHour(timestamp: string): string {
@@ -164,7 +178,15 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
     activePanel: null,
     snapPoint: 'closed',
   });
-  const { viewportMode, orientation } = useViewerViewport();
+  const [pointForecastMetric, setPointForecastMetric] = useState<PointForecastMetric>(
+    'temperature',
+  );
+  const classifiedViewport = useViewerViewport();
+  const [coarseTablet, setCoarseTablet] = useState(false);
+  const { viewportMode, orientation } = useIntegratedViewerViewport(
+    classifiedViewport,
+    coarseTablet,
+  );
   const viewportModeRef = useRef(viewportMode);
   const orchestratorRef = useRef<ViewerOrchestrator | null>(null);
   const responsiveSelectionRef = useRef({
@@ -173,10 +195,31 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
     route: null as string | null,
   });
   const airportTrend = useAirportWeatherSeries(snapshot.selectedAirport);
+  const layerCatalog = useMemo(() => buildLayerExplorerCatalog(
+    snapshot.catalogStatus === 'ready'
+      ? [
+          ...snapshot.catalogLayers,
+          {
+            id: 'pressure-isobars',
+            name: 'Isobaras',
+            unit: 'hPa',
+            simulated: true,
+          },
+        ]
+      : [],
+  ), [snapshot.catalogLayers, snapshot.catalogStatus]);
 
   useEffect(() => {
     viewportModeRef.current = viewportMode;
   }, [viewportMode]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(COARSE_TABLET_QUERY);
+    const updateCoarseTablet = () => setCoarseTablet(mediaQuery.matches);
+    updateCoarseTablet();
+    mediaQuery.addEventListener('change', updateCoarseTablet);
+    return () => mediaQuery.removeEventListener('change', updateCoarseTablet);
+  }, []);
 
   const openResponsivePanel = useCallback((panel: ResponsivePanelId) => {
     setResponsivePanel({ activePanel: panel, snapPoint: 'peek' });
@@ -263,6 +306,7 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
   };
   const handleReset = () => {
     closeResponsivePanel();
+    setPointForecastMetric('temperature');
     orchestrator()?.reset();
   };
   const handlePresentationMode = (active: boolean) => {
@@ -360,10 +404,16 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
   const responsiveLocationPanel = (
     <div className={styles.responsivePanelContent} data-testid="responsive-location-panel">
       {airportSearch}
-      {(snapshot.pickerLoading || snapshot.pickerResult) ? (
-        <WeatherPicker
-          result={snapshot.pickerResult}
-          loading={snapshot.pickerLoading}
+      {snapshot.selectedCoordinate ? (
+        <PointForecast
+          coordinate={snapshot.selectedCoordinate}
+          activeTimestamp={snapshot.activeTimestamp}
+          series={snapshot.pointForecastSeries}
+          activeMetric={pointForecastMetric}
+          status={snapshot.pointForecastStatus}
+          error={snapshot.pointForecastError}
+          onMetricChange={setPointForecastMetric}
+          onTimestampSelect={(timestamp) => orchestrator()?.selectTimestamp(timestamp)}
           onClose={() => {
             orchestrator()?.closePicker();
             closeResponsivePanel();
@@ -385,27 +435,54 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
 
   const layerPanel = (
     <div className={styles.layerPanel} data-testid="enriched-layer-panel">
-      <LayerSelector
-        activeLayer={snapshot.activeLayer}
-        disabled={controlsDisabled}
-        onSelect={(layer) => orchestrator()?.selectLayer(layer)}
-      />
-      <label className={styles.isobarToggle}>
-        <input
-          type="checkbox"
-          checked={snapshot.isobarsVisible}
-          disabled={controlsDisabled}
-          onChange={(event) => orchestrator()?.setIsobars(event.currentTarget.checked)}
-        />
-        <span>
-          <strong>Isobaras</strong>
-          <small>Overlay independiente · hPa</small>
-        </span>
-      </label>
+      <ViewerProductBoundary
+        key={`explorer-${snapshot.catalogStatus}-${layerCatalog.isComplete}`}
+        fallback={(
+          <LayerQuickRow
+            layers={layerCatalog.quickLayers}
+            activeLayer={snapshot.activeLayer}
+            disabled={controlsDisabled}
+            onSelectLayer={(layer) => orchestrator()?.selectLayer(layer)}
+            onOpenExplorer={() => openResponsivePanel('layers')}
+          />
+        )}
+      >
+        {layerCatalog.isComplete ? (
+          <LayerExplorer
+            layers={layerCatalog.layers}
+            activeLayer={snapshot.activeLayer}
+            isobarsVisible={snapshot.isobarsVisible}
+            disabled={controlsDisabled}
+            overlay={layerCatalog.overlay}
+            issues={layerCatalog.issues}
+            onSelectLayer={(layer: LayerExplorerLayerId) => {
+              orchestrator()?.selectLayer(layer);
+              if (viewportMode === 'phone') snapResponsivePanel('peek');
+            }}
+            onToggleIsobars={(visible) => orchestrator()?.setIsobars(visible)}
+          />
+        ) : (
+          <LayerQuickRow
+            layers={layerCatalog.quickLayers}
+            activeLayer={snapshot.activeLayer}
+            disabled={controlsDisabled}
+            onSelectLayer={(layer) => orchestrator()?.selectLayer(layer)}
+            onOpenExplorer={() => openResponsivePanel('layers')}
+          />
+        )}
+      </ViewerProductBoundary>
       {snapshot.isobarError && (
         <p className={styles.overlayWarning} role="status">{snapshot.isobarError}</p>
       )}
-      <WeatherLegend {...legend} />
+      <ViewerProductBoundary
+        key={`legend-${snapshot.activeLayer}`}
+        fallback={<WeatherLegend {...legend} />}
+      >
+        <CompactLegend
+          layers={layerCatalog.layers}
+          activeLayer={snapshot.activeLayer}
+        />
+      </ViewerProductBoundary>
       {viewportMode === 'desktop'
         && !snapshot.presentationMode
         && snapshot.airportsStatus === 'ready'
@@ -507,6 +584,8 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
       data-orientation={orientation}
       data-active-panel={responsivePanel.activePanel ?? 'none'}
       data-snap-point={responsivePanel.snapPoint}
+      data-render-profile={snapshot.renderProfile ?? 'pending'}
+      data-wind-document-visible={snapshot.windDocumentVisible ? 'true' : 'false'}
     >
       <WeatherViewerShell
         responsivePanelHost={(
@@ -522,16 +601,23 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
           />
         )}
         timeline={timeline}
+        utcLabel={zuluHour(snapshot.activeTimestamp)}
         controllerFactory={controllerFactory}
       />
 
       {viewportMode === 'desktop'
         && !snapshot.presentationMode
-        && (snapshot.pickerLoading || snapshot.pickerResult) && (
+        && snapshot.selectedCoordinate && (
         <div className={styles.pickerOverlay} data-testid="weather-picker-overlay">
-          <WeatherPicker
-            result={snapshot.pickerResult}
-            loading={snapshot.pickerLoading}
+          <PointForecast
+            coordinate={snapshot.selectedCoordinate}
+            activeTimestamp={snapshot.activeTimestamp}
+            series={snapshot.pointForecastSeries}
+            activeMetric={pointForecastMetric}
+            status={snapshot.pointForecastStatus}
+            error={snapshot.pointForecastError}
+            onMetricChange={setPointForecastMetric}
+            onTimestampSelect={(timestamp) => orchestrator()?.selectTimestamp(timestamp)}
             onClose={() => orchestrator()?.closePicker()}
             onRetry={() => orchestrator()?.retryPicker()}
           />

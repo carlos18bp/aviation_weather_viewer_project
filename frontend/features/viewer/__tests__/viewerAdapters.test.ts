@@ -85,24 +85,47 @@ describe('viewer adapter integration', () => {
     jest.mocked(createCoordinatePickerAdapter).mockReturnValue(adapterDouble() as never);
   });
 
-  it('publishes the seven adapters without representing map samples in React', () => {
+  it('publishes the complete Phase 23 registry without representing map samples in React', () => {
     const map = {} as MapLibreMap;
+    const onWindProfileChange = jest.fn();
+    const onWindDocumentVisibilityChange = jest.fn();
 
     const registry = createViewerAdapterRegistry(map, {
       onAirportSelect: jest.fn(),
       onCoordinateSelect: jest.fn(),
       onWindFallback: jest.fn(),
+      onWindProfileChange,
+      onWindDocumentVisibilityChange,
     });
 
     expect(Object.keys(registry)).toEqual([
       'temperature',
       'wind',
       'precipitation',
+      'cloudCover',
+      'cloudBase',
+      'visibility',
+      'windGusts',
       'isobars',
       'route',
       'airports',
       'picker',
+      'touch',
     ]);
+    const windOptions = jest.mocked(createWindLayerAdapter).mock.calls[0][1] as {
+      adaptiveRendering?: {
+        onProfileChange?(profile: { id: string; particleCount: number; preloadRadius: number }): void;
+        onDocumentVisibilityChange?(visible: boolean): void;
+      };
+    };
+    windOptions.adaptiveRendering?.onProfileChange?.({
+      id: 'phone',
+      particleCount: 900,
+      preloadRadius: 1,
+    });
+    windOptions.adaptiveRendering?.onDocumentVisibilityChange?.(false);
+    expect(onWindProfileChange).toHaveBeenCalledWith(expect.objectContaining({ id: 'phone' }));
+    expect(onWindDocumentVisibilityChange).toHaveBeenCalledWith(false);
   });
 
   it('suppresses the background picker when an airport owns the click', () => {

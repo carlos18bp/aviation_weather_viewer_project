@@ -1,6 +1,6 @@
 {
-  "version": "4.0.0",
-  "lastUpdated": "2026-08-20",
+  "version": "5.0.0",
+  "lastUpdated": "2026-08-21",
   "flows": {
     "viewer-demo-journey": {
       "name": "Complete base desktop weather viewer journey",
@@ -47,7 +47,7 @@
       "module": "viewer",
       "roles": ["public"],
       "priority": "P1",
-      "description": "The user copies the canonical scene URL, opens it, and restores viewport, layer, timestamp, airport, picker, route, isobars, and presentation-safe state.",
+      "description": "The user copies the canonical scene URL, opens it, and restores viewport, any of the seven layer IDs, timestamp, airport, picker, route, isobars, and presentation-safe state.",
       "outcomes": ["success", "display"]
     },
     "viewer-presentation-mode": {
@@ -63,8 +63,48 @@
       "module": "viewer",
       "roles": ["public"],
       "priority": "P1",
-      "description": "After airport, picker, route, precipitation, isobars, viewport, playback, URL, and presentation changes, reset returns once to wind 06Z and the canonical empty scene.",
+      "description": "After airport, picker, route, any primary layer, isobars, viewport, playback, URL, and presentation changes, reset returns once to wind, 06Z, camera [-73.5,4.5,4.7], no selections, no panel, and the canonical empty URL.",
       "outcomes": ["success"]
+    },
+    "viewer-layer-explorer": {
+      "name": "Discover and switch all seven primary weather layers",
+      "module": "viewer",
+      "roles": ["public"],
+      "priority": "P1",
+      "description": "The user opens the layer explorer, sees the frozen essential and aviation categories, and switches cloud cover or visibility while exactly one primary layer remains visible and isobars stay independent.",
+      "outcomes": ["success", "display"]
+    },
+    "viewer-point-forecast": {
+      "name": "Inspect the six-timestamp forecast for a touched coordinate",
+      "module": "viewer",
+      "roles": ["public"],
+      "priority": "P1",
+      "description": "A map touch opens the location panel at peek and displays six deterministic local forecast rows whose active metric and UTC remain synchronized with the committed scene.",
+      "outcomes": ["success", "display"]
+    },
+    "viewer-touch-integration": {
+      "name": "Use coarse-pointer GIS arbitration and responsive panels",
+      "module": "viewer",
+      "roles": ["public"],
+      "priority": "P1",
+      "description": "On a coarse pointer, map taps preserve airport-before-picker arbitration and open the corresponding location, route, or layers product at peek without creating another map.",
+      "outcomes": ["success", "display"]
+    },
+    "viewer-responsive-continuity": {
+      "name": "Rotate phone and tablet without recreating the map",
+      "module": "viewer",
+      "roles": ["public"],
+      "priority": "P1",
+      "description": "Portrait-to-landscape changes call resize on the existing MapLibre surface while layer, timestamp, point, airport, route, isobars, warning, panel and URL state remain coherent.",
+      "outcomes": ["success", "display"]
+    },
+    "viewer-tablet-aviation": {
+      "name": "Restore a tablet aviation scene with gusts, route and isobars",
+      "module": "viewer",
+      "roles": ["public"],
+      "priority": "P1",
+      "description": "The tablet user selects SKBO, creates SKBO to SKRG, chooses wind gusts, enables isobars, copies and restores the URL, rotates, and retains the route panel and timestamp before reset.",
+      "outcomes": ["success", "display"]
     },
     "viewer-catalog-recovery": {
       "name": "Recover from an unavailable weather catalog",
@@ -89,7 +129,7 @@
       "module": "viewer",
       "roles": ["public"],
       "priority": "P1",
-      "description": "A required main, airport, picker, or route product failure preserves the previous complete timestamp and exposes recovery.",
+      "description": "A required main, airport, picker, point-forecast, or route product failure preserves the previous complete timestamp; a failed new raster keeps the last valid raster or fallback and leaves wind and temperature reachable.",
       "expectedSpecs": 0,
       "knownGaps": ["Intentional E2E exemption: product failures, race discard, abort, preservation, and retry have directed ViewerOrchestrator coverage."]
     },
@@ -182,6 +222,42 @@
       "description": "Fullscreen denial is explained while the internal mode and its exit remain usable.",
       "expectedSpecs": 0,
       "knownGaps": ["Intentional E2E exemption: PresentationMode tests cover unavailable Fullscreen, keyboard exclusions, repeated requests, and cleanup."]
+    },
+    "viewer-point-forecast-recovery": {
+      "name": "Keep healthy point-forecast metrics when one grid fails",
+      "module": "viewer",
+      "roles": ["public"],
+      "priority": "P2",
+      "description": "A failed value grid leaves its raster visible, marks only that point value unavailable, and preserves every healthy metric and timestamp without cross-hour data.",
+      "expectedSpecs": 0,
+      "knownGaps": ["Intentional E2E exemption: point-forecast domain, service, component, and orchestrator tests cover partial grids, stale responses, abort, retry, and healthy-metric preservation."]
+    },
+    "viewer-explorer-fallback": {
+      "name": "Keep quick layer access when the explorer fails",
+      "module": "viewer",
+      "roles": ["public"],
+      "priority": "P2",
+      "description": "An explorer render or partial-catalog failure keeps the quick layer row, warning, reset, and access to wind available.",
+      "expectedSpecs": 0,
+      "knownGaps": ["Intentional E2E exemption: LayerExplorer catalog and product-boundary component tests cover incomplete entries, thrown render paths, and quick-row recovery."]
+    },
+    "viewer-touch-fallback": {
+      "name": "Retain panels and desktop click when touch coordination fails",
+      "module": "viewer",
+      "roles": ["public"],
+      "priority": "P2",
+      "description": "If coarse touch coordination cannot start, panel controls and the existing desktop click arbitration remain available without replacing MapLibre.",
+      "expectedSpecs": 0,
+      "knownGaps": ["Intentional E2E exemption: touch coordinator and Phase 23 adapter tests cover registration failure, fallback arbitration, cleanup, and one-time listener ownership."]
+    },
+    "viewer-adaptive-fallback": {
+      "name": "Use a conservative rendering profile when adaptation fails",
+      "module": "viewer",
+      "roles": ["public"],
+      "priority": "P2",
+      "description": "Adaptive rendering runs only for visible wind, degrades after sustained low FPS, pauses while the document is hidden, and falls back to a conservative profile if profiling fails.",
+      "expectedSpecs": 0,
+      "knownGaps": ["Intentional E2E exemption: adaptive controller, wind renderer, document-visibility, and orchestrator tests cover thresholds, profile fallback, pause/resume, and reverse-order destroy."]
     }
   }
 }

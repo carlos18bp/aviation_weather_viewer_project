@@ -78,9 +78,9 @@ test(
     await sceneExpect(airportPanel.locator('time')).toHaveAttribute('dateTime', '2026-01-15T06:00:00Z');
     await sceneExpect(airportPanel).toContainText('Condición para 06Z');
 
-    await page.getByRole('button', { name: /Temperatura/ }).click();
+    await page.locator('label[data-layer-id="temperature"]').click();
     await sceneExpect(viewer).toHaveAttribute('data-active-layer', 'temperature');
-    await sceneExpect(page.getByRole('region', { name: 'Leyenda de Temperatura' })).toContainText('Temperatura');
+    await sceneExpect(page.getByRole('region', { name: 'Leyenda compacta de Temperatura' })).toContainText('Temperatura');
 
     for (const timestamp of TIMESTAMPS) {
       const hour = zuluHour(timestamp);
@@ -109,9 +109,9 @@ test(
     await page.getByRole('button', { name: 'Pausar reproducción' }).click();
     await sceneExpect(page.getByRole('button', { name: 'Iniciar reproducción' })).toHaveAttribute('aria-pressed', 'false');
 
-    await page.getByRole('button', { name: /Viento/ }).click();
+    await page.locator('label[data-layer-id="wind"]').click();
     await sceneExpect(viewer).toHaveAttribute('data-active-layer', 'wind');
-    await sceneExpect(page.getByRole('region', { name: 'Leyenda de Viento' })).toContainText('Viento');
+    await sceneExpect(page.getByRole('region', { name: 'Leyenda compacta de Viento' })).toContainText('Viento');
 
     await page.getByRole('button', { name: 'Reiniciar' }).click();
     await sceneExpect(viewer).toHaveAttribute('data-active-layer', 'wind');
