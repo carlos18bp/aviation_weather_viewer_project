@@ -142,7 +142,7 @@ inválida converge a defaults seguros.
 - Catálogo/API inválido: boundary local y retry existente.
 - Warning y reset permanecen visibles bajo todos los fallos anteriores.
 
-## Evidencia automatizada previa al QA formal
+## Evidencia automatizada y QA formal
 
 Backend dirigido:
 
@@ -179,8 +179,17 @@ cubiertos, 17 exentos con tests unitarios/integration, 0 partial, 0 junk y 0
 missing en la auditoría estática completa. Un reporte de una invocación aislada
 sólo enumera los flows del spec ejecutado y no sustituye esa auditoría global.
 
-El gate formal `$qa`, quality gate, build, CI, squash y CI post-merge se agregan
-al cierre antes de declarar la fase completa.
+La skill `$qa` cerró backend, frontend-unit y E2E con veredicto aprobado. El
+quality gate estricto sobre los tres specs afectados quedó en score 100/100,
+con cero errores y cero warnings. La auditoría anti-junk revisó 14 archivos y
+123 tests: 123 `KEEP`, cero `REWRITE`, `MERGE` o `DELETE`. El único
+`negative_case_gap` del read-out es estructural: los 17 flujos negativos están
+exentos de E2E y cubiertos por unit/integration, como exige el scope; no se
+añadió cobertura duplicada. No hay tooling de mutation testing configurado.
+
+El build se ejecutó en un ciclo separado después de QA: Next.js 16 compiló,
+TypeScript quedó verde y generó las tres páginas estáticas. CI, squash y CI
+post-merge se registran después de abrir el PR.
 
 ## Estabilidad de diez minutos
 

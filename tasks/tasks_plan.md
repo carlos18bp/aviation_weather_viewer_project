@@ -134,8 +134,8 @@ Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 
 ## Roadmap móvil y capas aeronáuticas
 
-Estado: **Fases 15–22 integradas y verdes en `6626682`; wiring, matriz y soak de
-Fase 23 completos; QA formal/merge pendientes**.
+Estado: **Fases 15–22 integradas y verdes en `6626682`; wiring, matriz, soak,
+QA formal, quality gate y build de Fase 23 completos; PR/merge pendientes**.
 
 - [x] Auditar limitaciones responsive del visor actual.
 - [x] Seleccionar UX móvil propia para iOS/Android y tabletas.
@@ -153,10 +153,12 @@ Fase 23 completos; QA formal/merge pendientes**.
   y composición responsive sobre una sola instancia MapLibre.
 - [x] Cerrar atomicidad temporal, URL/reset y fallbacks sin timestamps mezclados.
 - [x] Actualizar flow map y añadir únicamente los flujos móviles C/D.
-- [ ] Ejecutar QA, quality gate, build, merge, deploy y validación del SHA final.
+- [x] Ejecutar QA, quality gate y build en ciclo separado.
+- [ ] Integrar por squash, validar CI post-merge y ejecutar localmente el SHA
+  final.
 
 Nota de ambiente: despliegue se omite por instrucción del operador; el último
-ítem cierra con QA, build, merge, CI post-merge y ejecución local del SHA.
+ítem pendiente cierra con merge, CI post-merge y ejecución local del SHA.
 
 Fuente normativa:
 `docs/MVP_roadmap/mobile_layer_enrichment/README.md`.

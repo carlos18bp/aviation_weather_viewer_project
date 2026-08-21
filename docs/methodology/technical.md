@@ -422,11 +422,17 @@ Capturas aisladas inspeccionadas: `/tmp/phase20-visibility-06Z.png`,
 - Responsive integrado corrige la clasificación de tablet coarse después de
   rotación usando dimensiones físicas; no recrea controller/MapLibre.
 
-Validación de integración previa al QA: backend dirigido verde, 260 tests
+Validación de integración: backend dirigido verde, 260 tests
 frontend en batches de máximo 20, TypeScript verde, ESLint sin errores tras
 retirar un click E2E forzado, matriz C/D Chrome+WebKit verde y recorridos desktop
 vigentes verdes. El flow map registra 30 flujos, 13 cubiertos y 17 exentos, sin
 partial/missing/junk en la auditoría estática completa.
+
+QA formal: quality gate estricto 100/100 y sin findings; auditoría de 14
+archivos/123 tests con 123 `KEEP`; matriz móvil/tableta Chrome+WebKit y journeys
+responsive/desktop verdes. No existe tooling de mutation testing configurado.
+El build posterior, ejecutado como ciclo separado, compiló con Next.js 16,
+validó TypeScript y generó tres páginas estáticas.
 
 Soak Chromium headless 360×800/DPR 1: 600,380 s, 54,54 FPS promedio, mínimo 4
 durante la carga que activa `degraded`, heap 15.678.472→52.068.940→20.157.460,

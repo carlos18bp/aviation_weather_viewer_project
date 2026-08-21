@@ -27,7 +27,7 @@ async function openReadyViewer(page: Page, size: readonly [number, number]): Pro
     { timeout: 60_000 },
   );
   await expect(viewer).toHaveAttribute('data-frame-loading', 'false');
-  await expect(page.locator('.maplibregl-canvas')).toHaveCount(1);
+  await expect(page.getByTestId('weather-map-container').locator('canvas')).toHaveCount(1);
   return viewer;
 }
 
@@ -52,7 +52,7 @@ async function selectLayer(page: Page, viewer: Locator, layer: string): Promise<
 async function rememberCanvas(page: Page): Promise<void> {
   await page.evaluate(() => {
     (window as typeof window & { __phase23Canvas?: Element | null }).__phase23Canvas = (
-      document.querySelector('.maplibregl-canvas')
+      document.querySelector('[data-testid="weather-map-container"] canvas')
     );
   });
 }
@@ -60,13 +60,14 @@ async function rememberCanvas(page: Page): Promise<void> {
 async function sameCanvas(page: Page): Promise<boolean> {
   return page.evaluate(() => (
     (window as typeof window & { __phase23Canvas?: Element | null }).__phase23Canvas
-      === document.querySelector('.maplibregl-canvas')
+      === document.querySelector('[data-testid="weather-map-container"] canvas')
   ));
 }
 
 async function tapMapBackground(page: Page): Promise<void> {
-  const box = await page.locator('.maplibregl-canvas').boundingBox();
-  if (box === null) throw new Error('The MapLibre canvas has no visible bounds.');
+  const map = page.getByTestId('weather-map-container');
+  const box = await map.boundingBox();
+  if (box === null) throw new Error('The weather map has no visible bounds.');
   await page.touchscreen.tap(box.x + box.width * 0.67, box.y + box.height * 0.33);
 }
 

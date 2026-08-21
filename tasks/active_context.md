@@ -39,11 +39,13 @@ cero requests externas y cero errores inesperados. El 503 de `cloud-base` fue
 inducido y recuperó `wind`; el reset terminó exacto.
 
 Evidencia y procedimiento físico:
-`docs/release/phase23-mobile-integration-release-handoff.md`. Próximo gate:
-ejecutar `$qa`, corregir findings, pasar quality gate, ejecutar build separado,
-abrir PR, esperar CI, integrar por squash y verificar CI/ejecución local del SHA
-integrado. Despliegue se omite por instrucción del operador. Smoke real iPhone y
-Android permanece explícitamente pendiente.
+`docs/release/phase23-mobile-integration-release-handoff.md`. `$qa` quedó
+aprobado: quality gate estricto 100/100, 123/123 tests auditados como `KEEP`,
+matriz C/D y recorridos responsive/desktop verdes. El build separado compiló y
+generó las tres páginas estáticas. Próximo gate: abrir PR, esperar CI, integrar
+por squash y verificar CI/ejecución local del SHA integrado. Despliegue se omite
+por instrucción del operador. Smoke real iPhone y Android permanece
+explícitamente pendiente.
 
 ## Base común de la Ola M2
 

@@ -22,7 +22,7 @@ async function openReadyViewer(
   );
   await expect(viewer).toHaveAttribute('data-active-layer', 'wind');
   await expect(viewer).toHaveAttribute('data-frame-loading', 'false');
-  await expect(page.locator('.maplibregl-canvas')).toHaveCount(1);
+  await expect(page.getByTestId('weather-map-container').locator('canvas')).toHaveCount(1);
   return viewer;
 }
 
@@ -50,8 +50,8 @@ async function rememberMapIdentity(page: Page): Promise<void> {
       __phase15Context?: RenderingContext | null;
       __phase15MapRoot?: Element;
     };
-    const canvas = document.querySelector<HTMLCanvasElement>('.maplibregl-canvas');
-    const mapRoot = document.querySelector('.maplibregl-map');
+    const mapRoot = document.querySelector('[data-testid="weather-map-container"]');
+    const canvas = mapRoot?.querySelector<HTMLCanvasElement>('canvas');
     if (!canvas || !mapRoot) throw new Error('MapLibre did not create its map surface.');
     phaseWindow.__phase15Canvas = canvas;
     phaseWindow.__phase15Context = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
@@ -66,12 +66,12 @@ async function expectStableMapIdentity(page: Page): Promise<void> {
       __phase15Context?: RenderingContext | null;
       __phase15MapRoot?: Element;
     };
-    const canvas = document.querySelector<HTMLCanvasElement>('.maplibregl-canvas');
-    const mapRoot = document.querySelector('.maplibregl-map');
+    const mapRoot = document.querySelector('[data-testid="weather-map-container"]');
+    const canvas = mapRoot?.querySelector<HTMLCanvasElement>('canvas');
     const context = canvas?.getContext('webgl2') ?? canvas?.getContext('webgl');
     return {
-      canvasCount: document.querySelectorAll('.maplibregl-canvas').length,
-      mapCount: document.querySelectorAll('.maplibregl-map').length,
+      canvasCount: mapRoot?.querySelectorAll('canvas').length ?? 0,
+      mapCount: document.querySelectorAll('[data-testid="weather-map-container"]').length,
       sameCanvas: canvas === phaseWindow.__phase15Canvas,
       sameContext: context === phaseWindow.__phase15Context,
       sameMapRoot: mapRoot === phaseWindow.__phase15MapRoot,
@@ -153,6 +153,8 @@ async function expectTouchTargets(page: Page): Promise<void> {
   expect(violations).toEqual([]);
 }
 
+// quality: allow-too-many-assertions (un único journey de continuidad responsive conserva panel, mapa y warning entre orientaciones)
+// quality: allow-test-too-long (un único journey de continuidad responsive debe cruzar phone portrait y landscape sin fragmentar el flujo)
 test(
   'phone portrait and landscape keep the Phase 14 journey touch-accessible without recreating MapLibre @flow:viewer-airport-intelligence @flow:viewer-weather-picker @flow:viewer-route-story @flow:viewer-atmospheric-layers @flow:viewer-scene-sharing @flow:viewer-presentation-mode @flow:viewer-enriched-reset @outcome:success @outcome:display',
   {
@@ -260,6 +262,7 @@ test(
   },
 );
 
+// quality: allow-too-many-assertions (un único journey de continuidad responsive conserva geometría tablet y desktop sobre la misma superficie)
 test(
   'tablet layouts preserve the 320px panel and become desktop with the same MapLibre surface @flow:viewer-demo-journey @outcome:success @outcome:display',
   { tag: ['@flow:viewer-demo-journey', '@outcome:success', '@outcome:display'] },

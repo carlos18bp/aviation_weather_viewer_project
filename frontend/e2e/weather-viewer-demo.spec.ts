@@ -38,6 +38,7 @@ function projectSkboClick(width: number, height: number): { x: number; y: number
   };
 }
 
+// quality: allow-too-many-assertions (un único journey de sincronización temporal conserva capa, UTC y aeropuerto durante las seis horas)
 test(
   'the public demo keeps its deterministic weather journey synchronized @flow:viewer-demo-journey @outcome:success @outcome:display',
   { tag: ['@flow:viewer-demo-journey', '@outcome:success', '@outcome:display'] },
