@@ -18,6 +18,10 @@ const SCENE_LAYERS = new Set<SceneWeatherLayerId>([
   'wind',
   'temperature',
   'precipitation',
+  'cloud-cover',
+  'cloud-base',
+  'visibility',
+  'wind-gusts',
 ]);
 const TIMESTAMP_BY_QUERY = new Map<string, DemoTimestamp>([
   ['00Z', '2026-01-15T00:00:00Z'],

@@ -26,6 +26,7 @@ type ControllerLifecycle = 'idle' | 'initializing' | 'ready' | 'failed' | 'destr
 export interface WeatherMapLifecycleCallbacks {
   onReady?(): void;
   onError?(error: Error): void;
+  onTouchFallback?(message: string): void;
 }
 
 export interface WeatherMapInteractionCallbacks {
@@ -124,6 +125,10 @@ export class DefaultWeatherMapController implements WeatherMapController {
     this.adapters.temperature?.setVisible(layerId === 'temperature');
     this.adapters.wind?.setVisible(layerId === 'wind');
     this.adapters.precipitation?.setVisible(layerId === 'precipitation');
+    this.adapters.cloudCover?.setVisible(layerId === 'cloud-cover');
+    this.adapters.cloudBase?.setVisible(layerId === 'cloud-base');
+    this.adapters.visibility?.setVisible(layerId === 'visibility');
+    this.adapters.windGusts?.setVisible(layerId === 'wind-gusts');
   }
 
   async prepareWeatherFrame(frame: WeatherMapFrame, signal: AbortSignal): Promise<void> {
@@ -133,6 +138,22 @@ export class DefaultWeatherMapController implements WeatherMapController {
     }
     if (frame.layer === 'precipitation') {
       await this.adapters.precipitation?.prepareFrame?.(frame, signal);
+      return;
+    }
+    if (frame.layer === 'cloud-cover') {
+      await this.adapters.cloudCover?.prepareFrame?.(frame, signal);
+      return;
+    }
+    if (frame.layer === 'cloud-base') {
+      await this.adapters.cloudBase?.prepareFrame?.(frame, signal);
+      return;
+    }
+    if (frame.layer === 'visibility') {
+      await this.adapters.visibility?.prepareFrame?.(frame, signal);
+      return;
+    }
+    if (frame.layer === 'wind-gusts') {
+      await this.adapters.windGusts?.prepareFrame?.(frame, signal);
       return;
     }
     await this.adapters.wind?.prepareFrame?.(frame, signal);
@@ -148,13 +169,32 @@ export class DefaultWeatherMapController implements WeatherMapController {
       await this.adapters.precipitation?.setFrame?.(frame);
       return;
     }
-
+    if (frame.layer === 'cloud-cover') {
+      await this.adapters.cloudCover?.setFrame?.(frame);
+      return;
+    }
+    if (frame.layer === 'cloud-base') {
+      await this.adapters.cloudBase?.setFrame?.(frame);
+      return;
+    }
+    if (frame.layer === 'visibility') {
+      await this.adapters.visibility?.setFrame?.(frame);
+      return;
+    }
+    if (frame.layer === 'wind-gusts') {
+      await this.adapters.windGusts?.setFrame?.(frame);
+      return;
+    }
     await this.adapters.wind?.setFrame?.(frame);
   }
 
   cancelPendingWeatherFrame(): void {
-    this.adapters.temperature?.reset();
-    this.adapters.precipitation?.reset();
+    this.adapters.temperature?.cancelPreparedFrame?.();
+    this.adapters.precipitation?.cancelPreparedFrame?.();
+    this.adapters.cloudCover?.cancelPreparedFrame?.();
+    this.adapters.cloudBase?.cancelPreparedFrame?.();
+    this.adapters.visibility?.cancelPreparedFrame?.();
+    this.adapters.windGusts?.cancelPreparedFrame?.();
   }
 
   setAirports(collection: FeatureCollection): void {
@@ -195,6 +235,14 @@ export class DefaultWeatherMapController implements WeatherMapController {
 
   setIsobarsVisible(visible: boolean): void {
     this.adapters.isobars?.setVisible(visible);
+  }
+
+  setTouchRouteCapture(active: boolean): void {
+    this.adapters.touch?.setRouteCapture?.(active);
+  }
+
+  setTouchReposition(active: boolean): void {
+    this.adapters.touch?.setReposition?.(active);
   }
 
   setViewport(viewport: MapViewport): void {
@@ -368,10 +416,15 @@ export class DefaultWeatherMapController implements WeatherMapController {
       this.adapters.wind,
       this.adapters.temperature,
       this.adapters.precipitation,
+      this.adapters.cloudCover,
+      this.adapters.cloudBase,
+      this.adapters.visibility,
+      this.adapters.windGusts,
       this.adapters.isobars,
       this.adapters.route,
       this.adapters.airports,
       this.adapters.picker,
+      this.adapters.touch,
     ].filter((adapter) => adapter !== undefined);
   }
 
@@ -380,10 +433,15 @@ export class DefaultWeatherMapController implements WeatherMapController {
       ['temperature', this.adapters.temperature],
       ['wind', this.adapters.wind],
       ['precipitation', this.adapters.precipitation],
+      ['cloud-cover', this.adapters.cloudCover],
+      ['cloud-base', this.adapters.cloudBase],
+      ['visibility', this.adapters.visibility],
+      ['wind-gusts', this.adapters.windGusts],
       ['pressure-isobars', this.adapters.isobars],
       ['route', this.adapters.route],
       ['airports', this.adapters.airports],
       ['picker', this.adapters.picker],
+      ['touch-coordinator', this.adapters.touch],
     ] as const;
 
     for (const [expectedId, adapter] of expectedIds) {

@@ -22,7 +22,7 @@ async function openReadyViewer(
   );
   await expect(viewer).toHaveAttribute('data-active-layer', 'wind');
   await expect(viewer).toHaveAttribute('data-frame-loading', 'false');
-  await expect(page.locator('.maplibregl-canvas')).toHaveCount(1);
+  await expect(page.getByTestId('weather-map-container').locator('canvas')).toHaveCount(1);
   return viewer;
 }
 
@@ -50,8 +50,8 @@ async function rememberMapIdentity(page: Page): Promise<void> {
       __phase15Context?: RenderingContext | null;
       __phase15MapRoot?: Element;
     };
-    const canvas = document.querySelector<HTMLCanvasElement>('.maplibregl-canvas');
-    const mapRoot = document.querySelector('.maplibregl-map');
+    const mapRoot = document.querySelector('[data-testid="weather-map-container"]');
+    const canvas = mapRoot?.querySelector<HTMLCanvasElement>('canvas');
     if (!canvas || !mapRoot) throw new Error('MapLibre did not create its map surface.');
     phaseWindow.__phase15Canvas = canvas;
     phaseWindow.__phase15Context = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
@@ -66,12 +66,12 @@ async function expectStableMapIdentity(page: Page): Promise<void> {
       __phase15Context?: RenderingContext | null;
       __phase15MapRoot?: Element;
     };
-    const canvas = document.querySelector<HTMLCanvasElement>('.maplibregl-canvas');
-    const mapRoot = document.querySelector('.maplibregl-map');
+    const mapRoot = document.querySelector('[data-testid="weather-map-container"]');
+    const canvas = mapRoot?.querySelector<HTMLCanvasElement>('canvas');
     const context = canvas?.getContext('webgl2') ?? canvas?.getContext('webgl');
     return {
-      canvasCount: document.querySelectorAll('.maplibregl-canvas').length,
-      mapCount: document.querySelectorAll('.maplibregl-map').length,
+      canvasCount: mapRoot?.querySelectorAll('canvas').length ?? 0,
+      mapCount: document.querySelectorAll('[data-testid="weather-map-container"]').length,
       sameCanvas: canvas === phaseWindow.__phase15Canvas,
       sameContext: context === phaseWindow.__phase15Context,
       sameMapRoot: mapRoot === phaseWindow.__phase15MapRoot,
@@ -133,7 +133,7 @@ async function clickMapBackground(page: Page): Promise<void> {
 async function expectTouchTargets(page: Page): Promise<void> {
   const violations = await page.locator(VIEWER).evaluate((root) => {
     const controls = root.querySelectorAll<HTMLElement>(
-      'button, summary, input:not([type="checkbox"]), label:has(input[type="checkbox"])',
+      'button, summary, label:has(input[type="checkbox"]), label:has(input[type="radio"])',
     );
     return [...controls].flatMap((control) => {
       const bounds = control.getBoundingClientRect();
@@ -153,6 +153,8 @@ async function expectTouchTargets(page: Page): Promise<void> {
   expect(violations).toEqual([]);
 }
 
+// quality: allow-too-many-assertions (un único journey de continuidad responsive conserva panel, mapa y warning entre orientaciones)
+// quality: allow-test-too-long (un único journey de continuidad responsive debe cruzar phone portrait y landscape sin fragmentar el flujo)
 test(
   'phone portrait and landscape keep the Phase 14 journey touch-accessible without recreating MapLibre @flow:viewer-airport-intelligence @flow:viewer-weather-picker @flow:viewer-route-story @flow:viewer-atmospheric-layers @flow:viewer-scene-sharing @flow:viewer-presentation-mode @flow:viewer-enriched-reset @outcome:success @outcome:display',
   {
@@ -185,12 +187,11 @@ test(
     await expect(viewer).toHaveAttribute('data-snap-point', 'full');
     await expect(page.getByRole('heading', { name: 'Capas y leyenda' })).toBeFocused();
     await expectTouchTargets(page);
-    await page.getByRole('button', { name: /Precipitación/ }).click();
-    await page.getByLabel('Isobaras').check();
+    await page.locator('label[data-layer-id="precipitation"]').click();
+    await page.locator('label').filter({ hasText: 'Isobaras' }).click();
     await expect(viewer).toHaveAttribute('data-active-layer', 'precipitation');
     await expect(viewer).toHaveAttribute('data-isobars-visible', 'true');
-    await page.getByRole('button', { name: 'Contraer panel' }).click();
-    await expect(viewer).toHaveAttribute('data-snap-point', 'half');
+    await expect(viewer).toHaveAttribute('data-snap-point', 'peek');
     await page.keyboard.press('Escape');
     await expect(sheet).toHaveCount(0);
     await expect(viewer).toHaveAttribute('data-active-panel', 'none');
@@ -216,7 +217,7 @@ test(
     await clickMapBackground(page);
     await expect(viewer).toHaveAttribute('data-active-panel', 'location');
     await expect(viewer).toHaveAttribute('data-picker-active', 'true');
-    await expect(page.getByRole('heading', { name: 'Punto meteorológico' })).toBeAttached();
+    await expect(page.getByRole('heading', { name: 'Evolución meteorológica del punto' })).toBeAttached();
     await expect(page.getByTestId('responsive-location-panel')).toContainText('°C');
     await expect(page.getByTestId('responsive-location-panel')).toContainText('kt');
 
@@ -261,6 +262,7 @@ test(
   },
 );
 
+// quality: allow-too-many-assertions (un único journey de continuidad responsive conserva geometría tablet y desktop sobre la misma superficie)
 test(
   'tablet layouts preserve the 320px panel and become desktop with the same MapLibre surface @flow:viewer-demo-journey @outcome:success @outcome:display',
   { tag: ['@flow:viewer-demo-journey', '@outcome:success', '@outcome:display'] },
@@ -272,7 +274,7 @@ test(
     await rememberMapIdentity(page);
 
     let panel = await openPanel(page, viewer, 'Capas', 'layers');
-    await expect(page.getByRole('region', { name: 'Leyenda de Viento' })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Leyenda compacta de Viento' })).toBeVisible();
     let panelBox = await panel.boundingBox();
     expect(panelBox).not.toBeNull();
     expect(panelBox!.width).toBe(320);
@@ -280,7 +282,9 @@ test(
     await page.screenshot({ path: 'test-results/phase15-768x1024.png' });
 
     await openPanel(page, viewer, 'Lugar', 'location');
-    await expect(page.getByLabel('Buscar aeropuerto')).toBeVisible();
+    await expect(page.getByLabel('Buscar aeropuerto')).toBeVisible({
+      timeout: MAP_BOOTSTRAP_TIMEOUT_MS,
+    });
     await openPanel(page, viewer, 'Ruta', 'route');
     await expect(page.getByRole('region', { name: 'Historia aeronáutica' })).toBeVisible();
     await openPanel(page, viewer, 'Más', 'more');

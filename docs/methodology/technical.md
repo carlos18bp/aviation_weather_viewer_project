@@ -396,3 +396,51 @@ coherentes sin aplicar corrección.
 Capturas aisladas inspeccionadas: `/tmp/phase20-visibility-06Z.png`,
 `/tmp/phase20-visibility-09Z.png`, `/tmp/phase20-wind-gusts-06Z.png` y
 `/tmp/phase20-wind-gusts-09Z.png`.
+
+## Contrato técnico — Fase 23
+
+- Base de integración: `662668292acc3236270c4633f069102d5a9c1d9c`.
+- Manifest: schema 3, siete layers, 42 frames principales, un overlay con seis
+  frames y seis timestamps exactos.
+- Assets nuevos: 48 archivos, 3.360.836 bytes y hashes SHA-256 congelados en
+  `MOBILE_LAYER_ASSET_SHA256`. El command `--check` valida bytes, dimensión,
+  schema, rangos, timestamps y coherencia gust-viento.
+- API: layer/timestamp inválido 400; traversal, missing, hash distinto o asset
+  corrupto 503 `asset_unavailable`; URLs sólo same-origin.
+- `WeatherLayerId` contiene siete literales. Parser rechaza catálogo parcial,
+  duplicados, flags falsos, reglas de grid inválidas y descriptor cruzado.
+- El frame service separa raster obligatorio de grid parcial y combina los
+  services públicos de Fases 19/20 sin duplicarlos.
+- El scene codec serializa los siete IDs y canonicaliza desconocidos a `wind`.
+  Panel, orientación y `WindRenderProfileId` no pertenecen a la escena.
+- Registry: adapters de cloud cover/base/visibility/gust se instancian una vez;
+  wind recibe callbacks adaptativos mediante su opción pública de renderer.
+- Orquestador: transición versionada, abortable y atómica; mantiene el último
+  frame confirmado ante falla y nunca publica datos de otra hora.
+- Reset: aborta transición/precargas, pausa playback, limpia derivados, resetea
+  adapters/cámara y carga `wind/06Z` con URL canónica.
+- Responsive integrado corrige la clasificación de tablet coarse después de
+  rotación usando dimensiones físicas; no recrea controller/MapLibre.
+
+Validación de integración: backend dirigido verde, 260 tests
+frontend en batches de máximo 20, TypeScript verde, ESLint sin errores tras
+retirar un click E2E forzado, matriz C/D Chrome+WebKit verde y recorridos desktop
+vigentes verdes. El flow map registra 30 flujos, 13 cubiertos y 17 exentos, sin
+partial/missing/junk en la auditoría estática completa.
+
+QA formal: quality gate estricto 100/100 y sin findings; auditoría de 14
+archivos/123 tests con 123 `KEEP`; matriz móvil/tableta Chrome+WebKit y journeys
+responsive/desktop verdes. No existe tooling de mutation testing configurado.
+El build posterior, ejecutado como ciclo separado, compiló con Next.js 16,
+validó TypeScript y generó tres páginas estáticas.
+
+Soak Chromium headless 360×800/DPR 1: 600,380 s, 54,54 FPS promedio, mínimo 4
+durante la carga que activa `degraded`, heap 15.678.472→52.068.940→20.157.460,
+listeners 689→1.283→693, cuatro object URLs estables, una canvas, cero crashes,
+cero page errors y cero requests externas. El único 503/console error fue
+inducido para validar fallback. Evidencia en
+`docs/release/phase23-stability-chromium.json`.
+
+El despliegue no forma parte de esta ejecución por instrucción del operador. La
+validación física de iPhone/Safari y Android/Chrome queda pendiente y no puede
+ser sustituida por Playwright WebKit.

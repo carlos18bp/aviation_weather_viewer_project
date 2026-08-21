@@ -134,8 +134,8 @@ Fuente normativa: `docs/MVP_roadmap/demo_enrichment/README.md`.
 
 ## Roadmap móvil y capas aeronáuticas
 
-Estado: **Ola M1 integrada y verde en `8180ff0`; Ola M2 abierta. Fase 20
-implementada en rama de sesión y pendiente de integración**.
+Estado: **Fases 15–22 integradas y verdes en `6626682`; wiring, matriz, soak,
+QA formal, quality gate y build de Fase 23 completos; PR/merge pendientes**.
 
 - [x] Auditar limitaciones responsive del visor actual.
 - [x] Seleccionar UX móvil propia para iOS/Android y tabletas.
@@ -147,7 +147,18 @@ implementada en rama de sesión y pendiente de integración**.
 - [x] Integrar Fases 12–14 del roadmap anterior.
 - [x] Abrir e integrar Ola M1: Fases 15–18.
 - [x] Abrir Ola M2: Fases 19–22.
-- [ ] Ejecutar Fase 23 de integración, QA y release móvil.
+- [x] Publicar schema 3 con siete capas, 42 frames principales, overlay y los
+  48 assets aeronáuticos validados.
+- [x] Conectar services/adapters, touch, rendimiento, point forecast, explorer
+  y composición responsive sobre una sola instancia MapLibre.
+- [x] Cerrar atomicidad temporal, URL/reset y fallbacks sin timestamps mezclados.
+- [x] Actualizar flow map y añadir únicamente los flujos móviles C/D.
+- [x] Ejecutar QA, quality gate y build en ciclo separado.
+- [ ] Integrar por squash, validar CI post-merge y ejecutar localmente el SHA
+  final.
+
+Nota de ambiente: despliegue se omite por instrucción del operador; el último
+ítem pendiente cierra con merge, CI post-merge y ejecución local del SHA.
 
 Fuente normativa:
 `docs/MVP_roadmap/mobile_layer_enrichment/README.md`.

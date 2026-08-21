@@ -13,7 +13,15 @@ describe('parseViewerScene core parameters', () => {
     expect(scene.viewport).not.toBe(DEFAULT_VIEWER_SCENE.viewport);
   });
 
-  it.each(['wind', 'temperature', 'precipitation'] as const)(
+  it.each([
+    'wind',
+    'temperature',
+    'precipitation',
+    'cloud-cover',
+    'cloud-base',
+    'visibility',
+    'wind-gusts',
+  ] as const)(
     'accepts final layer value %s without activating it',
     (layer) => {
       expect(parseViewerScene(`?layer=${layer}`).layer).toBe(layer);

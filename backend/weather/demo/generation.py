@@ -12,6 +12,7 @@ from PIL import Image
 
 from weather.demo.constants import (
     AIRPORT_WEATHER_FILENAME,
+    AVIATION_LAYER_IDS,
     BBOX,
     LAYER_DEFINITIONS,
     MANIFEST_SCHEMA_VERSION,
@@ -36,6 +37,7 @@ from weather.demo.constants import (
     TEMPERATURE_VALUE_WIDTH,
     TIMESTAMP_LABELS,
     TIMESTAMPS,
+    VALUE_DATA_LAYER_IDS,
     WIND_HEIGHT,
     WIND_WIDTH,
 )
@@ -584,40 +586,25 @@ def _wind_payload(timestamp: str, *, frame_index: int) -> dict:
 
 def _manifest_payload() -> dict:
     frames = []
+    layer_lookup = {layer["id"]: layer for layer in LAYER_DEFINITIONS}
     for timestamp in TIMESTAMPS:
         label = TIMESTAMP_LABELS[timestamp]
-        frames.extend(
-            (
-                {
-                    "layer": "temperature",
-                    "timestamp": timestamp,
-                    "data_path": (
-                        f"demo-weather/{SCENARIO_CODE}/temperature/{label}.webp"
-                    ),
-                    "value_data_path": (
-                        f"demo-weather/{SCENARIO_CODE}/temperature-values/{label}.json"
-                    ),
-                    "minimum": 0,
-                    "maximum": 38,
-                },
-                {
-                    "layer": "wind",
-                    "timestamp": timestamp,
-                    "data_path": f"demo-weather/{SCENARIO_CODE}/wind/{label}.json",
-                    "minimum": 0,
-                    "maximum": 60,
-                },
-                {
-                    "layer": "precipitation",
-                    "timestamp": timestamp,
-                    "data_path": (
-                        f"demo-weather/{SCENARIO_CODE}/precipitation/{label}.webp"
-                    ),
-                    "minimum": 0,
-                    "maximum": 40,
-                },
-            )
-        )
+        for layer_id in (layer["id"] for layer in LAYER_DEFINITIONS):
+            suffix = "json" if layer_id == "wind" else "webp"
+            frame = {
+                "layer": layer_id,
+                "timestamp": timestamp,
+                "data_path": (
+                    f"demo-weather/{SCENARIO_CODE}/{layer_id}/{label}.{suffix}"
+                ),
+                "minimum": layer_lookup[layer_id]["minimum"],
+                "maximum": layer_lookup[layer_id]["maximum"],
+            }
+            if layer_id in VALUE_DATA_LAYER_IDS:
+                frame["value_data_path"] = (
+                    f"demo-weather/{SCENARIO_CODE}/{layer_id}-values/{label}.json"
+                )
+            frames.append(frame)
 
     overlays = [
         {
@@ -655,6 +642,8 @@ def _manifest_payload() -> dict:
 
 def generate_scenario(output_dir: Path, *, airport_weather_source: Path) -> None:
     """Generate and validate one complete scenario in an empty directory."""
+    from weather.demo.mobile_layers.generation import generate_asset_tree
+
     if output_dir.exists() and any(output_dir.iterdir()):
         raise DemoAssetError("The generation output directory must be empty.")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -702,6 +691,13 @@ def generate_scenario(output_dir: Path, *, airport_weather_source: Path) -> None
             _pressure_isobars_payload(timestamp, frame_index=frame_index),
             compact=True,
         )
+
+    aviation_root = output_dir / ".aviation-layer-staging"
+    generate_asset_tree(aviation_root, dependency_root=output_dir)
+    for layer_id in AVIATION_LAYER_IDS:
+        for directory in (layer_id, f"{layer_id}-values"):
+            (aviation_root / directory).rename(output_dir / directory)
+    aviation_root.rmdir()
 
     _write_json(output_dir / MANIFEST_FILENAME, _manifest_payload())
     validate_scenario(output_dir)

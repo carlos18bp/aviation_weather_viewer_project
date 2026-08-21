@@ -18,7 +18,12 @@ import {
   WeatherPickerDataService,
   type WeatherPickerData,
 } from '@/features/weather/picker';
+import type { PointForecastSeriesLoader } from '@/features/weather/point-forecast';
 import type { WindFallbackEvent } from '@/features/weather/wind';
+import type {
+  WeatherCatalog,
+  WeatherFrameService,
+} from '@/lib/services/weatherService';
 import { useWeatherViewerStore } from '@/lib/stores/weatherViewerStore';
 import type {
   WeatherLayerId,
@@ -66,6 +71,7 @@ function deferred<T>(): Deferred<T> {
 }
 
 const CATALOG = {
+  schemaVersion: 3,
   scenario: {
     code: 'demo-colombia-001',
     name: 'Demo Colombia',
@@ -74,20 +80,27 @@ const CATALOG = {
     operationalUse: false,
   },
   layers: [
-    { id: 'temperature', name: 'Temperatura', kind: 'scalar', unit: '°C', minimum: 0, maximum: 38 },
-    { id: 'wind', name: 'Viento', kind: 'vector', unit: 'kt', minimum: 0, maximum: 60 },
+    { id: 'temperature', name: 'Temperatura', category: 'essential', kind: 'scalar', unit: '°C', minimum: 0, maximum: 38, supportsPointValue: true, simulated: true },
+    { id: 'wind', name: 'Viento', category: 'essential', kind: 'vector', unit: 'kt', minimum: 0, maximum: 60, supportsPointValue: true, simulated: true },
     {
       id: 'precipitation',
       name: 'Precipitación simulada',
+      category: 'essential',
       kind: 'scalar',
       unit: 'mm/h',
       minimum: 0,
       maximum: 40,
+      supportsPointValue: false,
+      simulated: true,
     },
+    { id: 'cloud-cover', name: 'Nubosidad simulada', category: 'aviation', kind: 'scalar', unit: '%', minimum: 0, maximum: 100, supportsPointValue: true, simulated: true },
+    { id: 'cloud-base', name: 'Base de nubes simulada', category: 'aviation', kind: 'scalar', unit: 'ft AGL', minimum: 300, maximum: 15000, supportsPointValue: true, simulated: true },
+    { id: 'visibility', name: 'Visibilidad simulada', category: 'aviation', kind: 'scalar', unit: 'km', minimum: 1, maximum: 20, supportsPointValue: true, simulated: true },
+    { id: 'wind-gusts', name: 'Ráfagas simuladas', category: 'aviation', kind: 'scalar', unit: 'kt', minimum: 0, maximum: 80, supportsPointValue: true, simulated: true },
   ],
   isobarFrames: DEMO_TIMESTAMPS.map(expectedIsobarFrame),
   timestamps: DEMO_TIMESTAMPS,
-} as const;
+} as const satisfies WeatherCatalog;
 
 const AIRPORTS = {
   type: 'FeatureCollection',
@@ -196,6 +209,38 @@ function pickerServiceDouble() {
   } as unknown as WeatherPickerDataService;
 }
 
+function pointForecastLoaderDouble() {
+  return {
+    loadCommittedCoordinate: jest.fn(async (coordinate: readonly [number, number]) => ({
+      status: 'partial' as const,
+      series: {
+        coordinate: [coordinate[0], coordinate[1]],
+        points: DEMO_TIMESTAMPS.map((timestamp) => ({
+          coordinate: [coordinate[0], coordinate[1]],
+          timestamp,
+          temperatureC: 18,
+          windSpeedKt: 7,
+          windDirectionDeg: 90,
+          cloudCoverPct: null,
+          cloudBaseFtAgl: null,
+          visibilityKm: null,
+          windGustKt: null,
+          isSimulated: true as const,
+          operationalUse: false as const,
+        })),
+        unavailableMetrics: [
+          'cloud-cover',
+          'cloud-base',
+          'visibility',
+          'wind-gusts',
+        ] as const,
+      },
+    })),
+    close: jest.fn(),
+    destroy: jest.fn(),
+  } as unknown as PointForecastSeriesLoader;
+}
+
 function frameFor(layer: WeatherLayerId, timestamp: string): WeatherMapFrame {
   if (layer === 'temperature') {
     return {
@@ -216,6 +261,16 @@ function frameFor(layer: WeatherLayerId, timestamp: string): WeatherMapFrame {
       isSimulated: true,
       operationalUse: false,
     };
+  }
+  if (layer !== 'wind') {
+    return {
+      layer,
+      timestamp,
+      frame: {
+        descriptor: { layer, timestamp },
+        objectUrl: `blob:${layer}:${timestamp}`,
+      },
+    } as WeatherMapFrame;
   }
   return {
     layer,
@@ -303,6 +358,12 @@ function createHarness(
     fetchIsobarCollection: jest.fn().mockResolvedValue(EMPTY_ISOBARS),
     analyzeRoute: jest.fn(({ timestamp }) => routeAnalysis(timestamp)),
     createPickerDataService: pickerServiceDouble,
+    createFrameService: jest.fn(() => ({
+      load: jest.fn(),
+      retain: jest.fn(),
+      destroy: jest.fn(),
+    } as unknown as WeatherFrameService)),
+    createPointForecastLoader: pointForecastLoaderDouble,
     createController: jest.fn((options) => {
       controllerOptions = options;
       options.adapterFactory?.({} as MapLibreMap, options.callbacks ?? {});
@@ -369,6 +430,10 @@ describe('ViewerOrchestrator', () => {
       activeLayer: 'wind',
       activeTimestamp: DEFAULT_VIEWER_TIMESTAMP,
       availableTimestamps: DEMO_TIMESTAMPS,
+      catalogLayers: expect.arrayContaining([
+        expect.objectContaining({ id: 'cloud-cover' }),
+        expect.objectContaining({ id: 'wind-gusts' }),
+      ]),
       catalogStatus: 'ready',
       airportsStatus: 'ready',
       isFrameLoading: false,
@@ -402,28 +467,28 @@ describe('ViewerOrchestrator', () => {
     );
   });
 
-  it('keeps the previous layer and UTC visible until the new frame commits', async () => {
-    const temperatureRequest = deferred<WeatherMapFrame>();
+  it('keeps the previous layer and UTC visible until a new aviation frame commits', async () => {
+    const aviationRequest = deferred<WeatherMapFrame>();
     const fetchFrame = jest.fn(async (layer: WeatherLayerId, timestamp: string) => {
-      if (layer === 'temperature') {
-        return temperatureRequest.promise;
+      if (layer === 'cloud-cover') {
+        return aviationRequest.promise;
       }
       return frameFor(layer, timestamp);
     });
     const harness = createHarness({ fetchFrame });
     await harness.orchestrator.initialize();
 
-    harness.orchestrator.selectLayer('temperature');
+    harness.orchestrator.selectLayer('cloud-cover');
 
     expect(harness.orchestrator.getSnapshot()).toMatchObject({
       activeLayer: 'wind',
       activeTimestamp: DEFAULT_VIEWER_TIMESTAMP,
       isFrameLoading: true,
     });
-    temperatureRequest.resolve(frameFor('temperature', DEFAULT_VIEWER_TIMESTAMP));
-    await waitFor(() => expect(harness.orchestrator.getSnapshot().activeLayer).toBe('temperature'));
+    aviationRequest.resolve(frameFor('cloud-cover', DEFAULT_VIEWER_TIMESTAMP));
+    await waitFor(() => expect(harness.orchestrator.getSnapshot().activeLayer).toBe('cloud-cover'));
     expect(useWeatherViewerStore.getState()).toMatchObject({
-      activeLayer: 'temperature',
+      activeLayer: 'cloud-cover',
       activeTimestamp: DEFAULT_VIEWER_TIMESTAMP,
       isFrameLoading: false,
     });
@@ -537,9 +602,17 @@ describe('ViewerOrchestrator', () => {
     };
 
     mockAdapterCallbacks?.onWindFallback(event);
+    mockAdapterCallbacks?.onWindProfileChange?.({
+      id: 'degraded',
+      particleCount: 540,
+      preloadRadius: 0,
+    });
+    mockAdapterCallbacks?.onWindDocumentVisibilityChange?.(false);
 
     expect(harness.orchestrator.getSnapshot()).toMatchObject({
       fallbackMessage: event.message,
+      renderProfile: 'degraded',
+      windDocumentVisible: false,
       catalogStatus: 'ready',
       isFrameLoading: false,
     });
@@ -676,6 +749,10 @@ describe('ViewerOrchestrator', () => {
       status: 'ready',
       sample: { timestamp: DEMO_TIMESTAMPS[4] },
     });
+    expect(snapshot.pointForecastStatus).toBe('partial');
+    expect(snapshot.pointForecastSeries?.points.map((point) => point.timestamp)).toEqual(
+      DEMO_TIMESTAMPS,
+    );
     expect(snapshot.routeAnalysis?.route).toEqual(initialScene.route);
     expect(snapshot.isobarsVisible).toBe(true);
     expect((harness.controller.setWeatherFrame as jest.Mock).mock.calls.at(-1)?.[0])
@@ -701,18 +778,18 @@ describe('ViewerOrchestrator', () => {
     expect(harness.controller.setLayer).not.toHaveBeenCalledWith('temperature');
   });
 
-  it('keeps wind visible when precipitation fails', async () => {
+  it('keeps wind visible when a new aviation layer fails', async () => {
     const harness = createHarness();
     await harness.orchestrator.initialize();
     (harness.dependencies.fetchFrame as jest.Mock).mockRejectedValueOnce(
-      new Error('precipitation unavailable'),
+      new Error('visibility unavailable'),
     );
 
-    harness.orchestrator.selectLayer('precipitation');
+    harness.orchestrator.selectLayer('visibility');
     await waitFor(() => expect(harness.orchestrator.getSnapshot().frameError).not.toBeNull());
 
     expect(harness.orchestrator.getSnapshot().activeLayer).toBe('wind');
-    expect(harness.controller.setLayer).not.toHaveBeenCalledWith('precipitation');
+    expect(harness.controller.setLayer).not.toHaveBeenCalledWith('visibility');
   });
 
   it('hides failed isobars without aborting the primary frame', async () => {
@@ -788,6 +865,12 @@ describe('ViewerOrchestrator', () => {
     harness.orchestrator.play();
 
     harness.orchestrator.reset();
+    harness.getControllerOptions()?.callbacks?.onViewportChanged?.({
+      longitude: -74,
+      latitude: 4.5,
+      zoom: 5.5,
+    });
+    expect(harness.urlSynchronizer.replaceViewport).not.toHaveBeenCalled();
     await waitFor(() => expect(harness.orchestrator.getSnapshot()).toMatchObject({
       activeLayer: 'wind',
       activeTimestamp: DEFAULT_VIEWER_TIMESTAMP,
@@ -799,6 +882,13 @@ describe('ViewerOrchestrator', () => {
     expect(harness.controller.reset).toHaveBeenCalledTimes(1);
     expect(harness.dependencies.createController).toHaveBeenCalledTimes(1);
     expect(harness.dependencies.clearInterval).toHaveBeenCalledTimes(1);
+    expect(harness.urlSynchronizer.replace).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        layer: 'wind',
+        timestamp: DEFAULT_VIEWER_TIMESTAMP,
+        viewport: { longitude: -73.5, latitude: 4.5, zoom: 4.7 },
+      }),
+    );
   });
 
   it('keeps catalog and airport failures independently retryable', async () => {

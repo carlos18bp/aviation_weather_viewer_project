@@ -36,6 +36,7 @@ export interface WeatherViewerShellProps {
   layerPanel?: ReactNode;
   responsivePanelHost?: ReactNode;
   timeline?: ReactNode;
+  utcLabel?: string;
   controllerFactory?: WeatherMapControllerFactory;
 }
 
@@ -66,6 +67,7 @@ export function WeatherViewerShell({
   layerPanel,
   responsivePanelHost,
   timeline,
+  utcLabel = '06Z',
   controllerFactory = defaultControllerFactory,
 }: WeatherViewerShellProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -80,17 +82,22 @@ export function WeatherViewerShell({
     let resizeObserver: ResizeObserver | null = null;
     let controller: WeatherMapController | null = null;
 
-    setMapStatus('loading');
-    setMapError(null);
     setMapReady(false);
 
     if (!container || !supportsWebGL2()) {
-      setMapStatus('error');
-      setMapError({
-        message: 'Este navegador no ofrece WebGL2. El visor cartográfico no puede iniciarse.',
-        canRetry: false,
-      });
-      return () => setMapReady(false);
+      const errorTimer = window.setTimeout(() => {
+        if (!isActive) return;
+        setMapStatus('error');
+        setMapError({
+          message: 'Este navegador no ofrece WebGL2. El visor cartográfico no puede iniciarse.',
+          canRetry: false,
+        });
+      }, 0);
+      return () => {
+        isActive = false;
+        window.clearTimeout(errorTimer);
+        setMapReady(false);
+      };
     }
 
     controller = controllerFactory({
@@ -140,6 +147,12 @@ export function WeatherViewerShell({
     };
   }, [attempt, controllerFactory, setMapReady]);
 
+  const retryMap = () => {
+    setMapStatus('loading');
+    setMapError(null);
+    setAttempt((current) => current + 1);
+  };
+
   return (
     <main className={styles.shell} data-map-status={mapStatus}>
       <div className={styles.mapViewport}>
@@ -166,7 +179,7 @@ export function WeatherViewerShell({
           </span>
           <div className={styles.time} aria-label="Hora seleccionada">
             <span>UTC / ZULU</span>
-            <strong>06Z</strong>
+            <strong>{utcLabel}</strong>
           </div>
         </div>
       </header>
@@ -197,7 +210,7 @@ export function WeatherViewerShell({
           <h2>Mapa no disponible</h2>
           <p>{mapError.message}</p>
           {mapError.canRetry && (
-            <button type="button" onClick={() => setAttempt((current) => current + 1)}>
+            <button type="button" onClick={retryMap}>
               Reintentar
             </button>
           )}

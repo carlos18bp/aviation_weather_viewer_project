@@ -67,7 +67,12 @@ def test_catalog_returns_frozen_contract(api_client):
         "is_simulated": True,
         "operational_use": False,
     }
-    assert len(response.json()["layers"]) == 3
+    assert response.json()["schema_version"] == 3
+    assert len(response.json()["layers"]) == 7
+    assert {layer["category"] for layer in response.json()["layers"]} == {
+        "essential",
+        "aviation",
+    }
     assert response.json()["timestamps"] == list(TIMESTAMPS)
     assert response.json()["overlays"][0]["id"] == "pressure-isobars"
     assert len(response.json()["overlays"][0]["frames"]) == 6
@@ -84,6 +89,30 @@ def test_catalog_returns_frozen_contract(api_client):
         ),
         ("wind", "kt", ".json", None),
         ("precipitation", "mm/h", ".webp", None),
+        (
+            "cloud-cover",
+            "%",
+            ".webp",
+            "/media/demo-weather/demo-colombia-001/cloud-cover-values/06Z.json",
+        ),
+        (
+            "cloud-base",
+            "ft AGL",
+            ".webp",
+            "/media/demo-weather/demo-colombia-001/cloud-base-values/06Z.json",
+        ),
+        (
+            "visibility",
+            "km",
+            ".webp",
+            "/media/demo-weather/demo-colombia-001/visibility-values/06Z.json",
+        ),
+        (
+            "wind-gusts",
+            "kt",
+            ".webp",
+            "/media/demo-weather/demo-colombia-001/wind-gusts-values/06Z.json",
+        ),
     ],
 )
 def test_frame_returns_same_origin_descriptor(
@@ -203,8 +232,8 @@ def test_airport_weather_returns_missing_airport_error(api_client):
     _assert_error(response, status_code=404, code="airport_not_found")
 
 
-def test_frame_returns_missing_descriptor_error(api_client, tmp_path):
-    """Return not found when a valid layer-time pair has no descriptor."""
+def test_frame_returns_unavailable_for_incomplete_manifest(api_client, tmp_path):
+    """Treat a missing valid descriptor as an unavailable atomic product."""
     manifest = deepcopy(load_manifest())
     manifest["frames"] = manifest["frames"][1:]
     scenario_root = tmp_path / "scenario"
@@ -217,8 +246,8 @@ def test_frame_returns_missing_descriptor_error(api_client, tmp_path):
             {"layer": "temperature", "timestamp": TIMESTAMPS[0]},
         )
 
-    assert response.status_code == 404
-    _assert_error(response, status_code=404, code="frame_not_found")
+    assert response.status_code == 503
+    _assert_error(response, status_code=503, code="asset_unavailable")
 
 
 def test_catalog_returns_unavailable_asset_error(api_client, tmp_path):
@@ -263,6 +292,30 @@ def test_temperature_frame_returns_unavailable_when_value_grid_is_missing(
         response = api_client.get(
             "/api/v1/demo/weather/frames",
             {"layer": "temperature", "timestamp": TIMESTAMPS[0]},
+        )
+
+    assert response.status_code == 503
+    _assert_error(response, status_code=503, code="asset_unavailable")
+
+
+def test_mobile_frame_returns_unavailable_when_hash_is_corrupt(api_client, tmp_path):
+    """Reject a staged raster that no longer matches its frozen SHA-256."""
+    scenario_root = tmp_path / "scenario"
+    _write_manifest(scenario_root, load_manifest())
+    source_root = Path(settings.DEMO_WEATHER_SCENARIO_ROOT)
+    for directory in ("cloud-cover", "cloud-cover-values"):
+        (scenario_root / directory).mkdir()
+    shutil.copy2(
+        source_root / "cloud-cover-values" / "06Z.json",
+        scenario_root / "cloud-cover-values" / "06Z.json",
+    )
+    (scenario_root / "cloud-cover" / "06Z.webp").write_bytes(b"corrupt")
+
+    with override_settings(DEMO_WEATHER_SCENARIO_ROOT=scenario_root):
+        clear_demo_asset_caches()
+        response = api_client.get(
+            "/api/v1/demo/weather/frames",
+            {"layer": "cloud-cover", "timestamp": TIMESTAMPS[2]},
         )
 
     assert response.status_code == 503

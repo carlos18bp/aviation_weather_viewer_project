@@ -388,3 +388,59 @@ El raster es obligatorio y el grid es parcial: un grid inválido queda como
 `grid=null` con error tipado y puede reintentarse reutilizando la imagen
 cacheada. Un raster inválido rechaza el reemplazo y el adapter conserva el frame
 confirmado. Abort y supersession revocan cualquier object URL no publicada.
+
+## 2026-08-21 — Hallazgos de integración de Fase 23
+
+### `Illegal invocation` al reutilizar `fetch`
+
+El service almacenaba `globalThis.fetch` como callback sin receiver. Chrome
+falló durante bootstrap aunque JSDOM no lo reprodujo. Se ligó el método al
+objeto global antes de inyectarlo y se añadió cobertura del service/abort.
+
+### Carrera reset versus `moveend`
+
+El `jumpTo` del reset emitía viewport antes de completar la escena canónica y
+podía reintroducir cámara/URL previa. El orquestador suspende updates de viewport
+durante la barrera de reset y los reactiva sólo al confirmar `wind/06Z`.
+
+### Rotación WebKit con media query rezagada
+
+En viewport emulado, WebKit podía conservar una respuesta vieja de
+`orientation`/pointer aunque las dimensiones ya hubieran cambiado. La
+integración usa dimensiones físicas como desempate y mantiene el hook público de
+Fase 15 intacto. Phone landscape y tablet landscape quedaron cubiertos.
+
+### Runtime gráfico sin privilegios
+
+El host carecía de librerías Chromium/WebKit y GPU física. Se extrajeron
+dependencias sólo bajo `/tmp`, se inició Xvfb y se usó Mesa/SwiftShader sin
+modificar sistema ni stack. Mezclar roots de librerías hacía caer el GPU process
+con exit 133; usar una única pila Noble coherente restauró WebGL2.
+
+### Estímulo de FPS descartado por diseño
+
+El primer stress producía gaps mayores a 250 ms. `TemporalFpsMonitor` los
+descarta para no confundir pestaña suspendida con FPS bajo, por lo que el soak se
+detuvo antes del mantenimiento. El harness definitivo redujo DPR y ralentizó
+`requestAnimationFrame` con intervalos continuos válidos; el perfil cambió a
+`degraded` sin alterar producto.
+
+### Fallback sintético de contexto no restaurable
+
+Despachar un `webglcontextlost` DOM no reprodujo el evento interno MapLibre y
+dejaba la automatización sin señal fiable. El soak definitivo usa un 503 real de
+metadata `cloud-base`, comprueba último frame, acceso a capas sanas y reset. El
+fallback WebGL permanece cubierto por tests del renderer.
+
+### Requests abortados durante mantenimiento
+
+El soak registró 40 `net::ERR_ABORTED` same-origin. Todos corresponden a
+supersession de frame/preload y no a respuestas HTTP; confirman que versiones
+viejas se cancelan. El único 503 fue inducido y no produjo crash ni timestamp
+mezclado.
+
+### Gate externo pendiente
+
+No hubo iPhone ni Android reales. La evidencia WebKit/Chromium no se presenta
+como smoke físico. El procedimiento y criterios de rechazo están en el handoff
+de release. Despliegue también se omitió por instrucción explícita del operador.

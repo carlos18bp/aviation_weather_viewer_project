@@ -11,6 +11,7 @@ import {
   type DemoAirportIcao,
   type DemoTimestamp,
 } from '@/features/airports';
+import type { WindRenderProfile, WindRenderProfileId } from '@/features/performance';
 import {
   createViewerSceneUrlSynchronizer,
   DEFAULT_VIEWER_SCENE,
@@ -48,12 +49,22 @@ import {
   type WeatherPickerData,
   type WeatherSampleResult,
 } from '@/features/weather/picker';
+import {
+  createPointForecastDescriptorMap,
+  PointForecastSeriesLoader,
+  type PointForecastLoadResult,
+  type PointForecastSeries,
+  type PointForecastStatus,
+} from '@/features/weather/point-forecast';
 import type { WindFallbackEvent } from '@/features/weather/wind';
 import {
+  createWeatherFrameService,
   fetchWeatherCatalog,
   fetchWeatherFrame,
   isAbortError,
   type WeatherCatalog,
+  type WeatherCatalogLayer,
+  type WeatherFrameService,
 } from '@/lib/services/weatherService';
 import { useWeatherViewerStore } from '@/lib/stores/weatherViewerStore';
 import type {
@@ -87,9 +98,13 @@ export interface ViewerSnapshot {
   isobarsVisible: boolean;
   presentationMode: boolean;
   mapViewport: MapViewport;
+  catalogLayers: readonly WeatherCatalogLayer[];
   airports: AirportFeatureCollection | null;
   airportWeather: AirportWeatherResponse | null;
   pickerResult: WeatherSampleResult | null;
+  pointForecastStatus: PointForecastStatus;
+  pointForecastSeries: PointForecastSeries | null;
+  pointForecastError: string | null;
   routeAnalysis: RouteAnalysis | null;
   isPlaying: boolean;
   isFrameLoading: boolean;
@@ -106,6 +121,8 @@ export interface ViewerSnapshot {
   isobarError: string | null;
   frameError: string | null;
   fallbackMessage: string | null;
+  renderProfile: WindRenderProfileId | null;
+  windDocumentVisible: boolean;
   transition: TemporalTransition;
 }
 
@@ -119,9 +136,13 @@ export const INITIAL_VIEWER_SNAPSHOT: Readonly<ViewerSnapshot> = {
   isobarsVisible: false,
   presentationMode: false,
   mapViewport: { ...DEFAULT_VIEWER_SCENE.viewport },
+  catalogLayers: [],
   airports: null,
   airportWeather: null,
   pickerResult: null,
+  pointForecastStatus: 'idle',
+  pointForecastSeries: null,
+  pointForecastError: null,
   routeAnalysis: null,
   isPlaying: false,
   isFrameLoading: true,
@@ -138,6 +159,8 @@ export const INITIAL_VIEWER_SNAPSHOT: Readonly<ViewerSnapshot> = {
   isobarError: null,
   frameError: null,
   fallbackMessage: null,
+  renderProfile: null,
+  windDocumentVisible: true,
   transition: { phase: 'idle', targetTimestamp: null },
 };
 
@@ -164,6 +187,8 @@ export interface ViewerOrchestratorDependencies {
   ): Promise<IsobarFeatureCollection>;
   analyzeRoute(input: Parameters<typeof analyzeRoute>[0]): RouteAnalysis;
   createPickerDataService(): WeatherPickerDataService;
+  createFrameService(): WeatherFrameService;
+  createPointForecastLoader(): PointForecastSeriesLoader;
   createController(
     options: DefaultWeatherMapControllerOptions,
   ): CancellableWeatherMapController;
@@ -190,7 +215,7 @@ interface TransitionIntent {
   readiness?: Promise<unknown>;
 }
 
-type TransitionFailureScope = 'frame' | 'airport' | 'picker' | 'route';
+type TransitionFailureScope = 'frame' | 'airport' | 'picker' | 'forecast' | 'route' | 'isobar';
 
 class TransitionFailure extends Error {
   constructor(
@@ -200,11 +225,6 @@ class TransitionFailure extends Error {
     super(`Viewer transition failed in ${scope}.`);
     this.name = 'TransitionFailure';
   }
-}
-
-interface OptionalIsobarResult {
-  collection: IsobarFeatureCollection | null;
-  error: string | null;
 }
 
 const DEFAULT_DEPENDENCIES: ViewerOrchestratorDependencies = {
@@ -226,6 +246,10 @@ const DEFAULT_DEPENDENCIES: ViewerOrchestratorDependencies = {
   ),
   analyzeRoute,
   createPickerDataService: () => new WeatherPickerDataService(),
+  createFrameService: () => createWeatherFrameService(),
+  createPointForecastLoader: () => new PointForecastSeriesLoader({
+    descriptorMap: createPointForecastDescriptorMap(),
+  }),
   createController: (options) => new DefaultWeatherMapController(options),
   createUrlSynchronizer: () => createViewerSceneUrlSynchronizer(),
   prefersReducedMotion: () => (
@@ -285,6 +309,8 @@ export class ViewerOrchestrator implements WeatherMapController {
   private readonly windPreloader: ManagedFramePreloader<DemoTimestamp, WindWeatherMapFrame>;
   private readonly isobarPreloader: ManagedFramePreloader<DemoTimestamp, IsobarFeatureCollection>;
   private readonly transitionRunner: TemporalTransitionRunner;
+  private readonly frameService: WeatherFrameService | null;
+  private readonly pointForecastLoader: PointForecastSeriesLoader;
   private pickerDataService: WeatherPickerDataService;
   private snapshot: ViewerSnapshot = {
     ...INITIAL_VIEWER_SNAPSHOT,
@@ -305,10 +331,21 @@ export class ViewerOrchestrator implements WeatherMapController {
   constructor(options: ViewerOrchestratorOptions) {
     this.callbacks = options.callbacks;
     this.onSnapshot = options.onSnapshot;
-    this.dependencies = { ...DEFAULT_DEPENDENCIES, ...options.dependencies };
+    const dependencyOverrides = options.dependencies ?? {};
+    this.frameService = dependencyOverrides.fetchFrame
+      ? null
+      : (dependencyOverrides.createFrameService ?? DEFAULT_DEPENDENCIES.createFrameService)();
+    this.dependencies = {
+      ...DEFAULT_DEPENDENCIES,
+      ...dependencyOverrides,
+      fetchFrame: dependencyOverrides.fetchFrame ?? (
+        (layer, timestamp, signal) => this.frameService!.load(layer, timestamp, signal)
+      ),
+    };
     this.initialScene = cloneScene(options.initialScene ?? DEFAULT_VIEWER_SCENE);
     this.urlSynchronizer = this.dependencies.createUrlSynchronizer();
     this.pickerDataService = this.dependencies.createPickerDataService();
+    this.pointForecastLoader = this.dependencies.createPointForecastLoader();
     this.framePreloader = createFramePreloader();
     this.windPreloader = createFramePreloader();
     this.isobarPreloader = createFramePreloader();
@@ -328,6 +365,11 @@ export class ViewerOrchestrator implements WeatherMapController {
           interactionCallbacks?.onCoordinateSelected?.(coordinate)
         ),
         onWindFallback: (event) => this.handleWindFallback(event),
+        onWindProfileChange: (profile) => this.handleWindProfileChange(profile),
+        onWindDocumentVisibilityChange: (visible) => (
+          this.handleWindDocumentVisibilityChange(visible)
+        ),
+        onTouchFallback: (message) => this.handleTouchFallback(message),
       }),
     });
   }
@@ -380,6 +422,14 @@ export class ViewerOrchestrator implements WeatherMapController {
     this.controller.setIsobarsVisible(visible);
   }
 
+  setTouchRouteCapture(active: boolean): void {
+    this.controller.setTouchRouteCapture?.(active);
+  }
+
+  setTouchReposition(active: boolean): void {
+    this.controller.setTouchReposition?.(active);
+  }
+
   setViewport(viewport: MapViewport): void {
     this.controller.setViewport(viewport);
   }
@@ -391,13 +441,15 @@ export class ViewerOrchestrator implements WeatherMapController {
   reset(): void {
     if (this.destroyed) return;
 
-    ++this.bootstrapVersion;
+    const resetVersion = ++this.bootstrapVersion;
+    this.acceptViewportUpdates = false;
     this.abortRequestsAndPreloads();
     this.stopPlayback();
     this.transitionRunner.cancel();
     this.retryIntent = null;
     this.pickerDataService.destroy();
     this.pickerDataService = this.dependencies.createPickerDataService();
+    this.pointForecastLoader.close();
     this.controller.setSelectedAirport(null);
     this.controller.setSelectedCoordinate(null);
     this.controller.setRoute(null);
@@ -423,6 +475,9 @@ export class ViewerOrchestrator implements WeatherMapController {
       selectedRoute: null,
       airportWeather: null,
       pickerResult: null,
+      pointForecastStatus: 'idle',
+      pointForecastSeries: null,
+      pointForecastError: null,
       routeAnalysis: null,
       isobarsVisible: false,
       presentationMode: false,
@@ -448,6 +503,12 @@ export class ViewerOrchestrator implements WeatherMapController {
         timestamp: DEFAULT_VIEWER_TIMESTAMP,
         scene: cloneScene(DEFAULT_VIEWER_SCENE),
         syncUrl: false,
+      }).then((committed) => {
+        if (this.destroyed || resetVersion !== this.bootstrapVersion) return;
+        this.acceptViewportUpdates = true;
+        if (committed) {
+          this.urlSynchronizer.replace(cloneScene(DEFAULT_VIEWER_SCENE));
+        }
       });
       if (this.snapshot.airportsStatus !== 'ready') void this.loadAirports();
       return;
@@ -465,9 +526,11 @@ export class ViewerOrchestrator implements WeatherMapController {
     this.stopPlayback(false);
     this.abortRequestsAndPreloads();
     this.transitionRunner.destroy();
+    this.controller.destroy();
+    this.frameService?.destroy();
+    this.pointForecastLoader.destroy();
     this.pickerDataService.destroy();
     this.urlSynchronizer.destroy();
-    this.controller.destroy();
     const store = useWeatherViewerStore.getState();
     store.setPlaying(false);
     store.setFrameLoading(false);
@@ -584,6 +647,9 @@ export class ViewerOrchestrator implements WeatherMapController {
       selectedCoordinate,
       pickerLoading: true,
       pickerError: null,
+      pointForecastStatus: 'loading',
+      pointForecastSeries: null,
+      pointForecastError: null,
     });
     void this.transition({
       layer: this.snapshot.activeLayer,
@@ -594,11 +660,15 @@ export class ViewerOrchestrator implements WeatherMapController {
   closePicker(): void {
     if (this.destroyed) return;
     this.cancelTransition();
+    this.pointForecastLoader.close();
     this.controller.setSelectedCoordinate(null);
     useWeatherViewerStore.getState().setSelectedCoordinate(null);
     this.publish({
       selectedCoordinate: null,
       pickerResult: null,
+      pointForecastStatus: 'idle',
+      pointForecastSeries: null,
+      pointForecastError: null,
       pickerLoading: false,
       pickerError: null,
       isFrameLoading: false,
@@ -665,21 +735,25 @@ export class ViewerOrchestrator implements WeatherMapController {
   setIsobars(visible: boolean): void {
     if (this.destroyed || this.snapshot.catalogStatus !== 'ready') return;
     this.cancelTransition();
-    useWeatherViewerStore.getState().setIsobarsVisible(visible);
-    this.publish({
-      isobarsVisible: visible,
-      isobarsStatus: visible ? 'loading' : 'idle',
-      isobarError: null,
-    });
     if (!visible) {
+      useWeatherViewerStore.getState().setIsobarsVisible(false);
       this.controller.setIsobarsVisible(false);
       this.controller.setIsobarFrame(null);
+      this.publish({
+        isobarsVisible: false,
+        isobarsStatus: 'idle',
+        isobarError: null,
+      });
       this.replaceUrl();
       return;
     }
+    const targetScene = this.currentScene();
+    targetScene.isobarsVisible = true;
+    this.publish({ isobarsStatus: 'loading', isobarError: null });
     void this.transition({
       layer: this.snapshot.activeLayer,
       timestamp: this.snapshot.activeTimestamp,
+      scene: targetScene,
     });
   }
 
@@ -772,6 +846,7 @@ export class ViewerOrchestrator implements WeatherMapController {
       store.setFrameLoading(true);
       this.publish({
         catalogStatus: 'ready',
+        catalogLayers: catalog.layers,
         availableTimestamps: timestamps,
         catalogError: null,
         isFrameLoading: true,
@@ -784,6 +859,7 @@ export class ViewerOrchestrator implements WeatherMapController {
       useWeatherViewerStore.getState().setFrameLoading(false);
       this.publish({
         catalogStatus: 'error',
+        catalogLayers: [],
         isFrameLoading: false,
         catalogError: safeErrorMessage(
           error,
@@ -835,12 +911,29 @@ export class ViewerOrchestrator implements WeatherMapController {
     const targetScene = intent.scene
       ? cloneScene(intent.scene)
       : this.currentScene({ layer: intent.layer, timestamp: intent.timestamp });
+    const cachedPointForecast = targetScene.picker
+      && this.snapshot.pointForecastSeries
+      && this.snapshot.pointForecastSeries.coordinate[0] === targetScene.picker[0]
+      && this.snapshot.pointForecastSeries.coordinate[1] === targetScene.picker[1]
+      && (
+        this.snapshot.pointForecastStatus === 'ready'
+        || this.snapshot.pointForecastStatus === 'partial'
+      )
+      ? {
+          status: this.snapshot.pointForecastStatus,
+          series: this.snapshot.pointForecastSeries,
+        } satisfies PointForecastLoadResult
+      : null;
     const store = useWeatherViewerStore.getState();
     store.setFrameLoading(true);
     store.setFrameError(null);
     this.publish({
       isFrameLoading: true,
       pickerLoading: targetScene.picker !== null,
+      pointForecastStatus: targetScene.picker
+        ? cachedPointForecast?.status ?? 'loading'
+        : 'idle',
+      pointForecastError: null,
       routeLoading: targetScene.route !== null,
       isobarsStatus: targetScene.isobarsVisible ? 'loading' : 'idle',
       frameError: null,
@@ -885,6 +978,14 @@ export class ViewerOrchestrator implements WeatherMapController {
             });
           }), 'picker')
         : Promise.resolve(null);
+      const pointForecastPromise: Promise<PointForecastLoadResult | null> = targetScene.picker
+        ? cachedPointForecast
+          ? Promise.resolve(cachedPointForecast)
+          : scoped(
+              this.pointForecastLoader.loadCommittedCoordinate(targetScene.picker),
+              'forecast',
+            )
+        : Promise.resolve(null);
       const routePromise: Promise<RouteAnalysis | null> = targetScene.route
         ? scoped(activeWindPromise.then((wind) => {
             if (!wind || !this.snapshot.airports) {
@@ -898,13 +999,24 @@ export class ViewerOrchestrator implements WeatherMapController {
             });
           }), 'route')
         : Promise.resolve(null);
-      const isobarPromise = this.loadOptionalIsobars(targetScene, request.signal);
+      const isobarPromise = scoped(
+        this.loadIsobars(targetScene, request.signal),
+        'isobar',
+      );
 
-      const [mainFrame, airportWeather, pickerData, routeAnalysis, isobarResult] = (
+      const [
+        mainFrame,
+        airportWeather,
+        pickerData,
+        pointForecast,
+        routeAnalysis,
+        isobarCollection,
+      ] = (
         await Promise.all([
           mainFramePromise,
           airportPromise,
           pickerDataPromise,
+          pointForecastPromise,
           routePromise,
           isobarPromise,
           intent.readiness ?? Promise.resolve(),
@@ -920,10 +1032,7 @@ export class ViewerOrchestrator implements WeatherMapController {
             wind: pickerData.wind,
           })
         : null;
-      const committedScene: ViewerScene = {
-        ...targetScene,
-        isobarsVisible: targetScene.isobarsVisible && isobarResult.collection !== null,
-      };
+      const committedScene = targetScene;
       const committed = await this.transitionRunner.run(
         committedScene.timestamp,
         async () => {
@@ -931,7 +1040,7 @@ export class ViewerOrchestrator implements WeatherMapController {
           await this.controller.setWeatherFrame(mainFrame);
           if (!this.isCurrentTransition(request, version)) return;
           this.controller.setLayer(committedScene.layer);
-          this.controller.setIsobarFrame(isobarResult.collection);
+          this.controller.setIsobarFrame(isobarCollection);
           this.controller.setIsobarsVisible(committedScene.isobarsVisible);
           this.controller.setSelectedAirport(committedScene.airport);
           this.controller.setSelectedCoordinate(committedScene.picker);
@@ -947,6 +1056,9 @@ export class ViewerOrchestrator implements WeatherMapController {
             mapViewport: { ...committedScene.viewport },
             airportWeather,
             pickerResult,
+            pointForecastStatus: pointForecast?.status ?? 'idle',
+            pointForecastSeries: pointForecast?.series ?? null,
+            pointForecastError: null,
             routeAnalysis,
             isFrameLoading: false,
             pickerLoading: false,
@@ -958,7 +1070,7 @@ export class ViewerOrchestrator implements WeatherMapController {
               ? pickerResult.message
               : null,
             routeError: null,
-            isobarError: isobarResult.error,
+            isobarError: null,
           });
         },
         { reducedMotion: this.dependencies.prefersReducedMotion() },
@@ -988,21 +1100,30 @@ export class ViewerOrchestrator implements WeatherMapController {
         frame: 'No se pudo actualizar el producto meteorológico. La visualización anterior permanece activa.',
         airport: 'No se pudo sincronizar la condición aeroportuaria. La visualización anterior permanece activa.',
         picker: 'No se pudieron sincronizar temperatura y viento del punto. El timestamp anterior permanece activo.',
+        forecast: 'No se pudo preparar el pronóstico del punto. El timestamp anterior permanece activo.',
         route: 'No se pudo recalcular la ruta con el campo U/V activo. El timestamp anterior permanece activo.',
+        isobar: 'No se pudieron sincronizar las isobaras. El timestamp anterior permanece activo.',
       };
       const message = messages[failure.scope];
       this.retryIntent = intent;
       store.setFrameLoading(false);
-      store.setFrameError(message);
+      store.setFrameError(failure.scope === 'frame' ? message : null);
       const pickerFailure = failure.scope === 'picker';
       this.publish({
         isFrameLoading: false,
         pickerLoading: false,
         routeLoading: false,
-        frameError: message,
+        frameError: failure.scope === 'frame' ? message : null,
         airportError: failure.scope === 'airport' ? message : null,
         pickerError: pickerFailure ? message : null,
+        pointForecastStatus: targetScene.picker
+          ? cachedPointForecast?.status ?? 'error'
+          : 'idle',
+        pointForecastSeries: cachedPointForecast?.series ?? null,
+        pointForecastError: targetScene.picker && !cachedPointForecast ? message : null,
         routeError: failure.scope === 'route' ? message : null,
+        isobarError: failure.scope === 'isobar' ? message : null,
+        isobarsStatus: this.snapshot.isobarsVisible ? 'ready' : 'idle',
         pickerResult: pickerFailure
           && targetScene.timestamp === this.snapshot.activeTimestamp
           && targetScene.picker
@@ -1043,46 +1164,48 @@ export class ViewerOrchestrator implements WeatherMapController {
     ));
   }
 
-  private async loadOptionalIsobars(
+  private loadIsobars(
     scene: ViewerScene,
     transitionSignal: AbortSignal,
-  ): Promise<OptionalIsobarResult> {
+  ): Promise<IsobarFeatureCollection | null> {
     if (!scene.isobarsVisible || !this.catalog) {
-      return { collection: null, error: null };
+      return Promise.resolve(null);
     }
-    try {
-      const frame = selectIsobarFrame(this.catalog.isobarFrames, scene.timestamp);
-      const collection = await this.isobarPreloader.get(
-        scene.timestamp,
-        (preloadSignal) => this.dependencies.fetchIsobarCollection(
-          frame,
-          combinedSignal(preloadSignal, transitionSignal),
-        ),
-      );
-      return { collection, error: null };
-    } catch (error) {
-      if (transitionSignal.aborted || isAbortError(error)) throw error;
-      return {
-        collection: null,
-        error: 'Las isobaras no están disponibles para este timestamp; la capa principal sigue activa.',
-      };
-    }
+    const frame = selectIsobarFrame(this.catalog.isobarFrames, scene.timestamp);
+    return this.isobarPreloader.get(
+      scene.timestamp,
+      (preloadSignal) => this.dependencies.fetchIsobarCollection(
+        frame,
+        combinedSignal(preloadSignal, transitionSignal),
+      ),
+    );
   }
 
   private preloadAdjacent(scene: ViewerScene): void {
     const plan = getTemporalFramePlan(this.snapshot.availableTimestamps, scene.timestamp);
     if (!plan || this.destroyed) return;
 
-    const mainKeys = [plan.active, plan.previous, plan.next].map(
+    const retainedTimestamps = [plan.active, plan.previous, plan.next].map(
+      parseDemoTimestamp,
+    );
+    const isAviationLayer = (
+      scene.layer === 'cloud-cover'
+      || scene.layer === 'cloud-base'
+      || scene.layer === 'visibility'
+      || scene.layer === 'wind-gusts'
+    );
+    const mainKeys = retainedTimestamps.map(
       (timestamp) => `${scene.layer}:${timestamp}`,
     );
-    this.framePreloader.retain(mainKeys);
-    for (const timestamp of [plan.previous, plan.next]) {
-      const parsedTimestamp = parseDemoTimestamp(timestamp);
-      void this.framePreloader.preload(
-        `${scene.layer}:${parsedTimestamp}`,
-        (signal) => this.dependencies.fetchFrame(scene.layer, parsedTimestamp, signal),
-      );
+    this.frameService?.retain(scene.layer, retainedTimestamps);
+    this.framePreloader.retain(isAviationLayer ? [mainKeys[0]] : mainKeys);
+    if (!isAviationLayer) {
+      for (const parsedTimestamp of retainedTimestamps.slice(1)) {
+        void this.framePreloader.preload(
+          `${scene.layer}:${parsedTimestamp}`,
+          (signal) => this.dependencies.fetchFrame(scene.layer, parsedTimestamp, signal),
+        );
+      }
     }
 
     if (scene.picker) {
@@ -1151,6 +1274,18 @@ export class ViewerOrchestrator implements WeatherMapController {
 
   private handleWindFallback(event: WindFallbackEvent): void {
     if (!this.destroyed) this.publish({ fallbackMessage: event.message });
+  }
+
+  private handleWindProfileChange(profile: Readonly<WindRenderProfile>): void {
+    if (!this.destroyed) this.publish({ renderProfile: profile.id });
+  }
+
+  private handleWindDocumentVisibilityChange(visible: boolean): void {
+    if (!this.destroyed) this.publish({ windDocumentVisible: visible });
+  }
+
+  private handleTouchFallback(message: string): void {
+    if (!this.destroyed) this.publish({ fallbackMessage: message });
   }
 
   private handleViewportChanged(viewport: MapViewport): void {

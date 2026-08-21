@@ -12,9 +12,12 @@ from django.conf import settings
 from weather.demo.airports import AIRPORT_ICAO_CODES
 from weather.demo.constants import (
     LAYER_DEFINITIONS,
+    LAYER_IDS,
+    MOBILE_LAYER_ASSET_SHA256,
     TEMPERATURE_VALUE_COUNT,
     TIMESTAMP_LABELS,
     TIMESTAMPS,
+    VALUE_DATA_LAYER_IDS,
     WIND_VALUE_COUNT,
 )
 from weather.demo.exceptions import DemoAssetError
@@ -23,6 +26,7 @@ from weather.demo.loaders import (
     load_airport_weather,
     load_manifest,
 )
+from weather.demo.mobile_layers import asset_inventory
 from weather.demo.validators import (
     load_json_document,
     validate_manifest,
@@ -39,7 +43,7 @@ def test_manifest_declares_frozen_catalog():
     manifest = validate_manifest(load_json_document(SCENARIO_ROOT / "manifest.json"))
 
     assert manifest["layers"] == [dict(layer) for layer in LAYER_DEFINITIONS]
-    assert manifest["schema_version"] == 2
+    assert manifest["schema_version"] == 3
     assert manifest["timestamps"] == list(TIMESTAMPS)
     assert len(manifest["overlays"]) == 1
     assert manifest["overlays"][0]["id"] == "pressure-isobars"
@@ -62,24 +66,25 @@ def test_manifest_declares_complete_frame_product():
         map(lambda frame: (frame["layer"], frame["timestamp"]), manifest["frames"])
     )
 
-    assert len(manifest["frames"]) == 18
-    assert pairs == set(product(("temperature", "wind", "precipitation"), TIMESTAMPS))
-    temperature_frames = [
-        frame for frame in manifest["frames"] if frame["layer"] == "temperature"
+    assert len(manifest["frames"]) == 42
+    assert pairs == set(product(LAYER_IDS, TIMESTAMPS))
+    value_frames = [
+        frame for frame in manifest["frames"] if frame["layer"] in VALUE_DATA_LAYER_IDS
     ]
     wind_frames = [frame for frame in manifest["frames"] if frame["layer"] == "wind"]
     precipitation_frames = [
         frame for frame in manifest["frames"] if frame["layer"] == "precipitation"
     ]
-    assert all("value_data_path" in frame for frame in temperature_frames)
+    assert len(value_frames) == 30
+    assert all("value_data_path" in frame for frame in value_frames)
     assert all("value_data_path" not in frame for frame in wind_frames)
     assert all("value_data_path" not in frame for frame in precipitation_frames)
 
 
-def test_manifest_rejects_schema_one_after_migration():
+def test_manifest_rejects_schema_two_after_migration():
     """Reject the retired manifest version without changing airport-fixture schema."""
     manifest = deepcopy(load_manifest())
-    manifest["schema_version"] = 1
+    manifest["schema_version"] = 2
 
     with pytest.raises(DemoAssetError):
         validate_manifest(manifest)
@@ -214,3 +219,14 @@ def test_manifest_rejects_traversal_temperature_value_path():
 
     with pytest.raises(DemoAssetError):
         validate_manifest(manifest, require_complete=False)
+
+
+def test_mobile_asset_inventory_matches_frozen_hash_contract():
+    """Keep all 48 staged aviation assets byte-identical to the release set."""
+    inventory = asset_inventory(SCENARIO_ROOT)
+
+    assert len(inventory) == 48
+    assert sum(entry.size_bytes for entry in inventory) == 3_360_836
+    assert {
+        entry.relative_path: entry.sha256 for entry in inventory
+    } == MOBILE_LAYER_ASSET_SHA256

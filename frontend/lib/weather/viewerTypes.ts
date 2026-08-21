@@ -7,9 +7,20 @@ import type {
 } from '@/features/weather/isobars';
 import type { Coordinate } from '@/features/weather/picker';
 import type { PrecipitationFrame } from '@/features/weather/precipitation';
+import type { CloudBaseRasterFrame } from '@/features/weather/cloud-base';
+import type { CloudCoverRasterFrame } from '@/features/weather/cloud-cover';
+import type { VisibilityLoadedFrame } from '@/features/weather/visibility';
+import type { WindGustLoadedFrame } from '@/features/weather/wind-gusts';
 
 
-export type WeatherLayerId = 'temperature' | 'wind' | 'precipitation';
+export type WeatherLayerId =
+  | 'temperature'
+  | 'wind'
+  | 'precipitation'
+  | 'cloud-cover'
+  | 'cloud-base'
+  | 'visibility'
+  | 'wind-gusts';
 
 export interface WindField {
   scenario: 'demo-colombia-001';
@@ -55,10 +66,38 @@ export type WindWeatherMapFrame = {
 
 export type PrecipitationWeatherMapFrame = PrecipitationFrame;
 
+export type CloudCoverWeatherMapFrame = {
+  layer: 'cloud-cover';
+  timestamp: string;
+  frame: CloudCoverRasterFrame;
+};
+
+export type CloudBaseWeatherMapFrame = {
+  layer: 'cloud-base';
+  timestamp: string;
+  frame: CloudBaseRasterFrame;
+};
+
+export type VisibilityWeatherMapFrame = {
+  layer: 'visibility';
+  timestamp: string;
+  frame: VisibilityLoadedFrame;
+};
+
+export type WindGustWeatherMapFrame = {
+  layer: 'wind-gusts';
+  timestamp: string;
+  frame: WindGustLoadedFrame;
+};
+
 export type WeatherMapFrame =
   | TemperatureWeatherMapFrame
   | WindWeatherMapFrame
-  | PrecipitationWeatherMapFrame;
+  | PrecipitationWeatherMapFrame
+  | CloudCoverWeatherMapFrame
+  | CloudBaseWeatherMapFrame
+  | VisibilityWeatherMapFrame
+  | WindGustWeatherMapFrame;
 
 export interface WeatherMapController {
   initialize(): Promise<void>;
@@ -72,6 +111,8 @@ export interface WeatherMapController {
   setRoute(route: DemoRoute | null, analysis?: RouteAnalysis | null): void;
   setIsobarFrame(collection: IsobarFeatureCollection | null): void;
   setIsobarsVisible(visible: boolean): void;
+  setTouchRouteCapture?(active: boolean): void;
+  setTouchReposition?(active: boolean): void;
   setViewport(viewport: MapViewport): void;
   resize(): void;
   reset(): void;
@@ -84,12 +125,16 @@ export interface WeatherLayerAdapter<TFrame> {
     | 'pressure-isobars'
     | 'route'
     | 'airports'
-    | 'picker';
+    | 'picker'
+    | 'touch-coordinator';
   initialize(): Promise<void>;
   prepareFrame?(frame: TFrame, signal: AbortSignal): Promise<void>;
+  cancelPreparedFrame?(): void;
   setFrame?(frame: TFrame): Promise<void> | void;
   setSelectedFeature?(featureId: string | null): void;
   focusFeature?(featureId: string): void;
+  setRouteCapture?(active: boolean): void;
+  setReposition?(active: boolean): void;
   setVisible(visible: boolean): void;
   reset(): void;
   destroy(): void;
@@ -99,8 +144,13 @@ export interface WeatherLayerAdapterRegistry {
   temperature?: WeatherLayerAdapter<TemperatureWeatherMapFrame>;
   wind?: WeatherLayerAdapter<WindWeatherMapFrame>;
   precipitation?: WeatherLayerAdapter<PrecipitationWeatherMapFrame>;
+  cloudCover?: WeatherLayerAdapter<CloudCoverWeatherMapFrame>;
+  cloudBase?: WeatherLayerAdapter<CloudBaseWeatherMapFrame>;
+  visibility?: WeatherLayerAdapter<VisibilityWeatherMapFrame>;
+  windGusts?: WeatherLayerAdapter<WindGustWeatherMapFrame>;
   isobars?: WeatherLayerAdapter<IsobarFeatureCollection | null>;
   route?: WeatherLayerAdapter<RouteAnalysis | null>;
   airports?: WeatherLayerAdapter<FeatureCollection>;
   picker?: WeatherLayerAdapter<Coordinate | null>;
+  touch?: WeatherLayerAdapter<null>;
 }

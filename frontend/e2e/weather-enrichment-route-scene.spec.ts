@@ -59,8 +59,8 @@ test(
     await expect.poll(() => routeProfileState(page, viewer)).toEqual({
       active: 'true', route: true, distance: true, disclaimer: true,
     });
-    await page.getByRole('button', { name: /Precipitación/ }).click();
-    await page.getByLabel('Isobaras').check();
+    await page.locator('label[data-layer-id="precipitation"]').click();
+    await page.locator('label').filter({ hasText: 'Isobaras' }).click();
     await page.getByRole('button', { name: 'Seleccionar 12:00Z' }).click();
     await expect.poll(async () => [
       await viewer.getAttribute('data-active-layer'),
