@@ -11,7 +11,7 @@ forecast, Layer Explorer, composición responsive, coordinación touch y perfil
 adaptativo sobre una sola instancia MapLibre.
 
 - Base de la sesión: `662668292acc3236270c4633f069102d5a9c1d9c`.
-- PR de Fase 23: se registra después del primer push.
+- PR de Fase 23: [#33](https://github.com/carlos18bp/aviation_weather_viewer_project/pull/33).
 - SHA integrado: se registra en el cierre del PR porque el squash SHA no puede
   autorreferenciarse dentro del commit.
 - URL desplegada: no aplica; el operador indicó que este ambiente no despliega.
