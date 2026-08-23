@@ -239,3 +239,37 @@ La entrega automatizada cubre los Flujos C/D en Chrome y WebKit para phone y
 tablet, conserva los recorridos desktop y documenta un soak de diez minutos.
 Despliegue fue omitido por instrucción del operador y el smoke en iPhone/Android
 reales permanece como gate explícito, sin resultados inferidos.
+
+## Instalación como aplicación (PWA) — 2026-08-23
+
+Capacidad transversal solicitada por el operador para la demo con el cliente:
+mostrar el potencial del visor como app instalable, no sólo como página.
+
+**Decisión de alcance registrada.** `mobile_layer_enrichment/README.md` evalúa la
+PWA y la marca `Postergado` (línea 73) y «fuera de este roadmap» (línea 259). El
+operador decidió implementarla igual, **como feature aparte, sin crear ni
+modificar ningún scope de fase**. Consecuencia asumida: esas dos líneas del
+roadmap quedan desactualizadas hasta que se decida enmendarlas entre olas.
+
+Requerimientos entregados:
+
+- La demo es instalable de verdad en Chromium (Android y escritorio): manifest
+  completo, iconos 192/512 `any` y `maskable`, `apple-touch-icon`, y un service
+  worker con handler de `fetch` — que Chromium sigue exigiendo para *ofrecer* el
+  prompt, aunque ya no lo exija para instalar desde el menú.
+- Punto de entrada protagónico: botón de acento sólido en la esquina inferior
+  derecha del mapa, la única superficie de acento sólido del visor.
+- Punto de entrada tipo barra de navegación: «Instalar app» en el cluster
+  superior derecho en escritorio y en el panel «Más acciones» en móvil, con el
+  mismo texto en ambos (NAV-1).
+- Modal explicativo con los pasos de la plataforma real del usuario, incluidos
+  los casos donde instalar es imposible (Firefox, Chrome en iOS, webviews
+  embebidos). Se abre solo una vez por dispositivo y queda siempre disponible
+  desde los dos puntos de entrada.
+- Sin conexión: el shell abre igual y la última escena consultada sigue
+  renderizando. Un cuadro nunca consultado degrada con un mensaje explícito.
+- La advertencia de datos simulados sigue visible en todos los estados nuevos,
+  incluido el documento de respaldo sin conexión y el propio modal.
+
+Identidad de la app instalada: nombre `Meteorología Aeronáutica · Demo
+ProjectApp`, nombre corto `Meteo Aero`, tema `#06111c`.

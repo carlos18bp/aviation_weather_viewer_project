@@ -1,0 +1,225 @@
+.overlay {
+  position: fixed;
+  z-index: 40;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: rgb(2 8 14 / 72%);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+
+.panel {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  width: min(100%, 520px);
+  max-height: min(86dvh, 760px);
+  padding: 26px 26px 22px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--viewer-border);
+  border-radius: 16px;
+  color: var(--viewer-text);
+  background: linear-gradient(150deg, rgb(10 30 43 / 97%), rgb(4 15 25 / 97%));
+  box-shadow: 0 36px 90px rgb(0 0 0 / 52%);
+}
+
+.panel:focus-visible {
+  outline: 2px solid var(--viewer-accent);
+  outline-offset: 3px;
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--viewer-muted);
+  background: transparent;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.close:hover,
+.close:focus-visible {
+  border-color: var(--viewer-border);
+  color: var(--viewer-text);
+  outline: 2px solid rgb(50 211 220 / 26%);
+  outline-offset: 2px;
+}
+
+.eyebrow {
+  margin: 0;
+  padding-right: 44px;
+  color: var(--viewer-accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.panel h2 {
+  margin: 0;
+  padding-right: 44px;
+  font-size: 21px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.benefits,
+.steps {
+  margin: 0;
+  color: var(--viewer-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.benefits {
+  display: grid;
+  gap: 8px;
+  padding-left: 0;
+  list-style: none;
+}
+
+/*
+ * Kept as a plain list rather than a grid: turning an <ol> into a grid
+ * container blockifies its items and the numbers disappear.
+ */
+.steps {
+  padding-left: 22px;
+}
+
+.steps li + li {
+  margin-top: 8px;
+}
+
+.benefits li {
+  position: relative;
+  padding-left: 20px;
+}
+
+.benefits li::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--viewer-accent);
+}
+
+.lead {
+  margin: 6px 0 0;
+  color: var(--viewer-text);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.steps li::marker {
+  color: var(--viewer-accent);
+  font-weight: 700;
+}
+
+.warning {
+  margin: 4px 0 0;
+  color: var(--viewer-warning);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.primary,
+.secondary {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 11px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.primary {
+  border: 0;
+  color: #06111c;
+  background: var(--viewer-accent);
+}
+
+.primary:hover:not(:disabled) {
+  background: #5ce0e7;
+}
+
+.primary:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.secondary {
+  border: 1px solid var(--viewer-border);
+  color: var(--viewer-muted);
+  background: transparent;
+}
+
+.secondary:hover {
+  border-color: var(--viewer-accent);
+  color: var(--viewer-text);
+}
+
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 2px solid var(--viewer-accent);
+  outline-offset: 3px;
+}
+
+/* Phone: bottom sheet with the same controls (MOD-1). */
+@media (max-width: 767px) {
+  .overlay {
+    align-items: end;
+    padding: 0;
+  }
+
+  .panel {
+    width: 100%;
+    max-height: 92dvh;
+    padding: 22px 18px calc(20px + var(--viewer-safe-bottom));
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .actions {
+    justify-content: stretch;
+  }
+
+  .actions button {
+    flex: 1 1 140px;
+  }
+}

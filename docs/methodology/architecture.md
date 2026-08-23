@@ -376,3 +376,44 @@ flowchart LR
 El backend mantiene generación offline y validación runtime por hash/semántica;
 no existe endpoint point-sample ni generación por request. API/media permanecen
 same-origin y nunca exponen paths internos.
+
+## PWA instalable — 2026-08-23
+
+Feature transversal, fuera del roadmap de fases por decisión explícita del
+operador (ver `product_requirement_docs.md`). No altera la identidad, el
+contrato de datos ni el dominio meteorológico.
+
+- `frontend/app/manifest.ts` — `MetadataRoute.Manifest`; Next emite
+  `/manifest.webmanifest` e inyecta el `<link rel="manifest">` sin wiring extra.
+- `frontend/app/layout.tsx` — `viewport.themeColor`, `metadata.icons`,
+  `metadata.appleWebApp`, el script inline que captura `beforeinstallprompt`
+  antes de la hidratación, y el montaje de `ServiceWorkerRegistrar`.
+- `frontend/public/sw.js` — service worker escrito a mano, servido desde la raíz
+  del origen, con scope `/`. Sin dependencias nuevas.
+- `frontend/public/offline.html` — documento de respaldo autocontenido.
+- `frontend/features/pwa/` — la feature completa: detección de plataforma,
+  preferencias persistidas, store singleton, registrar del worker y las tres
+  superficies de UI.
+
+Puntos de montaje en el visor:
+
+| Superficie | Dónde | Anchos |
+|---|---|---|
+| `InstallAppSurface` (botón protagónico + chip de actualización) | slot `stageOverlay` de `WeatherViewerShell`, dentro de `.stage` | todos |
+| `InstallAppButton` | cluster `.headerControls` de `WeatherViewer` | ≥1200 px |
+| `InstallAppButton` | panel «Más acciones» del riel responsive | <1200 px |
+| `InstallAppModal` | raíz de `.viewer`, montado una sola vez | todos |
+
+`stageOverlay` se agregó a `WeatherViewerShell` porque `.stage` es la fila
+central del grid `auto / 1fr / auto`: cualquier cosa anclada ahí queda por
+encima del pie a cualquier alto, sin offsets mágicos por breakpoint. En
+escritorio el botón además se coloca como ítem de grid en la columna 2 (la del
+mapa), de modo que nunca se superpone con los paneles de aeropuertos ni de
+capas.
+
+Estado: el store de `features/pwa/` es un singleton de módulo expuesto con
+`useSyncExternalStore`. **No entra en `weatherViewerStore`** — el contrato de
+`reset()` exige equivalencia exacta y está fuertemente testeado, y el estado de
+instalación debe sobrevivir a un reset. `features/pwa/` no importa nada de
+`features/weather/`; el permiso de auto-apertura llega como prop desde
+`WeatherViewer`.

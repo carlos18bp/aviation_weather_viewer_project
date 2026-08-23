@@ -35,6 +35,12 @@ export interface WeatherViewerShellProps {
   airportPanel?: ReactNode;
   layerPanel?: ReactNode;
   responsivePanelHost?: ReactNode;
+  /**
+   * Pinned to the bottom-right of the stage row. Because the stage sits between
+   * the header and the footer in the grid, anything here clears the footer at
+   * every width without magic offsets.
+   */
+  stageOverlay?: ReactNode;
   timeline?: ReactNode;
   utcLabel?: string;
   controllerFactory?: WeatherMapControllerFactory;
@@ -66,6 +72,7 @@ export function WeatherViewerShell({
   airportPanel,
   layerPanel,
   responsivePanelHost,
+  stageOverlay,
   timeline,
   utcLabel = '06Z',
   controllerFactory = defaultControllerFactory,
@@ -185,6 +192,7 @@ export function WeatherViewerShell({
       </header>
 
       <section className={styles.stage} aria-label="Shell del visor meteorológico">
+        {stageOverlay}
         {responsivePanelHost ?? (
           <>
             <aside className={`${styles.panelSlot} ${styles.airportSlot}`} aria-label="Slot para panel aeroportuario">

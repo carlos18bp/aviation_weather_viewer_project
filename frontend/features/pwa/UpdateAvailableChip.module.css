@@ -1,0 +1,33 @@
+.chip {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  margin: 0;
+  padding: 6px 6px 6px 13px;
+  border: 1px solid var(--viewer-border);
+  border-radius: 999px;
+  color: var(--viewer-muted);
+  background: rgb(4 15 25 / 88%);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 32%);
+  backdrop-filter: blur(14px);
+  font-size: 12px;
+}
+
+.chip button {
+  min-height: 32px;
+  padding: 6px 14px;
+  border: 1px solid rgb(50 211 220 / 45%);
+  border-radius: 999px;
+  color: var(--viewer-accent);
+  background: rgb(50 211 220 / 12%);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.chip button:hover,
+.chip button:focus-visible {
+  border-color: var(--viewer-accent);
+  outline: 2px solid rgb(50 211 220 / 26%);
+  outline-offset: 2px;
+}

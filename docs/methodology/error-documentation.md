@@ -444,3 +444,33 @@ mezclado.
 No hubo iPhone ni Android reales. La evidencia WebKit/Chromium no se presenta
 como smoke físico. El procedimiento y criterios de rechazo están en el handoff
 de release. Despliegue también se omitió por instrucción explícita del operador.
+
+## 2026-08-23 — La escena no vive en `/api/v1/`, y una regla de caché escrita contra la API deja el mapa en blanco
+
+**Síntoma esperado.** El primer diseño del service worker cacheaba `/api/v1/**`
+como «la escena vista». Sin conexión eso habría devuelto catálogo y punteros,
+pero ningún dato: mapa en blanco con la UI creyendo que todo está bien.
+
+**Causa.** `/api/v1/demo/weather/frames` devuelve un *descriptor* de 385 B que
+apunta a un asset. El peso real está en `/media/demo-weather/<escenario>/…`:
+6,5 MB en 74 URLs (una combinación capa+hora ronda 1,1 MB). En producción esas
+URLs ni siquiera pasan por Next — nginx las sirve con un `alias` al filesystem;
+el rewrite `/media/:path*` de `next.config.ts` es sólo de desarrollo.
+
+**Resolución.** `/media/demo-weather/**` va cache-first (ahí está la escena) y
+`/api/v1/**` va stale-while-revalidate (son punteros baratos de refrescar).
+Cubierto por `features/pwa/__tests__/serviceWorkerRouting.test.ts`, que fija la
+tabla de ruteo completa.
+
+## 2026-08-23 — `next build` congela el destino de los rewrites
+
+**Síntoma.** Con el build ya hecho, arrancar `next start` con otro
+`NEXT_PUBLIC_BACKEND_ORIGIN` seguía dando `500` en `/api/v1/...`, mientras el
+backend respondía `200` si se lo consultaba directo.
+
+**Causa.** Next evalúa `rewrites()` en build time y guarda el resultado en
+`routes-manifest.json`. Cambiar la variable al arrancar no reescribe nada.
+
+**Resolución.** La variable tiene que estar presente **en el build**, que es lo
+que ya hace el comando de deploy registrado en `projects.yml`. Anotado en
+`technical.md` junto a los comandos de verificación.

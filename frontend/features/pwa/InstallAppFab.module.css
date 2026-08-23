@@ -1,0 +1,57 @@
+.fab {
+  display: inline-flex;
+  gap: 9px;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 999px;
+  color: #06111c;
+  background: var(--viewer-accent);
+  box-shadow:
+    0 18px 44px rgb(0 0 0 / 42%),
+    0 0 0 1px rgb(6 17 28 / 45%);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.fab svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fab:hover {
+  background: #5ce0e7;
+}
+
+.fab:focus-visible {
+  outline: 2px solid var(--viewer-text);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .fab {
+    transition: background 160ms ease, transform 160ms ease;
+  }
+
+  .fab:active {
+    transform: scale(0.97);
+  }
+}
+
+@media (max-width: 767px) {
+  .fab {
+    padding: 11px 15px;
+    font-size: 13px;
+  }
+}

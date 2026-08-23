@@ -38,6 +38,7 @@ import {
   useAirportWeatherSeries,
   type AirportFeature,
 } from '@/features/airports';
+import { InstallAppButton, InstallAppModal, InstallAppSurface } from '@/features/pwa';
 import {
   DEFAULT_VIEWER_SCENE,
   parseViewerScene,
@@ -536,6 +537,7 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
         onChange={handlePresentationMode}
       />
       <SceneShare url={sceneUrl} />
+      <InstallAppButton />
       <ViewerActions
         onReset={handleReset}
         onRetry={hasPrimaryError ? () => orchestrator()?.retry() : undefined}
@@ -600,6 +602,15 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
             onClose={closeResponsivePanel}
           />
         )}
+        stageOverlay={(
+          <InstallAppSurface
+            autoOpenEnabled={catalogReady && !snapshot.presentationMode}
+            hidden={
+              snapshot.presentationMode
+              || (viewportMode !== 'desktop' && responsivePanel.activePanel !== null)
+            }
+          />
+        )}
         timeline={timeline}
         utcLabel={zuluHour(snapshot.activeTimestamp)}
         controllerFactory={controllerFactory}
@@ -651,6 +662,11 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
             <SceneShare url={sceneUrl} />
           </div>
         )}
+        {viewportMode === 'desktop' && !snapshot.presentationMode && (
+          <div className={styles.installControl}>
+            <InstallAppButton />
+          </div>
+        )}
         {viewportMode === 'desktop' && (
           <ViewerActions
             onReset={handleReset}
@@ -659,6 +675,8 @@ export function WeatherViewer({ initialScene }: WeatherViewerProps) {
           />
         )}
       </div>
+
+      <InstallAppModal />
     </div>
   );
 }

@@ -1,0 +1,35 @@
+.surface {
+  position: absolute;
+  z-index: 3;
+  right: calc(12px + var(--viewer-safe-right));
+  bottom: 10px;
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+  pointer-events: auto;
+}
+
+@media (min-width: 768px) {
+  .surface {
+    right: calc(16px + var(--viewer-safe-right));
+    bottom: 12px;
+  }
+}
+
+/*
+ * Desktop places this as a grid child of the stage instead of pinning it to the
+ * viewport corner: the stage columns are the airport panel, the map and the
+ * layer panel, so sitting in column 2 keeps the button in the bottom-right of
+ * the map itself and out of both panels, whatever height they grow to.
+ * grid-row is explicit because the panel host spans every column, and sparse
+ * auto-placement would otherwise push this into a second row.
+ */
+@media (min-width: 1200px) {
+  .surface {
+    position: static;
+    grid-row: 1;
+    grid-column: 2;
+    align-self: end;
+    justify-self: end;
+  }
+}
