@@ -10,6 +10,8 @@ it('keeps the operational warning visible in the offline fallback', () => {
 });
 
 it('requests nothing from the network so it can render with no connection', () => {
+  // Positive first: an empty file would satisfy every negative below.
+  expect(html).toMatch(/<style>[\s\S]+<\/style>/);
   expect(html).not.toMatch(/https?:\/\//);
   expect(html).not.toMatch(/<link[^>]+stylesheet/i);
   expect(html).not.toMatch(/@font-face/i);

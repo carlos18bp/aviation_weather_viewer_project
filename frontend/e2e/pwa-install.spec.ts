@@ -55,9 +55,13 @@ test.describe('PWA install', () => {
       await openReadyViewer(page);
 
       await page.getByTestId('pwa-install-fab').click();
-      await expect(page.getByTestId('pwa-install-modal')).toBeVisible();
 
-      await page.getByTestId('pwa-install-confirm').click();
+      const confirm = page.getByTestId('pwa-install-confirm');
+      await expect(confirm).toHaveText('Instalar ahora');
+      await expect(page.getByTestId('pwa-install-modal').getByRole('list').first())
+        .toContainText('La última escena consultada queda disponible sin conexión.');
+
+      await confirm.click();
 
       await expect
         .poll(() => page.evaluate(() => (window as typeof window & { __promptCalls?: number }).__promptCalls))

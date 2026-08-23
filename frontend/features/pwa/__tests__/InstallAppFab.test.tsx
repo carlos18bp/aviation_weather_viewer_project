@@ -42,15 +42,22 @@ it('stays visible where installing needs manual steps', () => {
 });
 
 it('disappears once the app is installed', () => {
+  givenState();
+  const { rerender } = render(<InstallAppFab />);
+  expect(screen.getByTestId('pwa-install-fab')).toHaveTextContent('Instalar app');
+
   givenState({ isInstalled: true });
-  render(<InstallAppFab />);
+  rerender(<InstallAppFab />);
 
   expect(screen.queryByTestId('pwa-install-fab')).not.toBeInTheDocument();
 });
 
 it('yields the corner while a panel covers it', () => {
   givenState();
-  render(<InstallAppFab hidden />);
+  const { rerender } = render(<InstallAppFab />);
+  expect(screen.getByTestId('pwa-install-fab')).toHaveTextContent('Instalar app');
+
+  rerender(<InstallAppFab hidden />);
 
   expect(screen.queryByTestId('pwa-install-fab')).not.toBeInTheDocument();
 });
