@@ -84,6 +84,14 @@ test.describe('PWA install', () => {
       await expect(modal.getByRole('note')).toHaveText(WARNING);
       await expect(page.getByTestId('pwa-install-confirm')).toHaveCount(0);
 
+      // Tailwind's preflight resets every list to list-style: none, so the
+      // numbered steps render unnumbered unless the module restates it.
+      const marker = await modal
+        .locator('ol li')
+        .first()
+        .evaluate((node) => getComputedStyle(node).listStyleType);
+      expect(marker).toBe('decimal');
+
       await page.keyboard.press('Escape');
 
       await expect(modal).toBeHidden();
