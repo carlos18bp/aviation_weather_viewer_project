@@ -268,3 +268,32 @@
   release serio deja el gate pendiente y entrega un procedimiento reproducible.
 - El warning y reset deben vivir fuera de toda boundary ocultable: son las dos
   salidas de seguridad que deben sobrevivir a cualquier fallback.
+
+## PWA instalable — 2026-08-23
+
+- **La referencia se audita, no se copia.** La PWA de `gym_project` sirve su
+  worker bajo `/static/frontend/`, así que nunca controla `/`: en producción no
+  cachea nada y `beforeinstallprompt` no llega a dispararse. Su modal manual
+  funciona por accidente, no por diseño. Copiamos las partes buenas (captura del
+  evento a nivel módulo, listener de `appinstalled`, chequeo multi-`display-mode`,
+  pasos manuales por navegador) y corregimos tres defectos: scope del worker,
+  modal montado dos veces con estado singleton, y una bandera `installed` en
+  localStorage que nunca se limpia y esconde el botón para siempre tras
+  desinstalar.
+- **Un estado «instalada» persistido miente.** Derivarlo de evidencia viva
+  (`display-mode`, `navigator.standalone`, referrer `android-app://`) y usar el
+  dato guardado sólo para no volver a abrir el modal automático.
+- **Turbopack hace que `skipWaiting` sea peligroso.** Los chunks llevan hash de
+  contenido y desaparecen en cada deploy; que un worker nuevo tome el control a
+  mitad de sesión le entrega un `ChunkLoadError` a la pestaña abierta. De ahí el
+  chip «Nueva versión · Actualizar» y el bucket `_next-static` sin versión.
+- **Un ítem de grid colocado explícitamente reordena a sus hermanos.** Agregar el
+  overlay de instalación en la columna 2 de `.stage` empujó el panel host a una
+  segunda fila, porque el host no declaraba `grid-row`. Se ve enseguida midiendo
+  `gridTemplateRows` en el browser y se pierde una tarde razonando sobre CSS.
+- **Medir antes que teorizar.** Dos hipótesis sobre por qué el botón quedaba
+  arriba fueron erradas; un `getBoundingClientRect` y un `getComputedStyle`
+  resolvieron el caso en un intento.
+- **Verificar el artefacto servido, no sólo el código.** `curl` sobre
+  `/manifest.webmanifest` y `/sw.js` confirmó content-type, `Cache-Control` y
+  scope antes de escribir un solo test de browser.

@@ -322,3 +322,39 @@ desconectadas de MapLibre central hasta esa integración.
    por movimiento del marcador.
 4. Destruir primero adapter y luego service para retirar source/layer antes de
    revocar sus object URLs.
+
+## PWA instalable — 2026-08-23
+
+Trabajo posterior al cierre de Fase 23, en la rama de sesión
+`feat/23082026-pwa-installable` (base `master`, sin PR de release abierto).
+
+**Por qué existe.** El operador la pidió para la próxima demo con el cliente:
+enseñar el potencial del visor como app instalable. La referencia visual fue la
+PWA de `gym_project` (G&M Consultores Jurídicos), auditada vía `gh` y contra su
+sitio público — no hizo falta Tailscale.
+
+**Decisión de alcance.** Se implementa como feature aparte y **no se toca el
+roadmap**, aunque `mobile_layer_enrichment/README.md` liste la PWA como
+`Postergado` (línea 73) y «fuera de este roadmap» (línea 259). Esas dos líneas
+quedan desactualizadas a propósito; enmendarlas es una decisión entre olas.
+
+**Decisiones de producto tomadas por el operador:**
+
+| Tema | Decisión |
+|---|---|
+| Alcance sin conexión | shell + última escena consultada (no el dataset completo) |
+| Modal | apertura automática una sola vez por dispositivo; icono y entrada de barra siempre disponibles |
+| Ubicación del botón protagónico | esquina inferior derecha, sobre el mapa |
+| Icono | avión ascendente sobre isobaras, cian `#32d3dc` sobre `#06111c` |
+| Nombre corto | `Meteo Aero` |
+
+**Estado.** Funcionalmente completo y verificado contra un build de producción:
+manifest válido, worker registrado y controlando la página, botón visible en los
+cinco anchos de referencia con objetivo táctil ≥44 px, sin scroll horizontal,
+advertencia de datos simulados intacta, y el modal abriéndose solo una vez y no
+repitiéndose tras recargar. 46 tests unitarios y 3 E2E en verde; `tsc` limpio y
+`npm run lint` sin hallazgos nuevos respecto de `master`.
+
+**Pendiente** (detallado en `tasks_plan.md`): instalación real en Android e
+iPhone, las dos capturas del manifest, y el deploy — que sigue excluido salvo
+instrucción explícita del operador.

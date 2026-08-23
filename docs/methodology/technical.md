@@ -444,3 +444,84 @@ inducido para validar fallback. Evidencia en
 El despliegue no forma parte de esta ejecución por instrucción del operador. La
 validación física de iPhone/Safari y Android/Chrome queda pendiente y no puede
 ser sustituida por Playwright WebKit.
+
+## Service worker y PWA — 2026-08-23
+
+Sin dependencias nuevas: `next-pwa`, `@ducanh2912/next-pwa`, `@serwist/next` y
+`workbox-*` quedan descartados (romperían la disciplina de cinco deps de runtime
+y ninguna es confiable con Next 16 + Turbopack). Worker escrito a mano.
+
+### Buckets de caché
+
+Tres relojes de invalidación distintos, para que un deploy no vuelva a bajar el
+basemap entero:
+
+| Bucket | Constante | Se invalida cuando |
+|---|---|---|
+| `awv-shell-<SW_REV>` | `SW_REV` | cambia la lógica de `sw.js` o el precache crítico |
+| `awv-map-<MAP_REV>` | `MAP_REV` | cambia algo bajo `public/map/` |
+| `awv-next-static` | — | **nunca**; ver abajo |
+| `awv-scene-<DATA_REV>` | `DATA_REV` | cambia el escenario o el schema del manifest |
+
+`awv-next-static` es deliberadamente sin versión. Turbopack emite chunks con
+hash de contenido y los reemplaza en cada build; borrar ese bucket al activar le
+entregaría un `ChunkLoadError` a cualquier pestaña que siga corriendo el build
+anterior. Una entrada vieja nunca es incorrecta (la URL es content-addressed),
+sólo ocupa espacio: se limita por conteo (`NEXT_MAX_ENTRIES`), no por versión.
+
+### Estrategia por clase de request
+
+| Request | Estrategia | Por qué |
+|---|---|---|
+| navegación a `/` | network-first (timeout 3 s) → caché → `/offline.html` | el HTML embebe los hashes del build actual; servir uno viejo garantiza `ChunkLoadError` |
+| `/_next/static/**` | cache-first, sólo si la respuesta es `immutable` | el chequeo de `immutable` desactiva la regla sola bajo `next dev`, así no rompe HMR |
+| `/map/**` | cache-first | ~1 MB de basemap congelado; es la diferencia entre mapa y lienzo en blanco sin red |
+| `/media/demo-weather/**` | cache-first | **acá vive la escena**: 6,5 MB en 74 URLs. El dataset es congelado, revalidar no aporta |
+| `/api/v1/**` GET | stale-while-revalidate | ~4 KB de punteros y catálogo; barato de refrescar |
+| `/api/**` no-GET | passthrough | nunca se cachea ni se encola una mutación |
+| resto de `/media/**`, `/_next/` interno, RSC, cross-origin | passthrough | MRNF-003 y App Router |
+
+Todo `cache.match` usa `{ ignoreVary: true }`: el documento, la API y
+`/_next/static` responden con `Vary`, y el matching por defecto produce misses
+intermitentes imposibles de reproducir.
+
+### Detalles operativos verificados
+
+- `next start` sirve `public/` con `Cache-Control: public, max-age=0` + ETag, así
+  que `/sw.js` se revalida en cada carga. **No agregar** un `location = /sw.js`
+  en nginx: un `location` propio pierde los `add_header` de
+  `security-headers.conf`.
+- El scope raíz sale gratis (`location /` es un `proxy_pass` transparente y no
+  hay `basePath`); no hace falta `Service-Worker-Allowed`.
+- Sin `skipWaiting` automático. La activación la dispara el usuario desde el chip
+  «Nueva versión · Actualizar», y el reload se guarda contra bucles con un flag
+  y contra el primer `clients.claim()` con `hadController`.
+- El worker se registra sólo con `NODE_ENV=production` o
+  `NEXT_PUBLIC_PWA_ENABLED=1`.
+- `public/sw.js` es invisible para `tsc` (el `include` de `tsconfig.json` no
+  toma `*.js`) pero **sí** lo lintea eslint: necesita el bloque de globals de
+  worker en `eslint.config.mjs`.
+
+### Verificación
+
+```bash
+cd frontend && npm test -- features/pwa/__tests__/installEnvironment.test.ts features/pwa/__tests__/pwaStore.test.ts
+cd frontend && npm test -- features/pwa/__tests__/InstallAppModal.test.tsx features/pwa/__tests__/InstallAppFab.test.tsx
+cd frontend && npm test -- features/pwa/__tests__/serviceWorkerRouting.test.ts features/pwa/__tests__/offlineDocument.test.ts features/pwa/__tests__/manifest.test.ts
+cd frontend && npm run build          # ciclo aparte
+cd frontend && npx playwright test e2e/pwa-install.spec.ts
+```
+
+El service worker y el modo sin conexión no se validan con el runner de E2E: su
+`webServer` levanta `next dev`, donde la regla de `/_next/static` se desactiva a
+propósito. Se prueban contra un build de producción:
+
+```bash
+cd frontend && NEXT_PUBLIC_BACKEND_ORIGIN=<origen> npm run build
+cd frontend && PORT=3100 NEXT_PUBLIC_BACKEND_ORIGIN=<origen> npm run start
+curl -s  localhost:3100/manifest.webmanifest | python3 -m json.tool
+curl -sI localhost:3100/sw.js | grep -iE 'content-type|cache-control'
+```
+
+`NEXT_PUBLIC_BACKEND_ORIGIN` debe estar presente **en el build**: Next evalúa
+`rewrites()` en build time y lo congela en `routes-manifest.json`.

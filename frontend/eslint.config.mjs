@@ -32,6 +32,32 @@ const eslintConfig = defineConfig([
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },
+  {
+    // public/sw.js is served verbatim, so it is plain worker-scoped script that
+    // neither Turbopack nor tsc ever sees. Declare its globals or no-undef
+    // floods the lint run.
+    files: ['public/sw.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'script',
+      globals: {
+        self: 'readonly',
+        caches: 'readonly',
+        clients: 'readonly',
+        fetch: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        AbortController: 'readonly',
+        Response: 'readonly',
+        Request: 'readonly',
+        URL: 'readonly',
+        Promise: 'readonly',
+        Error: 'readonly',
+        JSON: 'readonly',
+        Math: 'readonly',
+      },
+    },
+  },
   globalIgnores([
     '.next/**',
     'out/**',

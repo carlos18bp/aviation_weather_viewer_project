@@ -1,5 +1,8 @@
 .host {
   position: relative;
+  /* Row is explicit because the stage also holds the install overlay: without
+     it, sparse auto-placement pushes this host into a second row. */
+  grid-row: 1;
   grid-column: 1 / -1;
   width: 100%;
   height: 100%;

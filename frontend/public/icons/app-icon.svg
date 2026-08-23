@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512" role="img" aria-label="Meteo Aero">
+  <rect width="100" height="100" fill="#06111c"/>
+  <g fill="none" stroke="#32d3dc" stroke-width="3.2" stroke-linecap="round" opacity="0.4">
+    <path d="M-2 70C14 62 32 78 50 70S86 62 102 70"/>
+    <path d="M-2 81C14 73 32 89 50 81S86 73 102 81"/>
+    <path d="M-2 92C14 84 32 100 50 92S86 84 102 92"/>
+  </g>
+  <g transform="translate(50 33) scale(0.62) translate(-50 -50)">
+    <path fill="#32d3dc" d="M50 4 53.5 18 53.5 38 95 64 95 72 53.5 57 53.5 79 64 89 64 95 50 89 36 95 36 89 46.5 79 46.5 57 5 72 5 64 46.5 38 46.5 18Z"/>
+  </g>
+</svg>

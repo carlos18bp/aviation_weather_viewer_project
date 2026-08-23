@@ -1,8 +1,8 @@
 # Mapa de flujos de usuario
 
-Versión: 5.0.0
+Versión: 5.1.0
 
-Actualizado: 2026-08-21
+Actualizado: 2026-08-23
 
 Alcance inspeccionado: Fase 23, ruta pública `/`, vertical slice schema 3 en
 phone, tablet y desktop. La matriz automatizada cubre Chrome `360×800`,
@@ -127,17 +127,24 @@ superficies administrativas.
 | `viewer-touch-integration` | P1 | success, display | `mobile-integration-release.spec.ts`, Flujo C. |
 | `viewer-responsive-continuity` | P1 | success, display | `mobile-integration-release.spec.ts`, Flujos C/D en Chrome y WebKit. |
 | `viewer-tablet-aviation` | P1 | success, display | `mobile-integration-release.spec.ts`, Flujo D. |
+| `viewer-pwa-install` | P2 | success, failure, display | `pwa-install.spec.ts`: prompt nativo capturado, pasos manuales sin prompt y entrada desde el panel «Más» a 412 px. |
 | 17 flows negativos | P1–P3 | `expectedSpecs: 0` | Exentos deliberadamente; evidencia dirigida indicada en `flow-definitions.json`. |
 
-Resumen registrado: 30 flows; 13 con cobertura E2E prevista y 17 exentos
+Resumen registrado: 31 flows; 14 con cobertura E2E prevista y 17 exentos
 deliberados. No hay `junk-only`. Los dos tests de Fase 23 conducen los controles
 reales; races, corrupción y degradaciones no se duplican en browser.
+
+La instalación como PWA se conduce en browser con un `beforeinstallprompt`
+simulado: Chromium sólo emite el evento real cuando decide que se cumplen sus
+criterios de instalabilidad, y eso no es reproducible en un runner. El service
+worker y el comportamiento sin conexión se validan aparte, contra un build de
+producción (ver `docs/methodology/technical.md`).
 
 ## Clases por módulo
 
 | Módulo | success | error | failure | display |
 |---|---|---|---|---|
-| Viewer integrado | Búsqueda, touch/picker, point forecast, ruta, siete capas, isobaras, responsive, URL, modo y reset. | No-result, ruta inválida y URL normalizada. | Requests/assets/runtime/touch/perfil/Clipboard/Fullscreen con recovery. | Datos congelados de aeropuerto, seis horas, punto, ruta, capas y escena restaurada. |
+| Viewer integrado | Búsqueda, touch/picker, point forecast, ruta, siete capas, isobaras, responsive, URL, modo, instalación como app y reset. | No-result, ruta inválida y URL normalizada. | Requests/assets/runtime/touch/perfil/Clipboard/Fullscreen con recovery. | Datos congelados de aeropuerto, seis horas, punto, ruta, capas y escena restaurada. |
 
 ## Preguntas abiertas
 

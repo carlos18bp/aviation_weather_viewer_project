@@ -1,263 +1,409 @@
 {
-  "version": "5.0.0",
-  "lastUpdated": "2026-08-21",
+  "version": "5.1.0",
+  "lastUpdated": "2026-08-23",
   "flows": {
     "viewer-demo-journey": {
       "name": "Complete base desktop weather viewer journey",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "The public user completes the original Phase 08 wind, temperature, airport, timeline, playback, reset, and deterministic reload journey.",
-      "outcomes": ["success", "display"]
+      "outcomes": [
+        "success",
+        "display"
+      ]
     },
     "viewer-airport-intelligence": {
       "name": "Search an airport and explore its six-point trend",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "The user searches SKBO by its public identity, focuses it without opening the picker, reads its six simulated points, and selects 09Z from the trend.",
-      "outcomes": ["success", "display"]
+      "outcomes": [
+        "success",
+        "display"
+      ]
     },
     "viewer-weather-picker": {
       "name": "Inspect local weather at a map coordinate",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "A background map click places or moves one picker and displays temperature, wind speed, direction, coordinate, and active UTC from the same local grids.",
-      "outcomes": ["success", "display"]
+      "outcomes": [
+        "success",
+        "display"
+      ]
     },
     "viewer-route-story": {
       "name": "Build and inspect an airport route wind story",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "The user creates SKBO to SKRG, sees one map route and its simulated distance, head/tail/crosswind profile and permanent planning disclaimer.",
-      "outcomes": ["success", "display"]
+      "outcomes": [
+        "success",
+        "display"
+      ]
     },
     "viewer-atmospheric-layers": {
       "name": "Switch to precipitation with an independent isobar overlay",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "The user selects precipitation as the only primary layer, enables isobars independently, and sees the precipitation legend and synchronized overlay.",
-      "outcomes": ["success", "display"]
+      "outcomes": [
+        "success",
+        "display"
+      ]
     },
     "viewer-scene-sharing": {
       "name": "Copy and restore a canonical enriched scene",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "The user copies the canonical scene URL, opens it, and restores viewport, any of the seven layer IDs, timestamp, airport, picker, route, isobars, and presentation-safe state.",
-      "outcomes": ["success", "display"]
+      "outcomes": [
+        "success",
+        "display"
+      ]
     },
     "viewer-presentation-mode": {
       "name": "Enter and exit the internal presentation mode",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P2",
       "description": "The user contracts secondary controls while preserving brand, UTC, layer, legend, timeline, warning, active map results, and the visible exit action.",
-      "outcomes": ["success", "display"]
+      "outcomes": [
+        "success",
+        "display"
+      ]
     },
     "viewer-enriched-reset": {
       "name": "Reset the complete enriched viewer scene",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "After airport, picker, route, any primary layer, isobars, viewport, playback, URL, and presentation changes, reset returns once to wind, 06Z, camera [-73.5,4.5,4.7], no selections, no panel, and the canonical empty URL.",
-      "outcomes": ["success"]
+      "outcomes": [
+        "success"
+      ]
     },
     "viewer-layer-explorer": {
       "name": "Discover and switch all seven primary weather layers",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "The user opens the layer explorer, sees the frozen essential and aviation categories, and switches cloud cover or visibility while exactly one primary layer remains visible and isobars stay independent.",
-      "outcomes": ["success", "display"]
+      "outcomes": [
+        "success",
+        "display"
+      ]
     },
     "viewer-point-forecast": {
       "name": "Inspect the six-timestamp forecast for a touched coordinate",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "A map touch opens the location panel at peek and displays six deterministic local forecast rows whose active metric and UTC remain synchronized with the committed scene.",
-      "outcomes": ["success", "display"]
+      "outcomes": [
+        "success",
+        "display"
+      ]
     },
     "viewer-touch-integration": {
       "name": "Use coarse-pointer GIS arbitration and responsive panels",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "On a coarse pointer, map taps preserve airport-before-picker arbitration and open the corresponding location, route, or layers product at peek without creating another map.",
-      "outcomes": ["success", "display"]
+      "outcomes": [
+        "success",
+        "display"
+      ]
     },
     "viewer-responsive-continuity": {
       "name": "Rotate phone and tablet without recreating the map",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "Portrait-to-landscape changes call resize on the existing MapLibre surface while layer, timestamp, point, airport, route, isobars, warning, panel and URL state remain coherent.",
-      "outcomes": ["success", "display"]
+      "outcomes": [
+        "success",
+        "display"
+      ]
     },
     "viewer-tablet-aviation": {
       "name": "Restore a tablet aviation scene with gusts, route and isobars",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "The tablet user selects SKBO, creates SKBO to SKRG, chooses wind gusts, enables isobars, copies and restores the URL, rotates, and retains the route panel and timestamp before reset.",
-      "outcomes": ["success", "display"]
+      "outcomes": [
+        "success",
+        "display"
+      ]
     },
     "viewer-catalog-recovery": {
       "name": "Recover from an unavailable weather catalog",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "The shell and map remain visible while the user retries a failed frozen catalog.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: directed orchestrator tests cover catalog failure and retry; Phase 14 authorizes only the two commercial journeys for new E2E coverage."]
+      "knownGaps": [
+        "Intentional E2E exemption: directed orchestrator tests cover catalog failure and retry; Phase 14 authorizes only the two commercial journeys for new E2E coverage."
+      ]
     },
     "viewer-airports-recovery": {
       "name": "Recover airports without blocking weather",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P2",
       "description": "Weather remains usable while the user retries unavailable airport GeoJSON.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: independent failure and retry are covered by directed orchestrator tests and the stability rehearsal."]
+      "knownGaps": [
+        "Intentional E2E exemption: independent failure and retry are covered by directed orchestrator tests and the stability rehearsal."
+      ]
     },
     "viewer-frame-recovery": {
       "name": "Preserve and retry a failed atomic frame",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "A required main, airport, picker, point-forecast, or route product failure preserves the previous complete timestamp; a failed new raster keeps the last valid raster or fallback and leaves wind and temperature reachable.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: product failures, race discard, abort, preservation, and retry have directed ViewerOrchestrator coverage."]
+      "knownGaps": [
+        "Intentional E2E exemption: product failures, race discard, abort, preservation, and retry have directed ViewerOrchestrator coverage."
+      ]
     },
     "viewer-wind-fallback": {
       "name": "Continue with static wind arrows",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P2",
       "description": "A particle renderer failure announces and retains the original static-arrow fallback.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: renderer and orchestrator tests plus the required fallback rehearsal cover this outcome."]
+      "knownGaps": [
+        "Intentional E2E exemption: renderer and orchestrator tests plus the required fallback rehearsal cover this outcome."
+      ]
     },
     "viewer-map-recovery": {
       "name": "Explain and retry map initialization failure",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "MapLibre or WebGL2 failure keeps the warning and exposes an honest retry state when possible.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: shell and controller tests cover retryable and non-retryable map states."]
+      "knownGaps": [
+        "Intentional E2E exemption: shell and controller tests cover retryable and non-retryable map states."
+      ]
     },
     "viewer-search-validation": {
       "name": "Explain an airport search with no demo result",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P3",
       "description": "A user-entered query outside the six frozen airports shows a no-results message without changing the scene.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: AirportSearch keyboard, empty-result, and selection behavior is covered in its directed component tests."]
+      "knownGaps": [
+        "Intentional E2E exemption: AirportSearch keyboard, empty-result, and selection behavior is covered in its directed component tests."
+      ]
     },
     "viewer-trend-recovery": {
       "name": "Retry an unavailable airport trend",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P2",
       "description": "The active airport remains selected while the user retries a failed six-point evolution request.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: the trend hook and AirportTrend component cover failure, retry, race, cache, and unmount cleanup."]
+      "knownGaps": [
+        "Intentional E2E exemption: the trend hook and AirportTrend component cover failure, retry, race, cache, and unmount cleanup."
+      ]
     },
     "viewer-picker-recovery": {
       "name": "Distinguish picker outside coverage and unavailable data",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P2",
       "description": "The picker preserves its marker and distinguishes coverage rejection from a same-timestamp product failure with retry.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: picker service, sampler, component, and orchestrator tests cover both negative classes."]
+      "knownGaps": [
+        "Intentional E2E exemption: picker service, sampler, component, and orchestrator tests cover both negative classes."
+      ]
     },
     "viewer-route-validation": {
       "name": "Reject, invert, retry, and clear route inputs",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P2",
       "description": "The route form rejects equal endpoints and lets the user invert, retry, or clear controlled selections.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: RoutePlanner and route analysis directed tests cover invalid, inverse, retry, and clear behavior."]
+      "knownGaps": [
+        "Intentional E2E exemption: RoutePlanner and route analysis directed tests cover invalid, inverse, retry, and clear behavior."
+      ]
     },
     "viewer-isobar-recovery": {
       "name": "Hide failed isobars without aborting the primary frame",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "An isobar load failure hides only the overlay, explains the issue, and leaves layer, timestamp, UTC, and legend committed.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: the optional-overlay outcome is covered atomically in ViewerOrchestrator and adapter tests."]
+      "knownGaps": [
+        "Intentional E2E exemption: the optional-overlay outcome is covered atomically in ViewerOrchestrator and adapter tests."
+      ]
     },
     "viewer-scene-normalization": {
       "name": "Normalize a partial or invalid viewer URL",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P1",
       "description": "Opening an invalid or partial query safely uses defaults, omits invalid selections, and replaces it with the canonical URL.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: codec boundary matrices, URL synchronizer tests, and complete-scene orchestrator bootstrap cover validation and canonicalization."]
+      "knownGaps": [
+        "Intentional E2E exemption: codec boundary matrices, URL synchronizer tests, and complete-scene orchestrator bootstrap cover validation and canonicalization."
+      ]
     },
     "viewer-share-fallback": {
       "name": "Fall back to manual scene URL copy",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P3",
       "description": "Clipboard denial exposes a focused read-only URL for manual copy without losing the scene.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: SceneShare directed tests cover absent, rejected, stale, and successful Clipboard outcomes."]
+      "knownGaps": [
+        "Intentional E2E exemption: SceneShare directed tests cover absent, rejected, stale, and successful Clipboard outcomes."
+      ]
     },
     "viewer-presentation-fallback": {
       "name": "Keep internal presentation mode without Fullscreen",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P3",
       "description": "Fullscreen denial is explained while the internal mode and its exit remain usable.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: PresentationMode tests cover unavailable Fullscreen, keyboard exclusions, repeated requests, and cleanup."]
+      "knownGaps": [
+        "Intentional E2E exemption: PresentationMode tests cover unavailable Fullscreen, keyboard exclusions, repeated requests, and cleanup."
+      ]
     },
     "viewer-point-forecast-recovery": {
       "name": "Keep healthy point-forecast metrics when one grid fails",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P2",
       "description": "A failed value grid leaves its raster visible, marks only that point value unavailable, and preserves every healthy metric and timestamp without cross-hour data.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: point-forecast domain, service, component, and orchestrator tests cover partial grids, stale responses, abort, retry, and healthy-metric preservation."]
+      "knownGaps": [
+        "Intentional E2E exemption: point-forecast domain, service, component, and orchestrator tests cover partial grids, stale responses, abort, retry, and healthy-metric preservation."
+      ]
     },
     "viewer-explorer-fallback": {
       "name": "Keep quick layer access when the explorer fails",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P2",
       "description": "An explorer render or partial-catalog failure keeps the quick layer row, warning, reset, and access to wind available.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: LayerExplorer catalog and product-boundary component tests cover incomplete entries, thrown render paths, and quick-row recovery."]
+      "knownGaps": [
+        "Intentional E2E exemption: LayerExplorer catalog and product-boundary component tests cover incomplete entries, thrown render paths, and quick-row recovery."
+      ]
     },
     "viewer-touch-fallback": {
       "name": "Retain panels and desktop click when touch coordination fails",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P2",
       "description": "If coarse touch coordination cannot start, panel controls and the existing desktop click arbitration remain available without replacing MapLibre.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: touch coordinator and Phase 23 adapter tests cover registration failure, fallback arbitration, cleanup, and one-time listener ownership."]
+      "knownGaps": [
+        "Intentional E2E exemption: touch coordinator and Phase 23 adapter tests cover registration failure, fallback arbitration, cleanup, and one-time listener ownership."
+      ]
     },
     "viewer-adaptive-fallback": {
       "name": "Use a conservative rendering profile when adaptation fails",
       "module": "viewer",
-      "roles": ["public"],
+      "roles": [
+        "public"
+      ],
       "priority": "P2",
       "description": "Adaptive rendering runs only for visible wind, degrades after sustained low FPS, pauses while the document is hidden, and falls back to a conservative profile if profiling fails.",
       "expectedSpecs": 0,
-      "knownGaps": ["Intentional E2E exemption: adaptive controller, wind renderer, document-visibility, and orchestrator tests cover thresholds, profile fallback, pause/resume, and reverse-order destroy."]
+      "knownGaps": [
+        "Intentional E2E exemption: adaptive controller, wind renderer, document-visibility, and orchestrator tests cover thresholds, profile fallback, pause/resume, and reverse-order destroy."
+      ]
+    },
+    "viewer-pwa-install": {
+      "name": "Install the viewer as an app from the browser",
+      "module": "viewer",
+      "roles": [
+        "public"
+      ],
+      "priority": "P2",
+      "description": "The public user opens the install entry point from the desktop header or the mobile actions panel, reads the explanatory modal, and either hands off to the browser install prompt or follows the manual steps for a platform that has none.",
+      "outcomes": [
+        "success",
+        "failure",
+        "display"
+      ]
     }
   }
 }

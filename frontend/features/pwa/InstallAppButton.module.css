@@ -1,0 +1,40 @@
+.install {
+  display: grid;
+  gap: 7px;
+  color: var(--viewer-text);
+}
+
+.install button {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid rgb(50 211 220 / 45%);
+  border-radius: 8px;
+  color: var(--viewer-accent);
+  background: rgb(50 211 220 / 10%);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.install button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.install button:hover,
+.install button:focus-visible {
+  border-color: var(--viewer-accent);
+  background: rgb(50 211 220 / 18%);
+  outline: 2px solid rgb(50 211 220 / 26%);
+  outline-offset: 2px;
+}

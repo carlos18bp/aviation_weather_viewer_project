@@ -229,3 +229,36 @@ el toolkit**.
   E2E.
 - [x] Pasar 49 tests dirigidos, TypeScript, ESLint, guardas de imports y build.
 - [x] Preparar muestras SKBO/SKRG y cuatro capturas 06Z/09Z para Fase 23.
+
+## PWA instalable — 2026-08-23
+
+Feature transversal fuera del roadmap de fases, por decisión del operador.
+
+- [x] Manifest (`app/manifest.ts`), metadata de tema e iconos de iOS.
+- [x] Arte del icono desde cero (no había logo ni favicon en el repo) y los PNG
+      192/512 `any` + `maskable` + `apple-touch-icon`, generados con
+      `scripts/generate-pwa-icons.mjs` y commiteados.
+- [x] Service worker a mano en `public/sw.js`, scope raíz, sin dependencias
+      nuevas; shell + basemap + escena consultada disponibles sin conexión.
+- [x] Documento de respaldo `public/offline.html` con la advertencia obligatoria.
+- [x] `features/pwa/`: detección de plataforma, preferencias, store singleton,
+      registrar del worker, botón protagónico, entrada de barra y modal.
+- [x] Montaje en el visor: slot `stageOverlay` del shell, cluster de escritorio y
+      panel «Más acciones» en móvil.
+- [x] 46 tests unitarios dirigidos + spec E2E `pwa-install.spec.ts` (3 tests) y
+      alta del flow `viewer-pwa-install`.
+- [x] Barrido responsive a 412 / 835 / 1195 / 1440 / 2560 con el botón visible,
+      objetivo táctil ≥44 px, sin scroll horizontal y advertencia intacta.
+- [x] Verificación contra build de producción: manifest, `sw.js`, worker
+      controlando la página y apertura automática única del modal.
+- [x] Prueba real sin conexión (servidor apagado, perfil de browser persistente):
+      la app abre, el mapa renderiza, la advertencia sigue visible y un cuadro
+      nunca consultado devuelve el 503 sintético que la UI ya sabe mostrar.
+- [ ] Instalación real en un Android y un iPhone (mismo gate físico que quedó
+      pendiente desde Fase 23).
+- [x] Capturas `screenshot-wide.png` (1280×720) y `screenshot-narrow.png`
+      (720×1280) del manifest, tomadas con Playwright sobre un build de
+      producción con datos reales; activan el diálogo de instalación enriquecido
+      de Chrome en Android.
+- [ ] Deploy a `aviation-weather-platform.projectapp.co` (rebuild + restart de
+      `aviation-weather-viewer-frontend`), a la espera de instrucción.

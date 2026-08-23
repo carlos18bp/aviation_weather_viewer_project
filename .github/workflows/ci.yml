@@ -110,6 +110,9 @@ jobs:
       - name: Run directed page tests
         run: npm test -- app/__tests__/page.test.tsx
 
+      - name: Run directed PWA install tests
+        run: npm test -- features/pwa/__tests__
+
   frontend-build:
     runs-on: ubuntu-latest
     defaults:
