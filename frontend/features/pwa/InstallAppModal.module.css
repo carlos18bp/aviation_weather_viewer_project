@@ -99,11 +99,14 @@
 }
 
 /*
- * Kept as a plain list rather than a grid: turning an <ol> into a grid
- * container blockifies its items and the numbers disappear.
+ * Two things have to be spelled out for the numbers to render: the list stays a
+ * plain list (turning an <ol> into a grid container blockifies its items and
+ * kills the markers), and list-style is restated because Tailwind's preflight
+ * resets every ol/ul to list-style: none.
  */
 .steps {
   padding-left: 22px;
+  list-style: decimal;
 }
 
 .steps li + li {
